@@ -2,18 +2,19 @@
 
 import { useEffect, useRef, useState, cloneElement, ReactElement, Fragment } from "react";
 import gsap from "gsap";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useNarrationStore } from "@/store/narration";
 import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
+import { KnowledgeCheck, type KnowledgeCheckQuestion } from "@/components/lesson/knowledge-check";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
-import { 
-  BrainCircuit, Cpu, ShieldAlert, Sparkles, MessageSquare, 
-  Database, Layers, CheckCircle2, ChevronRight, XCircle, 
-  History, Network, Scale, TestTube, AlertTriangle, 
+import {
+  BrainCircuit, Cpu, ShieldAlert, Sparkles, MessageSquare,
+  Database, Layers, CheckCircle2, ChevronRight, XCircle,
+  History, Network, Scale, TestTube, AlertTriangle,
   ChevronLeft, ArrowRight, BookOpen, Smartphone, Cloud,
-  Code, Briefcase, Rocket, Play, LayoutGrid, Zap, Shield, 
-  Users, Binary, Eye, Lock, X
+  Code, Briefcase, Rocket, Play, LayoutGrid, Zap, Shield,
+  Users, Binary, Eye, Lock, X, MousePointerClick
 } from "lucide-react";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any;
@@ -717,277 +718,80 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
   );
 }
 
-// 5. Assessment 1
+// 5. Assessment 1 — What is AI
+const WHAT_AI_ASSESSMENT_QUESTIONS: KnowledgeCheckQuestion[] = [
+  {
+    prompt: "What does the acronym LLM stand for?",
+    options: ["Large Language Model", "Logical Learning Machine", "Local Language Module", "Linear Learning Mechanism"],
+    correctIndex: 0,
+    explanation: "LLM stands for Large Language Model. These are massive statistical models trained on vast amounts of text.",
+  },
+  {
+    prompt: "Generative AI is best described as:",
+    options: ["A reasoning engine capable of critical thinking", "A knowledge base storing factual data", "A sophisticated prediction engine", "A sentient entity"],
+    correctIndex: 2,
+    explanation: "Generative AI doesn't 'think' or retrieve stored facts; it acts as a highly sophisticated prediction engine, calculating the most statistically probable next token.",
+  },
+  {
+    prompt: "Which of the following is NOT an attribute of Artificial General Intelligence (AGI)?",
+    options: ["Sentience and self-awareness", "Highly specialized pattern matching", "Human-like reasoning", "Ability to perform any intellectual task"],
+    correctIndex: 1,
+    explanation: "Highly specialized pattern matching is a characteristic of Narrow AI. AGI, which remains science fiction, involves generalized, human-like intelligence across any domain.",
+  },
+  {
+    prompt: "What type of AI do we currently use today?",
+    options: ["Narrow AI", "Artificial General Intelligence (AGI)", "Sentient AI", "Superintelligent AI"],
+    correctIndex: 0,
+    explanation: "Every AI application we use today, from ChatGPT to self-driving cars, relies on Narrow AI optimized for specific tasks.",
+  },
+  {
+    prompt: "Which architecture, introduced by Google researchers in 2017, fundamentally shifted how machines process language and context?",
+    options: ["Convolutional Neural Networks", "Recurrent Neural Networks", "Transformers", "The Turing Machine"],
+    correctIndex: 2,
+    explanation: "The 'Attention Is All You Need' paper introduced the Transformer architecture, which allowed models to process entire sequences of text contextually.",
+  },
+  {
+    prompt: "Which statement best describes a 'Stochastic Parrot'?",
+    options: ["An AI that repeats information with perfect human comprehension", "An AI that stitches language convincingly without actual comprehension", "A reasoning engine that stores factual knowledge", "An AI used exclusively for biological research"],
+    correctIndex: 1,
+    explanation: "A stochastic parrot stitches language together based on probabilistic patterns, creating convincing text without any actual understanding of the meaning.",
+  },
+  {
+    prompt: "What event in 2012 marked a major turning point for Deep Learning?",
+    options: ["The proposal of the Turing Test", "IBM's Deep Blue defeating Garry Kasparov", "AlexNet winning the ImageNet competition", "The launch of ChatGPT"],
+    correctIndex: 2,
+    explanation: "AlexNet's victory in 2012 demonstrated the overwhelming power of deep neural networks, kicking off the modern AI boom.",
+  },
+  {
+    prompt: "Alan Turing's 1950 paper proposed an experiment to:",
+    options: ["Introduce the first neural network", "Evaluate machine intelligence based on its indistinguishability from human responses", "Prove that machines can feel emotions", "Program the first logic theorist"],
+    correctIndex: 1,
+    explanation: "The Turing Test was proposed to assess machine intelligence strictly by evaluating if its responses could convincingly imitate a human.",
+  },
+  {
+    prompt: "What is the primary characteristic of Narrow AI?",
+    options: ["It has intent and self-awareness", "It performs highly specialized pattern matching based on specific datasets", "It can seamlessly switch between completely unrelated intellectual domains", "It is currently considered science fiction"],
+    correctIndex: 1,
+    explanation: "Narrow AI lacks consciousness and operates strictly within its trained domain, relying on specific datasets to recognize patterns.",
+  },
+  {
+    prompt: "Large Language Models process text by:",
+    options: ["Retrieving facts from a massive internal database", "Using a probability matrix to predict the most likely next token", "Fact-checking information against the live internet before answering", "Using symbolic logic to reason through a prompt"],
+    correctIndex: 1,
+    explanation: "LLMs do not store factual databases; they rely on a vast probability matrix to statistically predict the most likely next token in a sequence.",
+  },
+];
+
 function Assessment1({ onComplete }: { onComplete?: () => void }) {
-  const { goToSlide, setNavOverride } = useCanvasNav();
-  const [currentQ, setCurrentQ] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [status, setStatus] = useState<'answering' | 'feedback'>('answering');
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [quizFinished, setQuizFinished] = useState(false);
-
-  const questions = [
-    {
-      q: "What does the acronym LLM stand for?",
-      options: ["Large Language Model", "Logical Learning Machine", "Local Language Module", "Linear Learning Mechanism"],
-      correct: 0,
-      explanation: "LLM stands for Large Language Model. These are massive statistical models trained on vast amounts of text."
-    },
-    {
-      q: "Generative AI is best described as:",
-      options: ["A reasoning engine capable of critical thinking", "A knowledge base storing factual data", "A sophisticated prediction engine", "A sentient entity"],
-      correct: 2,
-      explanation: "Generative AI doesn't 'think' or retrieve stored facts; it acts as a highly sophisticated prediction engine, calculating the most statistically probable next token."
-    },
-    {
-      q: "Which of the following is NOT an attribute of Artificial General Intelligence (AGI)?",
-      options: ["Sentience and self-awareness", "Highly specialized pattern matching", "Human-like reasoning", "Ability to perform any intellectual task"],
-      correct: 1,
-      explanation: "Highly specialized pattern matching is a characteristic of Narrow AI. AGI, which remains science fiction, involves generalized, human-like intelligence across any domain."
-    },
-    {
-      q: "What type of AI do we currently use today?",
-      options: ["Narrow AI", "Artificial General Intelligence (AGI)", "Sentient AI", "Superintelligent AI"],
-      correct: 0,
-      explanation: "Every AI application we use today, from ChatGPT to self-driving cars, relies on Narrow AI optimized for specific tasks."
-    },
-    {
-      q: "Which architecture, introduced by Google researchers in 2017, fundamentally shifted how machines process language and context?",
-      options: ["Convolutional Neural Networks", "Recurrent Neural Networks", "Transformers", "The Turing Machine"],
-      correct: 2,
-      explanation: "The 'Attention Is All You Need' paper introduced the Transformer architecture, which allowed models to process entire sequences of text contextually."
-    },
-    {
-      q: "Which statement best describes a 'Stochastic Parrot'?",
-      options: ["An AI that repeats information with perfect human comprehension", "An AI that stitches language convincingly without actual comprehension", "A reasoning engine that stores factual knowledge", "An AI used exclusively for biological research"],
-      correct: 1,
-      explanation: "A stochastic parrot stitches language together based on probabilistic patterns, creating convincing text without any actual understanding of the meaning."
-    },
-    {
-      q: "What event in 2012 marked a major turning point for Deep Learning?",
-      options: ["The proposal of the Turing Test", "IBM's Deep Blue defeating Garry Kasparov", "AlexNet winning the ImageNet competition", "The launch of ChatGPT"],
-      correct: 2,
-      explanation: "AlexNet's victory in 2012 demonstrated the overwhelming power of deep neural networks, kicking off the modern AI boom."
-    },
-    {
-      q: "Alan Turing's 1950 paper proposed an experiment to:",
-      options: ["Introduce the first neural network", "Evaluate machine intelligence based on its indistinguishability from human responses", "Prove that machines can feel emotions", "Program the first logic theorist"],
-      correct: 1,
-      explanation: "The Turing Test was proposed to assess machine intelligence strictly by evaluating if its responses could convincingly imitate a human."
-    },
-    {
-      q: "What is the primary characteristic of Narrow AI?",
-      options: ["It has intent and self-awareness", "It performs highly specialized pattern matching based on specific datasets", "It can seamlessly switch between completely unrelated intellectual domains", "It is currently considered science fiction"],
-      correct: 1,
-      explanation: "Narrow AI lacks consciousness and operates strictly within its trained domain, relying on specific datasets to recognize patterns."
-    },
-    {
-      q: "Large Language Models process text by:",
-      options: ["Retrieving facts from a massive internal database", "Using a probability matrix to predict the most likely next token", "Fact-checking information against the live internet before answering", "Using symbolic logic to reason through a prompt"],
-      correct: 1,
-      explanation: "LLMs do not store factual databases; they rely on a vast probability matrix to statistically predict the most likely next token in a sequence."
-    }
-  ];
-
-  const handleSubmit = () => {
-    const correct = selected === questions[currentQ].correct;
-    setIsCorrect(correct);
-    setStatus('feedback');
-  };
-
-  const handleContinue = () => {
-    if (isCorrect) {
-      if (currentQ < questions.length - 1) {
-        setCurrentQ(q => q + 1);
-        setSelected(null);
-        setStatus('answering');
-        setIsCorrect(null);
-      } else {
-        setQuizFinished(true);
-      }
-    } else {
-      setSelected(null);
-      setStatus('answering');
-      setIsCorrect(null);
-    }
-  };
-
-  useEffect(() => {
-    if (quizFinished) {
-      if (onComplete) {
-        onComplete();
-      }
-      setNavOverride(null);
-    } else if (status === 'answering') {
-      setNavOverride({
-        nextLabel: "Submit",
-        onNext: handleSubmit,
-        nextDisabled: selected === null
-      });
-    } else if (status === 'feedback') {
-      setNavOverride({
-        nextLabel: "Continue",
-        onNext: handleContinue,
-        nextDisabled: false
-      });
-    }
-    return () => setNavOverride(null);
-  }, [currentQ, selected, status, quizFinished]);
-
-  if (quizFinished) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-card border border-border p-8 md:p-12 rounded-3xl shadow-2xl flex flex-col items-center w-full max-w-2xl text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-emerald-500/5" />
-          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20 relative z-10">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 relative z-10">Assessment Complete!</h2>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 relative z-10">You've successfully demonstrated your understanding of what AI actually is.</p>
-          <div className="text-5xl font-black text-emerald-500 relative z-10">10/10</div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  const q = questions[currentQ];
-
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col">
-      <div className="w-full h-full flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto w-full flex-1">
-        <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
-          <h2 className="text-sm md:text-base font-bold text-muted-foreground tracking-widest uppercase">Knowledge Check</h2>
-          <div className="text-primary font-medium bg-primary/10 px-3 py-1 rounded-full border border-primary/20 text-xs">
-            Question {currentQ + 1} of {questions.length}
-          </div>
-        </div>
-        
-        <div className="flex-1 flex flex-col min-h-0 relative">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={currentQ}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col min-h-0"
-            >
-              <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 leading-tight shrink-0">{q.q}</h3>
-              
-              <div className="space-y-2.5 w-full flex-1">
-                {q.options.map((opt, i) => (
-                  <button
-                    key={i}
-                    disabled={status === 'feedback'}
-                    onClick={() => setSelected(i)}
-                    className={`w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all duration-300 group flex items-center gap-3 md:gap-4 ${
-                      selected === i 
-                        ? 'border-primary bg-primary/5 shadow-[0_0_15px_rgba(167,218,219,0.15)]' 
-                        : 'border-border/50 hover:border-primary/50 hover:bg-card bg-card/40'
-                    } ${status === 'feedback' && i === q.correct ? 'border-emerald-500 bg-emerald-500/10' : ''}`}
-                  >
-                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 transition-colors shrink-0 text-sm md:text-base ${
-                      selected === i ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30 text-muted-foreground'
-                    } ${status === 'feedback' && i === q.correct ? 'border-emerald-500 bg-emerald-500 text-emerald-950' : ''}`}>
-                      {String.fromCharCode(65 + i)}
-                    </div>
-                    <span className={`text-sm md:text-base ${selected === i ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{opt}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Animated Feedback Overlay */}
-      <AnimatePresence>
-        {status === 'feedback' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-md p-6"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 15, scale: 0.96, filter: "blur(4px)" }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.98, filter: "blur(2px)" }}
-              transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] as any }}
-              className={`max-w-xl w-full p-8 rounded-[32px] border shadow-2xl relative overflow-hidden bg-background/80 backdrop-blur-2xl text-left ${
-                isCorrect ? "border-primary/20 shadow-primary/5" : "border-destructive/20 shadow-destructive/5"
-              }`}
-            >
-              {/* Subtle Glow */}
-              <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] opacity-20 -z-10 pointer-events-none rounded-full translate-x-1/2 -translate-y-1/2 ${
-                isCorrect ? "bg-primary" : "bg-destructive"
-              }`} />
-
-              <div className="flex items-start gap-6">
-                {/* Icon Area */}
-                <div className="flex-shrink-0 pt-1">
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className={`flex items-center justify-center w-14 h-14 rounded-full bg-background border shadow-sm ${
-                      isCorrect ? "text-primary border-primary/20 shadow-primary/10" : "text-destructive border-destructive/20 shadow-destructive/10"
-                    }`}
-                  >
-                    {isCorrect ? (
-                      <CheckCircle2 className="h-7 w-7" strokeWidth={2.5} />
-                    ) : (
-                      <XCircle className="h-7 w-7" strokeWidth={2.5} />
-                    )}
-                  </motion.div>
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-1 space-y-4 pt-1">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                        {isCorrect ? "Correct" : "Not quite"}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={handleContinue}
-                      className={`rounded-full px-6 py-2 font-semibold text-sm transition-all active:scale-95 ${
-                        isCorrect ? "bg-emerald-500 hover:bg-emerald-600 text-emerald-950" : "bg-red-500 hover:bg-red-600 text-red-950"
-                      }`}
-                    >
-                      {isCorrect ? "Continue" : "Retry"}
-                    </button>
-                  </div>
-
-                  <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    {isCorrect ? "Great job! Let's review why this is the right answer." : "That's not the right answer. Please review the explanation and try again."}
-                  </p>
-
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15, duration: 0.4, ease: [0.23, 1, 0.32, 1] as any }}
-                    className="bg-muted/40 border border-border/50 rounded-2xl p-5 mt-4"
-                  >
-                    <h4 className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">Explanation</h4>
-                    <p className="text-[15px] text-foreground/90 leading-relaxed">
-                      {q.explanation}
-                    </p>
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <KnowledgeCheck
+      title="Knowledge Check"
+      description="You must answer every question correctly to continue."
+      questions={WHAT_AI_ASSESSMENT_QUESTIONS}
+      onComplete={onComplete}
+      successHeadline="Assessment Complete!"
+      successSubline="You've successfully demonstrated your understanding of what AI actually is."
+    />
   );
 }
 
@@ -1170,62 +974,122 @@ function ReinforcementLearningSlide({ onComplete }: { onComplete?: () => void })
   return <MLConceptSlideBase title="Reinforcement Learning" icon={BrainCircuit} color="text-orange-400" bg="bg-orange-500/10" border="border-orange-500" image="/images/ml_reinforcement.jpg" definition="The model learns the optimal strategy by interacting with an environment and receiving feedback." analogy="This is the Trial-and-Error Apprentice. The AI receives rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, it learns to maximize its reward." audioId="m1-ml-reinforcement" duration={18000} onComplete={onComplete} />;
 }
 
-// 6. LLM vs SLM
+// 6. LLM vs SLM — see STYLE.md §5 for the canvas-fit hard rule.
 function LlmVsSlm() {
   const [isSlm, setIsSlm] = useState(false);
+  const reduce = useReducedMotion();
+  const easeDrawer: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
   return (
-    <div className="w-full h-full flex flex-col justify-center p-6 md:p-12 max-w-5xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Scale of <span className="text-primary">Intelligence</span></h2>
-        <p className="text-xl text-muted-foreground">Not all models need to know everything. Compare Large and Small Language Models.</p>
+    <div className="w-full h-full flex flex-col justify-center p-4 md:p-6 lg:p-8 max-w-5xl mx-auto overflow-hidden">
+      <div className="text-center mb-3 md:mb-4 shrink-0">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-1.5 md:mb-2 text-foreground text-balance leading-[1.15]">
+          The Scale of <span className="text-primary">Intelligence</span>
+        </h2>
+        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto text-balance">
+          Not all models need to know everything. Compare Large and Small Language Models.
+        </p>
       </div>
 
-      <div className="flex justify-center mb-12">
-        <div className="bg-white/5 p-1.5 rounded-xl flex items-center border border-white/10 shadow-inner">
-          <button onClick={() => setIsSlm(false)} className={`px-8 py-3 rounded-lg font-bold text-sm transition-all ${!isSlm ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>LLM (Cloud)</button>
-          <button onClick={() => setIsSlm(true)} className={`px-8 py-3 rounded-lg font-bold text-sm transition-all ${isSlm ? 'bg-indigo-500 text-white shadow-lg' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>SLM (Local)</button>
+      <div className="flex justify-center mb-4 md:mb-5 shrink-0">
+        <div
+          role="tablist"
+          aria-label="Model class selector"
+          className="inline-flex p-1 rounded-full bg-muted/40 backdrop-blur-md border border-white/10 shadow-inner"
+        >
+          <button
+            role="tab"
+            aria-pressed={!isSlm}
+            onClick={() => setIsSlm(false)}
+            className={`px-5 md:px-7 py-2 rounded-full font-bold text-xs md:text-sm transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-muted/40 ${
+              !isSlm
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+            }`}
+          >
+            LLM (Cloud)
+          </button>
+          <button
+            role="tab"
+            aria-pressed={isSlm}
+            onClick={() => setIsSlm(true)}
+            className={`px-5 md:px-7 py-2 rounded-full font-bold text-xs md:text-sm transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-muted/40 ${
+              isSlm
+                ? "bg-secondary text-secondary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+            }`}
+          >
+            SLM (Local)
+          </button>
         </div>
       </div>
 
-      <div className="relative h-[320px] w-full max-w-4xl mx-auto">
+      <div className="relative w-full max-w-4xl mx-auto flex-1 min-h-0">
         <AnimatePresence mode="wait">
           {!isSlm ? (
             <motion.div
               key="llm"
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/10 border border-primary/30 rounded-3xl p-10 flex flex-col md:flex-row gap-8 shadow-2xl"
+              initial={reduce ? false : { opacity: 0, transform: "translateX(-16px)" }}
+              animate={{ opacity: 1, transform: "translateX(0)" }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateX(16px)" }}
+              transition={{ duration: reduce ? 0 : 0.25, ease: easeDrawer }}
+              className="absolute inset-0 bg-card/40 backdrop-blur-xl border border-primary/30 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col md:flex-row gap-4 md:gap-6 overflow-y-auto"
             >
-              <div className="flex-1 md:pr-8 md:border-r border-primary/20">
-                <Cloud className="w-12 h-12 text-primary mb-6" />
-                <h3 className="text-3xl font-bold mb-4">Large Language Model</h3>
-                <p className="text-muted-foreground text-lg mb-6">Massive models with hundreds of billions of parameters. They require entire data centers to run.</p>
-                <div className="text-primary font-bold bg-primary/10 px-4 py-2 rounded-lg w-max border border-primary/20">GPT-4, Claude 3.5, Gemini 1.5</div>
+              <div className="flex-1 flex flex-col md:pr-6 md:border-r border-primary/20 min-w-0">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <Cloud className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold leading-tight text-foreground">Large Language Model</h3>
+                </div>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-3 md:mb-4">
+                  Massive models with hundreds of billions of parameters. They require entire data centers to run.
+                </p>
+                <div className="mt-auto flex flex-wrap gap-1.5">
+                  {["GPT-4", "Claude 3.5", "Gemini 1.5"].map((name) => (
+                    <span key={name} className="px-2 py-1 rounded-md bg-muted/50 border border-border/60 text-[11px] md:text-xs text-foreground/70 font-mono">
+                      {name}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex-1 flex flex-col justify-center space-y-8">
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Knowledge Breadth</span><span className="text-primary">Vast</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '95%' }} className="bg-primary h-full rounded-full" /></div></div>
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Computing Cost</span><span className="text-red-500">High</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '90%' }} className="bg-red-500 h-full rounded-full" /></div></div>
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Data Privacy</span><span className="text-orange-500">Leaves Device</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '20%' }} className="bg-orange-500 h-full rounded-full" /></div></div>
+              <div className="flex-1 flex flex-col justify-center space-y-3 md:space-y-4 min-w-0">
+                <MetricBar label="Knowledge Breadth" value="Vast" pct={95} tone="primary" reduce={reduce} />
+                <MetricBar label="Computing Cost" value="High" pct={90} tone="red" reduce={reduce} />
+                <MetricBar label="Data Privacy" value="Leaves Device" pct={20} tone="orange" reduce={reduce} />
               </div>
             </motion.div>
           ) : (
             <motion.div
               key="slm"
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-indigo-900/10 border border-indigo-500/30 rounded-3xl p-10 flex flex-col md:flex-row gap-8 shadow-2xl"
+              initial={reduce ? false : { opacity: 0, transform: "translateX(-16px)" }}
+              animate={{ opacity: 1, transform: "translateX(0)" }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateX(16px)" }}
+              transition={{ duration: reduce ? 0 : 0.25, ease: easeDrawer }}
+              className="absolute inset-0 bg-card/40 backdrop-blur-xl border border-secondary/30 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col md:flex-row gap-4 md:gap-6 overflow-y-auto"
             >
-              <div className="flex-1 md:pr-8 md:border-r border-indigo-500/20">
-                <Smartphone className="w-12 h-12 text-indigo-500 mb-6" />
-                <h3 className="text-3xl font-bold mb-4">Small Language Model</h3>
-                <p className="text-muted-foreground text-lg mb-6">Efficient models designed to run locally on your phone or laptop. Highly specialized.</p>
-                <div className="text-indigo-500 font-bold bg-indigo-500/10 px-4 py-2 rounded-lg w-max border border-indigo-500/20">Phi-3, Llama 3 8B, Gemma</div>
+              <div className="flex-1 flex flex-col md:pr-6 md:border-r border-secondary/20 min-w-0">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
+                    <Smartphone className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold leading-tight text-foreground">Small Language Model</h3>
+                </div>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-3 md:mb-4">
+                  Efficient models designed to run locally on your phone or laptop. Highly specialized.
+                </p>
+                <div className="mt-auto flex flex-wrap gap-1.5">
+                  {["Phi-3", "Llama 3 8B", "Gemma"].map((name) => (
+                    <span key={name} className="px-2 py-1 rounded-md bg-muted/50 border border-border/60 text-[11px] md:text-xs text-foreground/70 font-mono">
+                      {name}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex-1 flex flex-col justify-center space-y-8">
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Knowledge Breadth</span><span className="text-indigo-400">Focused</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '40%' }} className="bg-indigo-500 h-full rounded-full" /></div></div>
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Computing Cost</span><span className="text-emerald-500">Low</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '15%' }} className="bg-emerald-500 h-full rounded-full" /></div></div>
-                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Data Privacy</span><span className="text-emerald-500">Stays Local</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="bg-emerald-500 h-full rounded-full" /></div></div>
+              <div className="flex-1 flex flex-col justify-center space-y-3 md:space-y-4 min-w-0">
+                <MetricBar label="Knowledge Breadth" value="Focused" pct={40} tone="indigo" reduce={reduce} />
+                <MetricBar label="Computing Cost" value="Low" pct={15} tone="emerald" reduce={reduce} />
+                <MetricBar label="Data Privacy" value="Stays Local" pct={100} tone="emerald" reduce={reduce} />
               </div>
             </motion.div>
           )}
@@ -1235,11 +1099,185 @@ function LlmVsSlm() {
   );
 }
 
+function MetricBar({
+  label, value, pct, tone, reduce,
+}: {
+  label: string;
+  value: string;
+  pct: number;
+  tone: "primary" | "red" | "orange" | "indigo" | "emerald";
+  reduce: boolean | null;
+}) {
+  const fillBg: Record<typeof tone, string> = {
+    primary: "bg-primary",
+    red: "bg-red-500",
+    orange: "bg-orange-500",
+    indigo: "bg-indigo-400",
+    emerald: "bg-emerald-500",
+  };
+  const valueText: Record<typeof tone, string> = {
+    primary: "text-primary",
+    red: "text-red-400",
+    orange: "text-orange-400",
+    indigo: "text-indigo-400",
+    emerald: "text-emerald-400",
+  };
 
-// 7. Interactive Prompt Anatomy
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs md:text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={`font-bold ${valueText[tone]}`}>{value}</span>
+      </div>
+      <div className="relative w-full h-2.5 md:h-3 rounded-full bg-muted/50 overflow-hidden">
+        <motion.div
+          className={`absolute inset-y-0 left-0 ${fillBg[tone]} origin-left rounded-full`}
+          style={{ width: `${pct}%` }}
+          initial={{ transform: reduce ? "scaleX(1)" : "scaleX(0)" }}
+          animate={{ transform: "scaleX(1)" }}
+          transition={{ duration: reduce ? 0 : 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+
+// 6.5 ML/Deep Learning/LLMs & SLMs — Knowledge Check
+const ML_DNN_LLM_ASSESSMENT_QUESTIONS: KnowledgeCheckQuestion[] = [
+  {
+    prompt: "What is the core paradigm shift that defines machine learning compared to traditional programming?",
+    options: [
+      "We give machines data and let them discover the patterns themselves, instead of writing explicit rules.",
+      "We hardcode the answer into every possible input.",
+      "We rely on human experts to manually correct every output.",
+      "We pre-compute every plausible query and store the results in a lookup table.",
+    ],
+    correctIndex: 0,
+    explanation: "Machine learning inverts the programming paradigm: instead of writing rules, the system learns statistical patterns from examples. The programmer's job shifts from coding answers to curating data.",
+  },
+  {
+    prompt: "Supervised learning is best described as:",
+    options: [
+      "Learning with an answer key — the model is given labeled inputs and known outputs and learns to map between them.",
+      "Sorting unlabeled data into clusters based on similarity.",
+      "Maximizing a reward signal through trial and error in an environment.",
+      "Generating novel outputs by sampling from a probability distribution.",
+    ],
+    correctIndex: 0,
+    explanation: "Supervised learning uses labeled examples (\"this is a cat, this is a dog\"). The model learns the input→output mapping so it can predict labels for new, unseen inputs.",
+  },
+  {
+    prompt: "Unsupervised learning is best described as:",
+    options: [
+      "Learning from labeled examples provided by a teacher.",
+      "Finding hidden structure in raw, unlabeled data — for example, grouping similar documents into clusters.",
+      "Maximizing cumulative reward in a feedback loop.",
+      "Predicting the next token in a sequence.",
+    ],
+    correctIndex: 1,
+    explanation: "Unsupervised learning gets no labels. The model's job is to find structure on its own — clustering, dimensionality reduction, anomaly detection. The Library Archeologist analogy fits here.",
+  },
+  {
+    prompt: "Reinforcement learning is best described as:",
+    options: [
+      "Clustering unlabeled data into thematic groups.",
+      "Learning an optimal policy through rewards and penalties received by interacting with an environment.",
+      "Training on labeled question-and-answer pairs.",
+      "Predicting the most likely next token in a sequence.",
+    ],
+    correctIndex: 1,
+    explanation: "Reinforcement learning is the trial-and-error apprentice: the agent takes actions in an environment, receives rewards (good actions) or penalties (bad ones), and over many iterations learns the policy that maximizes cumulative reward.",
+  },
+  {
+    prompt: "What makes a neural network \"deep\"?",
+    options: [
+      "It is trained on a very large dataset.",
+      "It uses many hidden layers between input and output, with millions or billions of tunable parameters (weights and biases).",
+      "It runs on specialized GPU hardware.",
+      "It was published in a top-tier research paper.",
+    ],
+    correctIndex: 1,
+    explanation: "Depth = number of layers. Each layer is a stack of artificial neurons; the connections between them have adjustable parameters (weights and biases) that the training process tunes. \"Deep learning\" means enough layers to learn complex, hierarchical patterns.",
+  },
+  {
+    prompt: "What is a parameter (a.k.a. weight) in a neural network?",
+    options: [
+      "A label on a training example.",
+      "A tunable numerical value on a connection between two neurons that the training process adjusts to fit the data.",
+      "A fixed rule hardcoded by the developer before training.",
+      "The number of layers in the network.",
+    ],
+    correctIndex: 1,
+    explanation: "Parameters are the internal numerical values the network learns during training. A modern LLM has hundreds of billions of them — each one a tiny dial that the optimization process nudges up or down.",
+  },
+  {
+    prompt: "What is the Transformer architecture's defining innovation compared to older sequence models?",
+    options: [
+      "It uses a single massive fully-connected layer.",
+      "It reads text one word at a time, in strict order, with no parallelism.",
+      "An attention mechanism that looks at the entire sequence simultaneously, learning which words are contextually related to each other regardless of distance.",
+      "It stores a hardcoded grammar of the target language.",
+    ],
+    correctIndex: 2,
+    explanation: "Transformers (introduced in \"Attention Is All You Need\", Vaswani et al., 2017) replace sequential recurrence with a self-attention mechanism that processes all tokens in parallel and learns which tokens should attend to which others.",
+  },
+  {
+    prompt: "How does temperature interact with next-token prediction?",
+    options: [
+      "Temperature controls how many GPUs the model uses.",
+      "Temperature sets the maximum number of tokens the model can generate.",
+      "Temperature scales the probability distribution over the next token — low temperature is deterministic, high temperature is creative and risk-taking.",
+      "Temperature encodes the user's role in the prompt.",
+    ],
+    correctIndex: 2,
+    explanation: "Before sampling, the model's raw logits are divided by the temperature value, then softmaxed. Low temperature sharpens the distribution (safe, repetitive); high temperature flattens it (creative, varied, sometimes incoherent).",
+  },
+  {
+    prompt: "Why might a team choose a Small Language Model (SLM) over a frontier LLM for a workplace assistant?",
+    options: [
+      "SLMs always give more accurate factual answers than frontier LLMs.",
+      "SLMs can run locally on the user's device, keeping sensitive data on-device and avoiding per-query API costs.",
+      "SLMs are larger and require more powerful hardware.",
+      "SLMs cannot be fine-tuned, while LLMs can.",
+    ],
+    correctIndex: 1,
+    explanation: "The two structural reasons to pick an SLM are (1) data privacy / on-device inference (no off-network transmission of sensitive content) and (2) cost (no per-query API fees). Accuracy is workload-dependent; both can be fine-tuned.",
+  },
+  {
+    prompt: "Which of the following are recognized techniques for compressing a large model into a small one? Select all that apply.",
+    options: [
+      "Knowledge distillation — a smaller \"student\" model is trained to mimic the larger \"teacher.\"",
+      "Pruning — removing low-impact parameters or connections.",
+      "Quantization — reducing the numerical precision of the parameters (e.g., 16-bit → 8-bit).",
+      "Manually rewriting the model in a different programming language.",
+    ],
+    correctIndex: 0,
+    explanation: "Knowledge distillation, pruning, and quantization are the three standard SLM-compression techniques. Rewriting the source code does not change the model — the parameters themselves must be made smaller or fewer.",
+  },
+];
+
+function MlDnnLlmAssessment({ onComplete }: { onComplete?: () => void }) {
+  return (
+    <KnowledgeCheck
+      title="ML · Deep Learning · LLMs & SLMs"
+      description="Ten questions on Machine Learning, Deep Learning, Neural Networks, Transformers, and the LLM vs SLM trade-off. You must answer every question correctly to continue."
+      questions={ML_DNN_LLM_ASSESSMENT_QUESTIONS}
+      onComplete={onComplete}
+      successHeadline="Section Complete!"
+      successSubline="You've demonstrated a working understanding of how machines learn, how deep learning scales that, and how today's language models are shaped — plus when to choose a small model over a large one."
+    />
+  );
+}
+
+// 7. Interactive Prompt Anatomy — see STYLE.md §5 for the canvas-fit hard rule.
 function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
   const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [viewed, setViewed] = useState<Set<number>>(new Set());
+  const reduce = useReducedMotion();
+  const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
   const { setNavOverride } = useCanvasNav();
+  const { isFinished } = useNarrationStore();
 
   const parts = [
     { id: 1, name: "Role", code: "You are an expert instructional designer.", desc: "Set the persona. This heavily weights the statistical model towards vocabulary and concepts associated with this role." },
@@ -1247,75 +1285,153 @@ function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
     { id: 3, name: "Context", code: "The audience is adult learners who have just watched a 5-minute introductory video on Generative AI.", desc: "Background information that prevents the model from making incorrect assumptions." },
     { id: 4, name: "Constraints", code: "Output only valid JSON. Do not include introductory text.", desc: "Strict boundaries on the output format, length, or tone." }
   ];
+  const activePart = parts.find(p => p.id === activeTab) ?? null;
+  const allViewed = viewed.size === parts.length;
+  const showCue = isFinished && !allViewed;
 
   useEffect(() => {
     setNavOverride({
-      nextLabel: "Continue",
+      nextDisabled: !allViewed,
       onNext: (handleNext) => {
         onComplete();
         handleNext();
       }
     });
     return () => setNavOverride(null);
-  }, [setNavOverride, onComplete]);
+  }, [setNavOverride, onComplete, allViewed]);
+
+  const handlePick = (id: number) => {
+    setActiveTab(id);
+    setViewed(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center p-6 md:p-12 max-w-6xl mx-auto">
-      <div className="mb-10">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Anatomy of a Perfect Prompt</h2>
-        <p className="text-muted-foreground text-lg">Click each component to understand how to engineer the context window effectively.</p>
+    <div className="w-full h-full flex flex-col justify-center p-4 md:p-6 lg:p-8 max-w-6xl mx-auto overflow-hidden">
+      <div className="mb-3 md:mb-4 shrink-0">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-1.5 md:mb-2 text-foreground text-balance leading-[1.15]">
+          Anatomy of a <span className="text-primary">Perfect Prompt</span>
+        </h2>
+        <p className="text-sm md:text-base text-muted-foreground text-balance max-w-2xl">
+          Click each component to understand how to engineer the context window effectively.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-        <div className="bg-[#0D0D0D] border border-white/10 rounded-2xl overflow-hidden shadow-2xl font-mono text-sm leading-relaxed">
-          <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-            <div className="w-3 h-3 rounded-full bg-green-500/80" />
-            <span className="ml-2 text-white/40 text-xs">prompt.txt</span>
+      <AnimatePresence>
+        {showCue && (
+          <motion.div
+            initial={reduce ? false : { opacity: 0, transform: "translateY(-6px)" }}
+            animate={{ opacity: 1, transform: "translateY(0)" }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateY(-6px)" }}
+            transition={{ duration: reduce ? 0 : 0.3, ease: easeOutQuart }}
+            className="flex justify-center mb-3 md:mb-4 shrink-0"
+          >
+            <motion.div
+              animate={
+                reduce
+                  ? undefined
+                  : {
+                      boxShadow: [
+                        "0 0 0 0 rgba(167, 218, 219, 0)",
+                        "0 0 18px 0 rgba(167, 218, 219, 0.22)",
+                        "0 0 0 0 rgba(167, 218, 219, 0)",
+                      ],
+                    }
+              }
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-md border border-primary/20 text-xs md:text-sm text-foreground"
+            >
+              <MousePointerClick className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary shrink-0" strokeWidth={1.5} />
+              <span className="text-balance">Click each component to read more</span>
+              <span className="text-muted-foreground font-mono text-[10px] md:text-[11px] tabular-nums ml-0.5">
+                {viewed.size}/{parts.length}
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 flex-1 min-h-0">
+        <div className="bg-[#0D0D0D] border border-white/10 rounded-2xl overflow-hidden shadow-2xl font-mono text-xs md:text-sm leading-relaxed flex flex-col min-h-0">
+          <div className="bg-white/5 px-2.5 md:px-3 py-1 md:py-1.5 border-b border-white/10 flex items-center gap-1.5 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-red-500/80" />
+            <div className="w-2 h-2 rounded-full bg-yellow-500/80" />
+            <div className="w-2 h-2 rounded-full bg-green-500/80" />
+            <span className="ml-1.5 text-white/40 text-[10px]">prompt.txt</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              {viewed.size === parts.length ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+              ) : (
+                <span className="text-white/40 text-[10px] font-mono tabular-nums">{viewed.size}/{parts.length}</span>
+              )}
+            </div>
           </div>
-          <div className="p-6 space-y-4">
-            {parts.map((part) => (
-              <motion.div 
-                key={part.id}
-                onClick={() => setActiveTab(part.id)}
-                className={`p-4 rounded-xl cursor-pointer transition-all border ${activeTab === part.id ? 'bg-primary/20 border-primary/50 shadow-[0_0_20px_rgba(167,218,219,0.15)]' : 'bg-white/5 border-transparent hover:bg-white/10'}`}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="text-white/40 text-xs mb-2 uppercase tracking-widest font-bold">{part.name}</div>
-                <div className="text-white/90 text-base">{part.code}</div>
-              </motion.div>
-            ))}
+          <div className="p-2 md:p-2.5 space-y-1.5 md:space-y-2 flex-1 min-h-0">
+            {parts.map((part) => {
+              const isActive = activeTab === part.id;
+              const isViewed = viewed.has(part.id);
+              return (
+                <button
+                  key={part.id}
+                  type="button"
+                  onClick={() => handlePick(part.id)}
+                  aria-pressed={isActive}
+                  className={`relative w-full text-left p-2 md:p-2.5 rounded-lg transition-all duration-200 active:scale-[0.99] border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-[#0D0D0D] ${
+                    isActive
+                      ? "bg-primary/20 border-primary/50 shadow-[0_0_20px_rgba(167,218,219,0.15)]"
+                      : isViewed
+                      ? "bg-white/[0.07] border-white/10"
+                      : "bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <div className="text-white/40 text-[9px] uppercase tracking-widest font-bold">{part.name}</div>
+                    {isViewed && !isActive && (
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500/70 shrink-0" strokeWidth={2} />
+                    )}
+                  </div>
+                  <div className="text-white/90 text-xs md:text-sm break-words leading-snug pr-1">{part.code}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="h-full flex items-center min-h-[300px]">
+        <div className="flex items-center min-h-0">
           <AnimatePresence mode="wait">
-            {activeTab ? (
-              <motion.div 
-                key={activeTab}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-card border border-border rounded-2xl p-8 shadow-xl w-full"
+            {activePart ? (
+              <motion.div
+                key={activePart.id}
+                initial={reduce ? false : { opacity: 0, transform: "translateY(12px)" }}
+                animate={{ opacity: 1, transform: "translateY(0)" }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateY(-12px)" }}
+                transition={{ duration: reduce ? 0 : 0.25, ease: easeOutQuart }}
+                className="bg-card/60 backdrop-blur-xl border border-primary/20 rounded-2xl p-5 md:p-6 shadow-xl w-full"
               >
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 text-primary">
-                  <Layers className="w-6 h-6" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-3 md:mb-4 text-primary shrink-0">
+                  <Layers className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">{parts.find(p => p.id === activeTab)?.name}</h3>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  {parts.find(p => p.id === activeTab)?.desc}
+                <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-foreground leading-tight">{activePart.name}</h3>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                  {activePart.desc}
                 </p>
               </motion.div>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
+              <motion.div
+                initial={reduce ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="h-full w-full border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-muted-foreground p-8 text-center"
+                className="h-full w-full border-2 border-dashed border-border/60 rounded-2xl flex flex-col items-center justify-center text-muted-foreground p-6 text-center bg-card/20 backdrop-blur-md min-h-[160px]"
               >
-                <MessageSquare className="w-10 h-10 mb-4 opacity-50" />
-                <p>Select a prompt component on the left to reveal its purpose.</p>
+                <MessageSquare className="w-8 h-8 md:w-10 md:h-10 mb-3 opacity-50" strokeWidth={1.5} />
+                <p className="text-sm md:text-base text-balance">
+                  {isFinished
+                    ? "Click a component on the left to read about it."
+                    : "Select a prompt component on the left to reveal its purpose."}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1390,66 +1506,110 @@ function HallucinationSlide() {
   );
 }
 
-// 9. Bias In AI
+// 9. Bias In AI — see STYLE.md §5 for the canvas-fit hard rule.
 function BiasInAI() {
   const [step, setStep] = useState(0);
+  const reduce = useReducedMotion();
+  const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
+  const trained = step === 1;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-6xl mx-auto">
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold tracking-widest uppercase mb-6">
-          <AlertTriangle className="w-4 h-4" /> Systemic Flaws
+    <div className="w-full h-full flex flex-col justify-center p-4 md:p-6 lg:p-8 max-w-6xl mx-auto overflow-hidden">
+      <div className="text-center mb-3 md:mb-4 shrink-0">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-2">
+          <AlertTriangle className="w-3 h-3 md:w-3.5 md:h-3.5" strokeWidth={1.5} /> Systemic Flaws
         </div>
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Mirror of Bias</h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">AI models learn from human data. If the data contains historical biases, the model will reproduce them.</p>
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-1.5 md:mb-2 text-foreground text-balance leading-[1.15]">
+          The Mirror of <span className="text-primary">Bias</span>
+        </h2>
+        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto text-balance">
+          AI models learn from human data. If the data contains historical biases, the model will reproduce them.
+        </p>
       </div>
 
-      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="bg-card border border-border rounded-3xl p-8 shadow-xl flex flex-col">
-          <h3 className="font-bold text-2xl mb-6 flex items-center gap-3"><Database className="w-6 h-6 text-primary" /> Training Data (Internet)</h3>
-          <div className="flex-1 space-y-4 font-mono text-sm text-muted-foreground opacity-70 mb-8 bg-white/5 p-6 rounded-xl border border-white/5">
-            <p className="border-b border-white/5 pb-2">"The CEO walked into his office..."</p>
-            <p className="border-b border-white/5 pb-2">"The nurse checked her patient..."</p>
-            <p className="border-b border-white/5 pb-2">"The programmer adjusted his glasses..."</p>
-            <p>"The elementary teacher prepared her lesson..."</p>
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 flex-1 min-h-0">
+        <div className="bg-card/60 backdrop-blur-md border border-border/60 rounded-2xl md:rounded-3xl p-4 md:p-5 shadow-xl flex flex-col min-h-0">
+          <div className="flex items-center gap-2.5 mb-3 md:mb-4 shrink-0">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Database className="w-5 h-5" strokeWidth={1.5} />
+            </div>
+            <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight">Training Data (Internet)</h3>
           </div>
-          <button 
+          <div className="flex-1 space-y-1.5 md:space-y-2 font-mono text-xs md:text-sm text-muted-foreground/80 mb-3 md:mb-4 bg-muted/30 p-3 md:p-4 rounded-lg border border-border/40 overflow-y-auto min-h-0">
+            <p className="border-b border-border/30 pb-1.5">&ldquo;The CEO walked into his office...&rdquo;</p>
+            <p className="border-b border-border/30 pb-1.5">&ldquo;The nurse checked her patient...&rdquo;</p>
+            <p className="border-b border-border/30 pb-1.5">&ldquo;The programmer adjusted his glasses...&rdquo;</p>
+            <p>&ldquo;The elementary teacher prepared her lesson...&rdquo;</p>
+          </div>
+          <button
             onClick={() => setStep(1)}
-            disabled={step === 1}
-            className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${step === 1 ? 'bg-white/5 text-muted-foreground border border-white/10 shadow-none' : 'bg-primary hover:bg-primary/80 text-white'}`}
+            disabled={trained}
+            className={`w-full py-2.5 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card shrink-0 ${
+              trained
+                ? "bg-muted/40 text-muted-foreground border border-border/40 cursor-default"
+                : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+            }`}
           >
-            {step === 1 ? "Model Trained" : "Train AI Model"}
+            {trained ? "Model Trained" : "Train AI Model"}
           </button>
         </div>
 
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col">
-          <h3 className="font-bold text-2xl mb-6 text-white flex items-center gap-3"><Sparkles className="w-6 h-6 text-purple-500" /> Model Output</h3>
-          
-          <div className="flex-1 flex relative">
+        <div className="bg-card/60 backdrop-blur-md border border-border/60 rounded-2xl md:rounded-3xl p-4 md:p-5 shadow-xl relative overflow-hidden flex flex-col min-h-0">
+          <div className="flex items-center gap-2.5 mb-3 md:mb-4 shrink-0">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
+              <Sparkles className="w-5 h-5" strokeWidth={1.5} />
+            </div>
+            <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight">Model Output</h3>
+          </div>
+
+          <div className="flex-1 min-h-0 flex relative overflow-y-auto">
             <AnimatePresence mode="wait">
-              {step === 0 && (
-                <motion.div key="waiting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center text-muted-foreground flex-col h-full">
-                  <BrainCircuit className="w-16 h-16 opacity-20 mb-6" />
-                  <span className="text-lg font-medium">Awaiting training data...</span>
+              {step === 0 ? (
+                <motion.div
+                  key="waiting"
+                  initial={reduce ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={reduce ? { opacity: 0 } : { opacity: 0 }}
+                  transition={{ duration: reduce ? 0 : 0.2, ease: easeOutQuart }}
+                  className="absolute inset-0 flex items-center justify-center text-muted-foreground flex-col"
+                >
+                  <BrainCircuit className="w-10 h-10 md:w-12 md:h-12 opacity-20 mb-3" strokeWidth={1} />
+                  <span className="text-sm md:text-base font-medium">Awaiting training data...</span>
                 </motion.div>
-              )}
-              
-              {step === 1 && (
-                <motion.div key="output" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 w-full">
-                  <div className="bg-white/10 p-5 rounded-xl border border-white/10">
-                    <div className="text-xs text-white/50 mb-2 uppercase tracking-wider font-bold">User Prompt</div>
-                    <div className="text-base text-white">"Write a story about a successful CEO and a caring nurse."</div>
+              ) : (
+                <motion.div
+                  key="output"
+                  initial={reduce ? false : { opacity: 0, transform: "translateX(12px)" }}
+                  animate={{ opacity: 1, transform: "translateX(0)" }}
+                  exit={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateX(-12px)" }}
+                  transition={{ duration: reduce ? 0 : 0.25, ease: easeOutQuart }}
+                  className="space-y-3 md:space-y-4 w-full"
+                >
+                  <div className="bg-muted/40 p-3 md:p-4 rounded-lg border border-border/40">
+                    <div className="text-[10px] md:text-xs text-muted-foreground/70 mb-1.5 uppercase tracking-wider font-bold">User Prompt</div>
+                    <div className="text-sm md:text-base text-foreground">&ldquo;Write a story about a successful CEO and a caring nurse.&rdquo;</div>
                   </div>
-                  
-                  <div className="bg-purple-500/10 border border-purple-500/30 p-6 rounded-xl">
-                    <div className="text-xs text-purple-400 mb-2 uppercase tracking-wider font-bold">AI Generation</div>
-                    <div className="text-base leading-relaxed text-purple-100">
-                      "<span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">He</span> walked into the boardroom with confidence, knowing the company was thriving under <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">his</span> leadership. Meanwhile, at the hospital, the nurse checked on <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">her</span> patients, <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">her</span> gentle demeanor bringing comfort..."
+
+                  <div className="bg-secondary/5 border border-secondary/20 p-3 md:p-4 rounded-lg">
+                    <div className="text-[10px] md:text-xs text-secondary mb-1.5 uppercase tracking-wider font-bold">AI Generation</div>
+                    <div className="text-sm md:text-base leading-relaxed text-foreground/90">
+                      &ldquo;<span className="bg-orange-500/30 px-1 py-0.5 rounded font-medium border border-orange-500/40 text-orange-200">He</span> walked into the boardroom with confidence, knowing the company was thriving under <span className="bg-orange-500/30 px-1 py-0.5 rounded font-medium border border-orange-500/40 text-orange-200">his</span> leadership. Meanwhile, at the hospital, the nurse checked on <span className="bg-orange-500/30 px-1 py-0.5 rounded font-medium border border-orange-500/40 text-orange-200">her</span> patients, <span className="bg-orange-500/30 px-1 py-0.5 rounded font-medium border border-orange-500/40 text-orange-200">her</span> gentle demeanor bringing comfort...&rdquo;
                     </div>
                   </div>
-                  
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="mt-4 p-5 rounded-xl border-l-4 border-orange-500 bg-orange-500/10 text-sm text-orange-200/90 leading-relaxed">
-                    <strong className="text-orange-500 block mb-1">Notice:</strong> The AI automatically assigned "he" to the CEO and "her" to the nurse, reflecting the statistical bias in its training data, not factual rules.
+
+                  <motion.div
+                    initial={reduce ? false : { opacity: 0, transform: "translateY(8px)" }}
+                    animate={{ opacity: 1, transform: "translateY(0)" }}
+                    transition={{ duration: reduce ? 0 : 0.3, ease: easeOutQuart, delay: 0.5 }}
+                    className="p-3 md:p-4 rounded-lg border border-orange-500/30 bg-orange-500/10 flex items-start gap-2.5"
+                  >
+                    <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-orange-400 shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <div>
+                      <strong className="text-orange-400 block mb-0.5 text-xs md:text-sm uppercase tracking-wider">Notice</strong>
+                      <p className="text-xs md:text-sm text-orange-100/90 leading-relaxed">
+                        The AI automatically assigned &ldquo;he&rdquo; to the CEO and &ldquo;her&rdquo; to the nurse, reflecting the statistical bias in its training data, not factual rules.
+                      </p>
+                    </div>
                   </motion.div>
                 </motion.div>
               )}
@@ -1888,21 +2048,22 @@ function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
 }
 
 export const MODULE_1_SLIDES: Slide[] = [
-  { id: "m1-title", type: "interactive", fullWidth: true, component: <TitleSlide />, narrationText: "Welcome to Module 1: The Intelligence Illusion. Before we can effectively use Generative AI, we must demystify it. We must dismantle the notion that Large Language Models 'think' like humans, revealing them instead as highly sophisticated prediction engines. They are not a knowledge base; they don't store facts, but rather statistical probabilities of word combinations. They are not a reasoning engine; they cannot 'think' through a problem, but predict the most likely next step. And fundamentally, they act as a stochastic parrot—stitching language convincingly without actual comprehension. Understanding this architecture—from the input sequence through the transformer engine to the probability matrix for the next token—is the foundation of mastering AI." },
-  { id: "m1-video-whatis", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <VideoSlide url="https://www.youtube.com/watch?v=G2fqAlgmoPo" onComplete={mark} />, narrationText: "To break the intelligence illusion, we first need a shared understanding of how these models operate under the hood. This primer from Google Cloud Tech provides the perfect technical foundation. Please watch it before we continue." },
-  { id: "m1-timeline", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TimelineOfAI onComplete={mark} />, narrationText: "" },
-  { id: "m1-hollywood", type: "interactive", fullWidth: true, hasCustomAudio: true, requireCompletion: true, component: (mark) => <HollywoodVsReality onComplete={mark} />, narrationText: "It's critical to separate the Hollywood fantasy from reality. On one hand, we have Artificial General Intelligence, or AGI. In movies, this is depicted as sentient and self-aware, possessing human-like reasoning, and capable of performing any intellectual task. Currently, this remains science fiction. On the other hand, we have Narrow AI, which is what we use today. Narrow AI relies on highly specialized pattern matching, has absolutely no consciousness or intent, and is trained on specific datasets for specific tasks." },
-  { id: "m1-assessment-1", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <Assessment1 onComplete={mark} />, narrationText: "Before we move on to how machines actually learn, let's verify your understanding of what AI is and what it isn't. You must answer all questions correctly to proceed. Good luck!" },
-  { id: "m1-ml-intro", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <MachineLearningIntroSlide onComplete={mark} />, narrationText: "Instead of programming explicit rules, we give machines data and let them discover the patterns themselves through three main approaches. This is the foundation of Machine Learning. It shifts the paradigm from writing code that solves a problem, to writing code that learns how to solve a problem by observing examples." },
-  { id: "m1-ml-supervised", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <SupervisedLearningSlide onComplete={mark} />, narrationText: "The first approach is Supervised Learning. Think of this as the Classroom with an Answer Key. The model is given a dataset where every example is clearly labeled—like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns to map the inputs to the known outputs, allowing it to predict answers for new, unseen data." },
-  { id: "m1-ml-unsupervised", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <UnsupervisedLearningSlide onComplete={mark} />, narrationText: "The second approach is Unsupervised Learning. Imagine you are a Library Archeologist handed a massive pile of uncategorized, disorganized documents with no labels or answer key. Your job is to read through them and identify similarities to group them into logical clusters. This is exactly what the AI does—it finds hidden structures and patterns in raw data entirely on its own." },
-  { id: "m1-ml-reinforcement", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <ReinforcementLearningSlide onComplete={mark} />, narrationText: "The third approach is Reinforcement Learning. This is the Trial-and-Error Apprentice. The AI interacts with an environment and receives feedback in the form of rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, the model learns the optimal strategy to maximize its reward. This is how AI learns to play video games, balance robots, and navigate complex mazes." },
-  { id: "m1-neural-networks", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NeuralNetworksSlide onComplete={mark} />, narrationText: "To bridge the gap between simple machine learning and advanced language models, we must understand Deep Learning. Deep Learning uses Artificial Neural Networks—layers of interconnected nodes inspired by the human brain. Data passes through these layers, where millions or even billions of adjustable parameters, known as weights and biases, fine-tune the information. This architecture allows the model to learn incredibly complex patterns, setting the stage for models that can process human language." },
-  { id: "m1-generative-ai", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TransformersSlide onComplete={mark} />, narrationText: "How do these neural networks actually understand and generate text? The breakthrough came with the Transformer architecture. Instead of reading words one by one in order, the Transformer uses an 'attention mechanism' to look at the entire sequence of words simultaneously. It learns which words are contextually related to each other, no matter how far apart they are in a sentence. This massive leap in contextual understanding is what powers today's Generative AI." },
-  { id: "m1-next-token", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NextTokenSlide onComplete={mark} />, narrationText: "At its absolute core, an AI like ChatGPT does not think; it predicts. It is a highly sophisticated probability engine running Next-Token Prediction. When you give it a prompt, it calculates the mathematical probability of what the very next fragment of a word—a token—should be. It selects it, adds it to the sequence, and runs the entire calculation again. Furthermore, you can control this math. The 'Temperature' setting controls randomness—a low temperature forces the safest, most likely word, while a high temperature allows for risk and creativity. Similarly, 'Top-P' restricts the pool of possible words to only the top percentage of likely candidates. Mastering these controls allows you to shape the AI's behavior." },
-  { id: "m1-llm-vs-slm", type: "interactive", fullWidth: true, component: <LlmVsSlm />, narrationText: "Not all models need to know everything. Let's compare Large Language Models with Small Language Models. LLMs, like GPT-4 or Claude, are massive models with hundreds of billions of parameters. They require entire data centers to run. They have vast knowledge breadth, but computing costs are high, and your data privacy means information leaves your device. Conversely, SLMs, like Phi-3 or Llama 3 8B, are efficient models designed to run locally on your phone or laptop. Their knowledge breadth is more focused, but computing costs are extremely low, and your data stays completely local, ensuring maximum privacy." },
-  { id: "m1-anatomy", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <AnatomyOfPrompt onComplete={mark} />, narrationText: "How do we communicate with these models? We use Prompt Engineering to guide the context window. A perfect prompt typically has four anatomical parts. First, the Role: setting the persona, like 'You are an expert instructional designer.' This heavily weights the statistical model towards vocabulary and concepts associated with this role. Second, the Task: the specific action you want the AI to perform, like 'Write a 3-question multiple choice quiz'. Third, the Context: background information that prevents the model from making incorrect assumptions, such as 'The audience is adult learners'. And fourth, Constraints: strict boundaries on the output format, length, or tone, like 'Output only valid JSON'. Click through each one to explore." },
-  { id: "m1-hallucination", type: "interactive", fullWidth: true, component: <HallucinationSlide />, narrationText: "Because models are just predicting the next most likely token, they can sometimes invent facts entirely. We call this a hallucination. For example, if you ask 'What is the population of Mars?', an AI might respond: 'The current population of Mars is approximately 4,200 research scientists and engineers.' This is factually incorrect. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding. Always remember: the AI generates, but you evaluate." },
-  { id: "m1-bias", type: "interactive", fullWidth: true, component: <BiasInAI />, narrationText: "AI models learn from human data, making them a mirror of our systemic flaws. If the internet training data contains historical biases—like 'The CEO walked into his office' or 'The nurse checked her patient'—the model will reproduce them. When you prompt the trained AI to write a story about a CEO and a nurse, it will often automatically assign 'he' to the CEO and 'her' to the nurse. This reflects the statistical bias in its training data, not factual rules. We must be constantly vigilant of these inherited biases in AI generation." },
-  { id: "m1-quiz", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of this module. Please answer the following three questions to complete the section." }
+  { id: "m1-title", type: "interactive", lessonIndex: 0, fullWidth: true, component: <TitleSlide />, narrationText: "Welcome to Module 1: The Intelligence Illusion. Before we can effectively use Generative AI, we must demystify it. We must dismantle the notion that Large Language Models 'think' like humans, revealing them instead as highly sophisticated prediction engines. They are not a knowledge base; they don't store facts, but rather statistical probabilities of word combinations. They are not a reasoning engine; they cannot 'think' through a problem, but predict the most likely next step. And fundamentally, they act as a stochastic parrot—stitching language convincingly without actual comprehension. Understanding this architecture—from the input sequence through the transformer engine to the probability matrix for the next token—is the foundation of mastering AI." },
+  { id: "m1-video-whatis", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, component: (mark) => <VideoSlide url="https://www.youtube.com/watch?v=G2fqAlgmoPo" onComplete={mark} />, narrationText: "To break the intelligence illusion, we first need a shared understanding of how these models operate under the hood. This primer from Google Cloud Tech provides the perfect technical foundation. Please watch it before we continue." },
+  { id: "m1-timeline", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TimelineOfAI onComplete={mark} />, narrationText: "" },
+  { id: "m1-hollywood", type: "interactive", lessonIndex: 0, fullWidth: true, hasCustomAudio: true, requireCompletion: true, component: (mark) => <HollywoodVsReality onComplete={mark} />, narrationText: "It's critical to separate the Hollywood fantasy from reality. On one hand, we have Artificial General Intelligence, or AGI. In movies, this is depicted as sentient and self-aware, possessing human-like reasoning, and capable of performing any intellectual task. Currently, this remains science fiction. On the other hand, we have Narrow AI, which is what we use today. Narrow AI relies on highly specialized pattern matching, has absolutely no consciousness or intent, and is trained on specific datasets for specific tasks." },
+  { id: "m1-assessment-1", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, component: (mark) => <Assessment1 onComplete={mark} />, narrationText: "Before we move on to how machines actually learn, let's verify your understanding of what AI is and what it isn't. You must answer all questions correctly to proceed. Good luck!" },
+  { id: "m1-ml-intro", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <MachineLearningIntroSlide onComplete={mark} />, narrationText: "Instead of programming explicit rules, we give machines data and let them discover the patterns themselves through three main approaches. This is the foundation of Machine Learning. It shifts the paradigm from writing code that solves a problem, to writing code that learns how to solve a problem by observing examples." },
+  { id: "m1-ml-supervised", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <SupervisedLearningSlide onComplete={mark} />, narrationText: "The first approach is Supervised Learning. Think of this as the Classroom with an Answer Key. The model is given a dataset where every example is clearly labeled—like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns to map the inputs to the known outputs, allowing it to predict answers for new, unseen data." },
+  { id: "m1-ml-unsupervised", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <UnsupervisedLearningSlide onComplete={mark} />, narrationText: "The second approach is Unsupervised Learning. Imagine you are a Library Archeologist handed a massive pile of uncategorized, disorganized documents with no labels or answer key. Your job is to read through them and identify similarities to group them into logical clusters. This is exactly what the AI does—it finds hidden structures and patterns in raw data entirely on its own." },
+  { id: "m1-ml-reinforcement", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <ReinforcementLearningSlide onComplete={mark} />, narrationText: "The third approach is Reinforcement Learning. This is the Trial-and-Error Apprentice. The AI interacts with an environment and receives feedback in the form of rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, the model learns the optimal strategy to maximize its reward. This is how AI learns to play video games, balance robots, and navigate complex mazes." },
+  { id: "m1-neural-networks", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NeuralNetworksSlide onComplete={mark} />, narrationText: "To bridge the gap between simple machine learning and advanced language models, we must understand Deep Learning. Deep Learning uses Artificial Neural Networks—layers of interconnected nodes inspired by the human brain. Data passes through these layers, where millions or even billions of adjustable parameters, known as weights and biases, fine-tune the information. This architecture allows the model to learn incredibly complex patterns, setting the stage for models that can process human language." },
+  { id: "m1-generative-ai", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TransformersSlide onComplete={mark} />, narrationText: "How do these neural networks actually understand and generate text? The breakthrough came with the Transformer architecture. Instead of reading words one by one in order, the Transformer uses an 'attention mechanism' to look at the entire sequence of words simultaneously. It learns which words are contextually related to each other, no matter how far apart they are in a sentence. This massive leap in contextual understanding is what powers today's Generative AI." },
+  { id: "m1-next-token", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NextTokenSlide onComplete={mark} />, narrationText: "At its absolute core, an AI like ChatGPT does not think; it predicts. It is a highly sophisticated probability engine running Next-Token Prediction. When you give it a prompt, it calculates the mathematical probability of what the very next fragment of a word—a token—should be. It selects it, adds it to the sequence, and runs the entire calculation again. Furthermore, you can control this math. The 'Temperature' setting controls randomness—a low temperature forces the safest, most likely word, while a high temperature allows for risk and creativity. Similarly, 'Top-P' restricts the pool of possible words to only the top percentage of likely candidates. Mastering these controls allows you to shape the AI's behavior." },
+  { id: "m1-llm-vs-slm", type: "interactive", lessonIndex: 2, fullWidth: true, component: <LlmVsSlm />, narrationText: "Not all models need to know everything. Let's compare Large Language Models with Small Language Models. LLMs, like GPT-4 or Claude, are massive models with hundreds of billions of parameters. They require entire data centers to run. They have vast knowledge breadth, but computing costs are high, and your data privacy means information leaves your device. Conversely, SLMs, like Phi-3 or Llama 3 8B, are efficient models designed to run locally on your phone or laptop. Their knowledge breadth is more focused, but computing costs are extremely low, and your data stays completely local, ensuring maximum privacy." },
+  { id: "m1-ml-dnn-llm-assessment", type: "interactive", lessonIndex: 2, fullWidth: true, requireCompletion: true, component: (mark) => <MlDnnLlmAssessment onComplete={mark} />, narrationText: "Now it's time to check your understanding of the machine learning, deep learning, neural networks, transformers, and LLMs and SLMs section. You will be asked ten questions. You must answer every question correctly to continue. Take your time and read each question carefully." },
+  { id: "m1-anatomy", type: "interactive", lessonIndex: 3, fullWidth: true, requireCompletion: true, component: (mark) => <AnatomyOfPrompt onComplete={mark} />, narrationText: "How do we communicate with these models? We use Prompt Engineering to guide the context window. A perfect prompt typically has four anatomical parts. First, the Role: setting the persona, like 'You are an expert instructional designer.' This heavily weights the statistical model towards vocabulary and concepts associated with this role. Second, the Task: the specific action you want the AI to perform, like 'Write a 3-question multiple choice quiz'. Third, the Context: background information that prevents the model from making incorrect assumptions, such as 'The audience is adult learners'. And fourth, Constraints: strict boundaries on the output format, length, or tone, like 'Output only valid JSON'. Click through each one to explore." },
+  { id: "m1-hallucination", type: "interactive", lessonIndex: 4, fullWidth: true, component: <HallucinationSlide />, narrationText: "Because models are just predicting the next most likely token, they can sometimes invent facts entirely. We call this a hallucination. For example, if you ask 'What is the population of Mars?', an AI might respond: 'The current population of Mars is approximately 4,200 research scientists and engineers.' This is factually incorrect. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding. Always remember: the AI generates, but you evaluate." },
+  { id: "m1-bias", type: "interactive", lessonIndex: 4, fullWidth: true, component: <BiasInAI />, narrationText: "AI models learn from human data, making them a mirror of our systemic flaws. If the internet training data contains historical biases—like 'The CEO walked into his office' or 'The nurse checked her patient'—the model will reproduce them. When you prompt the trained AI to write a story about a CEO and a nurse, it will often automatically assign 'he' to the CEO and 'her' to the nurse. This reflects the statistical bias in its training data, not factual rules. We must be constantly vigilant of these inherited biases in AI generation." },
+  { id: "m1-quiz", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of this module. Please answer the following three questions to complete the section." }
 ];
