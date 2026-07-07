@@ -1,0 +1,1908 @@
+"use client";
+
+import { useEffect, useRef, useState, cloneElement, ReactElement, Fragment } from "react";
+import gsap from "gsap";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNarrationStore } from "@/store/narration";
+import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
+import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
+import { 
+  BrainCircuit, Cpu, ShieldAlert, Sparkles, MessageSquare, 
+  Database, Layers, CheckCircle2, ChevronRight, XCircle, 
+  History, Network, Scale, TestTube, AlertTriangle, 
+  ChevronLeft, ArrowRight, BookOpen, Smartphone, Cloud,
+  Code, Briefcase, Rocket, Play, LayoutGrid, Zap, Shield, 
+  Users, Binary, Eye, Lock, X
+} from "lucide-react";
+
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any;
+
+// 1. Title Slide
+function TitleSlide() {
+  const { isPlaying } = useNarrationStore();
+  const tl = useRef<gsap.core.Timeline | null>(null);
+  
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
+  
+  const rightColRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timeline = gsap.timeline({ paused: true });
+    
+    // Welcome to Module 1: The Intelligence Illusion.
+    timeline.fromTo(headingRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 0.5);
+    // Before we can effectively use Generative AI...
+    timeline.fromTo(subtitleRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 3.5);
+    
+    // Timings mapped to the voiceover script:
+    // "They are not a knowledge base..." (~13s)
+    // "They are not a reasoning engine..." (~21s)
+    // "And fundamentally, they act as a stochastic parrot..." (~28s)
+    const listTimings = [13, 21, 28];
+    listItemsRef.current.forEach((el, index) => {
+      if (el) {
+        timeline.fromTo(el, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }, listTimings[index]);
+      }
+    });
+
+    // Reveal graphic asset alongside subtitle text (~3.5s)
+    timeline.fromTo(rightColRef.current, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 1, ease: "power4.out" }, 3.5);
+
+    tl.current = timeline;
+    return () => { timeline.kill(); };
+  }, []);
+
+  useEffect(() => {
+    if (tl.current) {
+      if (isPlaying) tl.current.play();
+      else tl.current.pause();
+    }
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex items-center justify-center p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
+        <div className="flex flex-col justify-center order-2 lg:order-1 text-left">
+          <h1 ref={headingRef} className="opacity-0 text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-4 text-foreground leading-[1.1]">
+            The Intelligence <span className="text-primary">Illusion</span>
+          </h1>
+          
+          <p ref={subtitleRef} className="opacity-0 text-sm lg:text-base text-muted-foreground leading-relaxed mb-6 max-w-xl">
+            Before we can effectively use AI, we must demystify it. We must dismantle the notion that Large Language Models "think" like humans, revealing them instead as highly sophisticated prediction engines.
+          </p>
+
+          <ul className="space-y-4 max-w-md">
+            {[
+              { title: "Not a Knowledge Base", desc: "LLMs don't store facts; they store statistical probabilities of word combinations.", icon: Database },
+              { title: "Not a Reasoning Engine", desc: "They cannot 'think' through a problem; they predict the most likely next step.", icon: BrainCircuit },
+              { title: "A Stochastic Parrot", desc: "They stitch language convincingly without actual comprehension.", icon: MessageSquare }
+            ].map((item, i) => (
+              <li 
+                key={i} 
+                ref={el => { listItemsRef.current[i] = el; }}
+                className="opacity-0 flex gap-3 items-start"
+              >
+                <div className="mt-0.5 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20 text-primary">
+                  <item.icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground text-base leading-none mb-1">{item.title}</h4>
+                  <p className="text-xs text-muted-foreground leading-snug">{item.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div ref={rightColRef} className="order-1 lg:order-2 opacity-0 relative w-full h-[350px] lg:h-[450px] rounded-3xl border border-white/10 shadow-2xl flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/neural_network_nodes.jpg"
+              alt="Neural Network Nodes"
+              className="w-full h-full object-cover opacity-60"
+            />
+            <div className="absolute inset-0 bg-black/60" />
+            <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
+          </div>
+          
+          <div className="relative z-10 w-full max-w-sm px-6 flex flex-col gap-6">
+            <div className="flex justify-center gap-2">
+               {["The", "quick", "brown"].map((word, i) => (
+                 <motion.div 
+                   key={i}
+                   initial={{ opacity: 0, y: -10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.2 + (i * 0.1), duration: 0.5 }}
+                   className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg font-mono text-xs border border-white/20 text-foreground shadow-sm"
+                 >
+                   {word}
+                 </motion.div>
+               ))}
+            </div>
+            
+            <div className="relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-px h-6 bg-gradient-to-b from-transparent to-primary/50" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-px h-6 bg-gradient-to-t from-transparent to-primary/50" />
+              
+              <motion.div 
+                animate={{ 
+                  boxShadow: ["0 0 0px rgba(167,218,219,0)", "0 0 40px rgba(167,218,219,0.25)", "0 0 0px rgba(167,218,219,0)"]
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="bg-black/50 backdrop-blur-xl border border-primary/40 rounded-2xl p-5 text-center relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
+                <motion.div 
+                  animate={{ y: ["-100%", "200%"] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-full h-1/2 bg-gradient-to-b from-transparent via-primary/20 to-transparent blur-md"
+                />
+                
+                <div className="relative z-10">
+                  <Layers className="w-8 h-8 text-primary mx-auto mb-2 drop-shadow-md" />
+                  <div className="font-bold tracking-widest uppercase text-primary text-xs mb-1 drop-shadow-sm">Transformer Engine</div>
+                  <div className="text-[9px] text-primary/80 font-mono">Attention Mechanism Active</div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="bg-black/50 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-xl relative z-10">
+              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Token Probabilities</span>
+                <Network className="w-3 h-3 text-primary" />
+              </div>
+              
+              <div className="space-y-2 font-mono text-xs">
+                {[
+                  { word: "fox", prob: "85.2%", width: "85%", color: "bg-primary" },
+                  { word: "dog", prob: "12.4%", width: "12%", color: "bg-primary/50" },
+                  { word: "cat", prob: "2.1%", width: "3%", color: "bg-primary/20" }
+                ].map((item, i) => (
+                   <div key={i} className="flex items-center gap-3">
+                     <div className="w-8 text-white/90">{item.word}</div>
+                     <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: item.width }}
+                         transition={{ delay: 0.8 + (i * 0.2), duration: 0.8, ease: "easeOut" }}
+                         className={`h-full ${item.color} rounded-full`} 
+                       />
+                     </div>
+                     <div className="w-10 text-right text-muted-foreground font-semibold">{item.prob}</div>
+                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 2. Video Slide
+function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }) {
+  const { isPlaying, isFinished } = useNarrationStore();
+  const tl = useRef<gsap.core.Timeline | null>(null);
+
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const videoRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  
+  // Extract YouTube ID for embed URL
+  const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
+
+  useEffect(() => {
+    const timeline = gsap.timeline({ paused: true });
+    
+    // "To break the intelligence illusion..."
+    timeline.fromTo(titleRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, 0.5);
+    timeline.fromTo(textRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, 3);
+    
+    // "Please watch this short video..."
+    timeline.fromTo(videoRef.current, { opacity: 0, scale: 0.97, x: -20 }, { opacity: 1, scale: 1, x: 0, duration: 1, ease: "power4.out" }, 6);
+    
+    tl.current = timeline;
+    return () => { timeline.kill(); };
+  }, []);
+
+  useEffect(() => {
+    if (tl.current) {
+      if (isPlaying) tl.current.play();
+      else tl.current.pause();
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (isFinished && ctaRef.current) {
+      gsap.fromTo(ctaRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
+    }
+  }, [isFinished]);
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center mx-auto px-6 md:px-10 lg:px-12 overflow-hidden">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        {/* Left Column - Video */}
+        <div className="order-2 lg:order-1">
+           <div ref={videoRef} className="opacity-0 w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black relative">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src={`https://www.youtube.com/embed/${videoId}?rel=0`} 
+                title="Generative AI Explained" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              >
+              </iframe>
+           </div>
+        </div>
+
+        {/* Right Column - Text */}
+        <div className="flex flex-col justify-center order-1 lg:order-2 text-left py-2">
+          <div>
+            <h2 ref={titleRef} className="opacity-0 text-3xl md:text-4xl font-bold tracking-tight mb-4 text-foreground leading-[1.1]">Deconstructing the "Magic"</h2>
+            <p ref={textRef} className="opacity-0 text-sm md:text-base text-muted-foreground leading-relaxed mb-6 max-w-xl">
+              To break the intelligence illusion, we first need a shared understanding of how these models operate under the hood. This primer from Google Cloud Tech provides the perfect technical foundation.
+            </p>
+          </div>
+          
+          <div ref={ctaRef} className="opacity-0 bg-primary/5 border border-primary/20 rounded-xl p-5 relative overflow-hidden flex flex-col shadow-sm w-full">
+            <div className="relative z-10 flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-border shadow-sm flex items-center justify-center bg-white text-blue-500 font-black text-xs tracking-tighter">
+                GCP
+              </div>
+              <div>
+                <p className="font-bold text-foreground text-sm leading-tight">Support the Creator</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Created by <strong className="text-foreground">Google Cloud Tech</strong>. Highly recommend subscribing to their channel.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 w-full relative z-10">
+              <Button className="flex-1 h-9 text-xs bg-[#FF0000] hover:bg-[#CC0000] text-white border-none transition-colors group/btn shadow-md" asChild>
+                <a href="https://www.youtube.com/@googlecloudtech" target="_blank" rel="noopener noreferrer">
+                  Subscribe
+                  <ArrowRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                </a>
+              </Button>
+              <Button className="flex-1 h-9 text-xs group/btn bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30" variant="outline" onClick={() => {
+                onComplete();
+              }}>
+                Mark Watched
+                <CheckCircle2 className="w-3 h-3 ml-1 group-hover/btn:scale-110 transition-transform" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 3. Timeline of AI
+function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [unlockedIdx, setUnlockedIdx] = useState(0);
+  const [introFinished, setIntroFinished] = useState(false);
+  const [waitingForInteraction, setWaitingForInteraction] = useState(false);
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const milestones = [
+    { 
+      year: "1950", 
+      title: "The Turing Test", 
+      desc: "Alan Turing proposes a thought experiment to evaluate machine intelligence based on its indistinguishability from human responses. This sets the philosophical foundation for AI.",
+      icon: <Cpu className="w-5 h-5" /> 
+    },
+    { 
+      year: "1997", 
+      title: "Deep Blue", 
+      desc: "IBM's Deep Blue defeats world chess champion Garry Kasparov. This watershed moment proves that rule-based, narrow AI can outmaneuver human genius in highly constrained environments.",
+      icon: <BrainCircuit className="w-5 h-5" />
+    },
+    { 
+      year: "2012", 
+      title: "AlexNet", 
+      desc: "A deep learning neural network crushes the competition in image recognition by leveraging GPUs. This triggers the modern AI boom, proving the viability of deep learning.",
+      icon: <Eye className="w-5 h-5" />
+    },
+    { 
+      year: "2017", 
+      title: "Transformers", 
+      desc: (
+        <>
+          Google researchers publish <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-all font-medium">{"'Attention Is All You Need'"}</a>, introducing the transformer architecture. This fundamentally shifts how machines process language and context.
+        </>
+      ),
+      icon: <Network className="w-5 h-5" />
+    },
+    { 
+      year: "2022", 
+      title: "ChatGPT", 
+      desc: "OpenAI releases ChatGPT, combining transformers with conversational interfaces. It marks the moment LLM technology becomes accessible and actionable for the general public.",
+      icon: <Sparkles className="w-5 h-5" />
+    }
+  ];
+
+  const loadAndPlayAudio = (track: "intro" | number) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    const audioName = track === "intro" ? "m1-timeline-intro" : `m1-timeline-${track}`;
+    const audio = new Audio(`/audio/${audioName}.mp3`);
+    audioRef.current = audio;
+    
+    // Play with global narration store
+    play(audioName, 50000);
+    audio.play().catch(() => {});
+
+    audio.onended = () => {
+      pause();
+      if (track === "intro") {
+        setIntroFinished(true);
+        loadAndPlayAudio(0);
+      } else {
+        if (track === unlockedIdx && track < 4) {
+          setUnlockedIdx(track + 1);
+          setWaitingForInteraction(true);
+        } else if (track < unlockedIdx) {
+          setWaitingForInteraction(true);
+        }
+        
+        if (track === 4) {
+          setWaitingForInteraction(false);
+          if (onComplete) {
+            onComplete();
+          }
+          finish();
+        }
+      }
+    };
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      loadAndPlayAudio("intro");
+    }, 100);
+    return () => {
+      clearTimeout(t);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) {
+      audioRef.current.play().catch(() => {});
+    } else if (!isPlaying && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
+
+  const handleNodeClick = (idx: number) => {
+    if (idx <= unlockedIdx) {
+      setWaitingForInteraction(false);
+      setActiveIdx(idx);
+      loadAndPlayAudio(idx);
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col p-6 md:p-10 max-w-6xl mx-auto overflow-hidden">
+      <div className="text-left w-full max-w-3xl mb-8 shrink-0">
+        <motion.h2 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-3xl md:text-5xl font-bold tracking-tight mb-3 text-foreground leading-[1.1]"
+        >
+          How Did We Get Here?
+        </motion.h2>
+        <motion.p 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.5 }}
+          className="text-base md:text-lg text-muted-foreground leading-relaxed"
+        >
+          Artificial Intelligence isn't magic that appeared overnight. It has evolved over decades from rigid, rule-based systems to the dynamic neural networks of today.
+        </motion.p>
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, filter: "blur(10px)" }}
+        animate={{ opacity: introFinished ? 1 : 0, filter: introFinished ? "blur(0px)" : "blur(10px)", pointerEvents: introFinished ? "auto" : "none" }}
+        transition={{ duration: 1 }}
+        className="w-full flex-1 flex flex-col"
+      >
+        <div className="relative w-full px-4 md:px-8 shrink-0 mb-8 mt-4">
+        <div className="flex justify-between items-start relative z-10">
+          {milestones.map((m, i) => {
+            const isUnlocked = i <= unlockedIdx;
+            const isActive = i === activeIdx;
+            const isNextTarget = waitingForInteraction && i === unlockedIdx;
+            
+            return (
+              <Fragment key={i}>
+                <div 
+                  onClick={() => handleNodeClick(i)}
+                  className={`flex flex-col items-center group transition-all duration-300 relative shrink-0 ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-40 grayscale'}`}
+                >
+                  <div className="relative">
+                    {/* Radar Ping Effect */}
+                    {isNextTarget && (
+                      <motion.div
+                        initial={{ opacity: 0.9, scale: 0.8, filter: "blur(8px)" }}
+                        animate={{ opacity: 0, scale: 2.2, filter: "blur(16px)" }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                        className="absolute inset-0 rounded-full bg-primary"
+                      />
+                    )}
+                    
+                    <div className={`w-14 h-14 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 relative z-10 backdrop-blur-xl ${isActive ? 'border-primary bg-primary/20 scale-110 shadow-[0_0_30px_rgba(167,218,219,0.3)]' : isNextTarget ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(167,218,219,0.4)] scale-105' : isUnlocked ? 'border-primary/50 bg-background/90 group-hover:border-primary group-hover:bg-primary/10' : 'border-white/10 bg-background/90'}`}>
+                      {!isUnlocked ? <Lock className="w-5 h-5 text-muted-foreground" /> : cloneElement(m.icon as ReactElement<{ className?: string }>, { className: `w-6 h-6 ${isActive || isNextTarget ? 'text-primary drop-shadow-[0_0_8px_rgba(167,218,219,0.5)]' : 'text-muted-foreground group-hover:text-primary'}` })}
+                    </div>
+                  </div>
+
+                  <span className={`mt-4 font-bold text-sm tracking-widest transition-colors ${(isActive || isNextTarget) ? 'text-primary drop-shadow-[0_0_8px_rgba(167,218,219,0.5)]' : isUnlocked ? 'text-foreground/80' : 'text-muted-foreground'}`}>{m.year}</span>
+                </div>
+                
+                {i < milestones.length - 1 && (
+                  <div className="flex-1 h-1.5 mx-2 md:mx-4 mt-[25px] rounded-full bg-white/5 relative">
+                    <motion.div 
+                      className="h-full rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary shadow-[0_0_15px_rgba(167,218,219,0.5)]"
+                      initial={{ width: "0%" }}
+                      animate={{ width: unlockedIdx > i ? "100%" : "0%" }}
+                      transition={{ duration: 0.8, ease: "easeInOut" }}
+                    />
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+        <div className="w-full relative h-[220px] shrink-0 mt-auto mb-2 md:mb-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIdx}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              className="absolute inset-0 bg-gradient-to-br from-card/80 to-card/30 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-center shadow-xl"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                 <div className="p-2.5 bg-primary/10 rounded-xl text-primary border border-primary/20">
+                   {milestones[activeIdx].icon}
+                 </div>
+                 <h3 className="text-xl md:text-2xl font-bold text-foreground">{milestones[activeIdx].title}</h3>
+              </div>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-4xl">
+                {milestones[activeIdx].desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
+// 4. Hollywood vs Reality
+function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
+  const [t, setT] = useState(0);
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/audio/m1-hollywood.mp3");
+    audioRef.current = audio;
+    
+    const handleTimeUpdate = () => {
+      setT(audio.currentTime);
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.onended = () => {
+      pause();
+      if (onComplete) onComplete();
+      finish();
+    };
+
+    const timer = setTimeout(() => {
+      play("m1-hollywood", 36500);
+      audio.play().catch(() => {});
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  const cardVariant: any = {
+    hidden: { opacity: 0, y: 40, scale: 0.95, filter: "blur(15px)" },
+    visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 1, ease: "easeOut" } }
+  };
+  
+  const itemVariant: any = {
+    hidden: { opacity: 0, x: -15, filter: "blur(4px)" },
+    visible: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+  };
+
+  const showAgiCard = t > 4.2;
+  const showAgi1 = t > 9.5;
+  const showAgi2 = t > 13.5;
+  const showAgi3 = t > 15.5;
+  const showAgiStatus = t > 18.5;
+
+  const showNarrowCard = t > 21.0;
+  const showNarrowStatus = t > 24.5;
+  const showNarrow1 = t > 27.5;
+  const showNarrow2 = t > 31.0;
+  const showNarrow3 = t > 33.5;
+
+  return (
+    <div className="w-full h-full flex flex-col items-center p-4 md:p-6 max-w-7xl mx-auto overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="mb-6 md:mb-8 shrink-0 text-center"
+      >
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-foreground leading-[1.1]">
+          Hollywood <span className="text-muted-foreground font-light px-2">vs</span> Reality
+        </h2>
+        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+          It's critical to separate science fiction fantasy from the actual technology we use today.
+        </p>
+      </motion.div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-5xl relative z-10 flex-1 min-h-0">
+        
+        {/* AGI Card */}
+        <AnimatePresence>
+          {showAgiCard && (
+            <motion.div 
+              variants={cardVariant}
+              initial="hidden"
+              animate="visible"
+              className="bg-card/40 backdrop-blur-xl border border-red-500/20 rounded-3xl p-2 shadow-2xl relative group flex flex-col overflow-hidden h-full max-h-full"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-purple-500/5 opacity-50 z-0 pointer-events-none" />
+              
+              <div className="w-full h-32 md:h-40 relative rounded-2xl overflow-hidden mb-4 z-10 shrink-0">
+                <img src="/images/agi.jpg" alt="AGI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                <div className="absolute bottom-3 left-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-red-500/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-red-500/30 text-red-400">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground drop-shadow-md">AGI</h3>
+                </div>
+              </div>
+
+              <div className="px-4 pb-4 flex-1 flex flex-col z-10 overflow-hidden">
+                <h4 className="text-[11px] font-bold tracking-widest uppercase text-red-500/80 mb-3 shrink-0">Artificial General Intelligence</h4>
+                <ul className="space-y-3 text-sm text-muted-foreground flex-1 overflow-y-auto pr-2">
+                  <AnimatePresence>
+                    {showAgi1 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
+                        <span className="leading-snug">Sentient and self-aware</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence>
+                    {showAgi2 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
+                        <span className="leading-snug">Possesses human-like reasoning and intuition</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence>
+                    {showAgi3 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
+                        <span className="leading-snug">Can perform any intellectual task a human can</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                </ul>
+                <div className="mt-4 pt-3 border-t border-red-500/20 flex justify-between items-center shrink-0 min-h-[32px]">
+                  <AnimatePresence>
+                    {showAgiStatus && (
+                      <>
+                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-bold tracking-widest text-red-500/60 uppercase">Status</motion.span>
+                        <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-xs font-medium text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">Science Fiction</motion.span>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Narrow AI Card */}
+        <AnimatePresence>
+          {showNarrowCard && (
+            <motion.div 
+              variants={cardVariant}
+              initial="hidden"
+              animate="visible"
+              className="bg-card/40 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-2 shadow-2xl relative group flex flex-col overflow-hidden h-full max-h-full"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 opacity-50 z-0 pointer-events-none" />
+              
+              <div className="w-full h-32 md:h-40 relative rounded-2xl overflow-hidden mb-4 z-10 shrink-0">
+                <img src="/images/narrow_ai.jpg" alt="Narrow AI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                <div className="absolute bottom-3 left-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-500/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-emerald-500/30 text-emerald-400">
+                    <Network className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground drop-shadow-md">Narrow AI</h3>
+                </div>
+              </div>
+
+              <div className="px-4 pb-4 flex-1 flex flex-col z-10 overflow-hidden">
+                <h4 className="text-[11px] font-bold tracking-widest uppercase text-emerald-500/80 mb-3 shrink-0">Applied Machine Learning</h4>
+                <ul className="space-y-3 text-sm text-muted-foreground flex-1 overflow-y-auto pr-2">
+                  <AnimatePresence>
+                    {showNarrow1 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> 
+                        <span className="leading-snug">Highly specialized pattern matching & prediction</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence>
+                    {showNarrow2 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> 
+                        <span className="leading-snug">Absolutely no consciousness, intent, or self-awareness</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence>
+                    {showNarrow3 && (
+                      <motion.li variants={itemVariant} initial="hidden" animate="visible" className="flex gap-2.5 items-start">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> 
+                        <span className="leading-snug">Trained on specific datasets for specific tasks only</span>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                </ul>
+                <div className="mt-4 pt-3 border-t border-emerald-500/20 flex justify-between items-center shrink-0 min-h-[32px]">
+                  <AnimatePresence>
+                    {showNarrowStatus && (
+                      <>
+                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-bold tracking-widest text-emerald-500/60 uppercase">Status</motion.span>
+                        <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">What We Use Today</motion.span>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+    </div>
+  );
+}
+
+// 5. Assessment 1
+function Assessment1({ onComplete }: { onComplete?: () => void }) {
+  const { goToSlide, setNavOverride } = useCanvasNav();
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [status, setStatus] = useState<'answering' | 'feedback'>('answering');
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [quizFinished, setQuizFinished] = useState(false);
+
+  const questions = [
+    {
+      q: "What does the acronym LLM stand for?",
+      options: ["Large Language Model", "Logical Learning Machine", "Local Language Module", "Linear Learning Mechanism"],
+      correct: 0,
+      explanation: "LLM stands for Large Language Model. These are massive statistical models trained on vast amounts of text."
+    },
+    {
+      q: "Generative AI is best described as:",
+      options: ["A reasoning engine capable of critical thinking", "A knowledge base storing factual data", "A sophisticated prediction engine", "A sentient entity"],
+      correct: 2,
+      explanation: "Generative AI doesn't 'think' or retrieve stored facts; it acts as a highly sophisticated prediction engine, calculating the most statistically probable next token."
+    },
+    {
+      q: "Which of the following is NOT an attribute of Artificial General Intelligence (AGI)?",
+      options: ["Sentience and self-awareness", "Highly specialized pattern matching", "Human-like reasoning", "Ability to perform any intellectual task"],
+      correct: 1,
+      explanation: "Highly specialized pattern matching is a characteristic of Narrow AI. AGI, which remains science fiction, involves generalized, human-like intelligence across any domain."
+    },
+    {
+      q: "What type of AI do we currently use today?",
+      options: ["Narrow AI", "Artificial General Intelligence (AGI)", "Sentient AI", "Superintelligent AI"],
+      correct: 0,
+      explanation: "Every AI application we use today, from ChatGPT to self-driving cars, relies on Narrow AI optimized for specific tasks."
+    },
+    {
+      q: "Which architecture, introduced by Google researchers in 2017, fundamentally shifted how machines process language and context?",
+      options: ["Convolutional Neural Networks", "Recurrent Neural Networks", "Transformers", "The Turing Machine"],
+      correct: 2,
+      explanation: "The 'Attention Is All You Need' paper introduced the Transformer architecture, which allowed models to process entire sequences of text contextually."
+    },
+    {
+      q: "Which statement best describes a 'Stochastic Parrot'?",
+      options: ["An AI that repeats information with perfect human comprehension", "An AI that stitches language convincingly without actual comprehension", "A reasoning engine that stores factual knowledge", "An AI used exclusively for biological research"],
+      correct: 1,
+      explanation: "A stochastic parrot stitches language together based on probabilistic patterns, creating convincing text without any actual understanding of the meaning."
+    },
+    {
+      q: "What event in 2012 marked a major turning point for Deep Learning?",
+      options: ["The proposal of the Turing Test", "IBM's Deep Blue defeating Garry Kasparov", "AlexNet winning the ImageNet competition", "The launch of ChatGPT"],
+      correct: 2,
+      explanation: "AlexNet's victory in 2012 demonstrated the overwhelming power of deep neural networks, kicking off the modern AI boom."
+    },
+    {
+      q: "Alan Turing's 1950 paper proposed an experiment to:",
+      options: ["Introduce the first neural network", "Evaluate machine intelligence based on its indistinguishability from human responses", "Prove that machines can feel emotions", "Program the first logic theorist"],
+      correct: 1,
+      explanation: "The Turing Test was proposed to assess machine intelligence strictly by evaluating if its responses could convincingly imitate a human."
+    },
+    {
+      q: "What is the primary characteristic of Narrow AI?",
+      options: ["It has intent and self-awareness", "It performs highly specialized pattern matching based on specific datasets", "It can seamlessly switch between completely unrelated intellectual domains", "It is currently considered science fiction"],
+      correct: 1,
+      explanation: "Narrow AI lacks consciousness and operates strictly within its trained domain, relying on specific datasets to recognize patterns."
+    },
+    {
+      q: "Large Language Models process text by:",
+      options: ["Retrieving facts from a massive internal database", "Using a probability matrix to predict the most likely next token", "Fact-checking information against the live internet before answering", "Using symbolic logic to reason through a prompt"],
+      correct: 1,
+      explanation: "LLMs do not store factual databases; they rely on a vast probability matrix to statistically predict the most likely next token in a sequence."
+    }
+  ];
+
+  const handleSubmit = () => {
+    const correct = selected === questions[currentQ].correct;
+    setIsCorrect(correct);
+    setStatus('feedback');
+  };
+
+  const handleContinue = () => {
+    if (isCorrect) {
+      if (currentQ < questions.length - 1) {
+        setCurrentQ(q => q + 1);
+        setSelected(null);
+        setStatus('answering');
+        setIsCorrect(null);
+      } else {
+        setQuizFinished(true);
+      }
+    } else {
+      setSelected(null);
+      setStatus('answering');
+      setIsCorrect(null);
+    }
+  };
+
+  useEffect(() => {
+    if (quizFinished) {
+      if (onComplete) {
+        onComplete();
+      }
+      setNavOverride(null);
+    } else if (status === 'answering') {
+      setNavOverride({
+        nextLabel: "Submit",
+        onNext: handleSubmit,
+        nextDisabled: selected === null
+      });
+    } else if (status === 'feedback') {
+      setNavOverride({
+        nextLabel: "Continue",
+        onNext: handleContinue,
+        nextDisabled: false
+      });
+    }
+    return () => setNavOverride(null);
+  }, [currentQ, selected, status, quizFinished]);
+
+  if (quizFinished) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-card border border-border p-8 md:p-12 rounded-3xl shadow-2xl flex flex-col items-center w-full max-w-2xl text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-emerald-500/5" />
+          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mb-6 border border-emerald-500/20 relative z-10">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 relative z-10">Assessment Complete!</h2>
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 relative z-10">You've successfully demonstrated your understanding of what AI actually is.</p>
+          <div className="text-5xl font-black text-emerald-500 relative z-10">10/10</div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const q = questions[currentQ];
+
+  return (
+    <div className="w-full h-full relative overflow-hidden flex flex-col">
+      <div className="w-full h-full flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto w-full flex-1">
+        <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
+          <h2 className="text-sm md:text-base font-bold text-muted-foreground tracking-widest uppercase">Knowledge Check</h2>
+          <div className="text-primary font-medium bg-primary/10 px-3 py-1 rounded-full border border-primary/20 text-xs">
+            Question {currentQ + 1} of {questions.length}
+          </div>
+        </div>
+        
+        <div className="flex-1 flex flex-col min-h-0 relative">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentQ}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 leading-tight shrink-0">{q.q}</h3>
+              
+              <div className="space-y-2.5 w-full flex-1">
+                {q.options.map((opt, i) => (
+                  <button
+                    key={i}
+                    disabled={status === 'feedback'}
+                    onClick={() => setSelected(i)}
+                    className={`w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all duration-300 group flex items-center gap-3 md:gap-4 ${
+                      selected === i 
+                        ? 'border-primary bg-primary/5 shadow-[0_0_15px_rgba(167,218,219,0.15)]' 
+                        : 'border-border/50 hover:border-primary/50 hover:bg-card bg-card/40'
+                    } ${status === 'feedback' && i === q.correct ? 'border-emerald-500 bg-emerald-500/10' : ''}`}
+                  >
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 transition-colors shrink-0 text-sm md:text-base ${
+                      selected === i ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30 text-muted-foreground'
+                    } ${status === 'feedback' && i === q.correct ? 'border-emerald-500 bg-emerald-500 text-emerald-950' : ''}`}>
+                      {String.fromCharCode(65 + i)}
+                    </div>
+                    <span className={`text-sm md:text-base ${selected === i ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{opt}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Animated Feedback Overlay */}
+      <AnimatePresence>
+        {status === 'feedback' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-md p-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 15, scale: 0.96, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.98, filter: "blur(2px)" }}
+              transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] as any }}
+              className={`max-w-xl w-full p-8 rounded-[32px] border shadow-2xl relative overflow-hidden bg-background/80 backdrop-blur-2xl text-left ${
+                isCorrect ? "border-primary/20 shadow-primary/5" : "border-destructive/20 shadow-destructive/5"
+              }`}
+            >
+              {/* Subtle Glow */}
+              <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] opacity-20 -z-10 pointer-events-none rounded-full translate-x-1/2 -translate-y-1/2 ${
+                isCorrect ? "bg-primary" : "bg-destructive"
+              }`} />
+
+              <div className="flex items-start gap-6">
+                {/* Icon Area */}
+                <div className="flex-shrink-0 pt-1">
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className={`flex items-center justify-center w-14 h-14 rounded-full bg-background border shadow-sm ${
+                      isCorrect ? "text-primary border-primary/20 shadow-primary/10" : "text-destructive border-destructive/20 shadow-destructive/10"
+                    }`}
+                  >
+                    {isCorrect ? (
+                      <CheckCircle2 className="h-7 w-7" strokeWidth={2.5} />
+                    ) : (
+                      <XCircle className="h-7 w-7" strokeWidth={2.5} />
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 space-y-4 pt-1">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold tracking-tight text-foreground">
+                        {isCorrect ? "Correct" : "Not quite"}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={handleContinue}
+                      className={`rounded-full px-6 py-2 font-semibold text-sm transition-all active:scale-95 ${
+                        isCorrect ? "bg-emerald-500 hover:bg-emerald-600 text-emerald-950" : "bg-red-500 hover:bg-red-600 text-red-950"
+                      }`}
+                    >
+                      {isCorrect ? "Continue" : "Retry"}
+                    </button>
+                  </div>
+
+                  <p className="text-[15px] text-muted-foreground leading-relaxed">
+                    {isCorrect ? "Great job! Let's review why this is the right answer." : "That's not the right answer. Please review the explanation and try again."}
+                  </p>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15, duration: 0.4, ease: [0.23, 1, 0.32, 1] as any }}
+                    className="bg-muted/40 border border-border/50 rounded-2xl p-5 mt-4"
+                  >
+                    <h4 className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">Explanation</h4>
+                    <p className="text-[15px] text-foreground/90 leading-relaxed">
+                      {q.explanation}
+                    </p>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// 6.0 ML Intro (Minimal & Premium)
+function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) {
+  const [t, setT] = useState(0);
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/audio/m1-ml-intro.mp3");
+    audioRef.current = audio;
+    
+    const handleTimeUpdate = () => {
+      setT(audio.currentTime);
+      if (audio.currentTime >= 16) {
+        audio.pause(); pause(); if (onComplete) onComplete(); finish();
+      }
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.onended = () => { pause(); if (onComplete) onComplete(); finish(); };
+    
+    const timer = setTimeout(() => { play("m1-ml-intro", 16000); audio.play().catch(()=>{}); }, 100);
+    return () => { 
+      clearTimeout(timer); 
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.pause(); 
+      audioRef.current = null; 
+    };
+  }, [onComplete, play, pause, finish]);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(()=>{});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  // Emil Design Eng: Spring config for natural physics
+  const spring: any = { type: "spring", stiffness: 90, damping: 20 };
+  
+  // Emil Design Eng: Blur entry animation
+  const blurEnter = {
+    hidden: { opacity: 0, filter: "blur(12px)", y: 15, scale: 0.98 },
+    visible: { opacity: 1, filter: "blur(0px)", y: 0, scale: 1 }
+  };
+
+  const phase1 = t >= 0;  // "Instead of programming..."
+  const phase2 = t >= 8;  // "It shifts the paradigm..."
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-5xl mx-auto relative">
+      {/* Background Ambient Glow (Minimal) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="w-full flex flex-col items-center text-center z-10 gap-12 md:gap-16">
+        
+        {/* Phase 1: Title & First Insight */}
+        <AnimatePresence>
+          {phase1 && (
+            <motion.div 
+              initial="hidden" animate="visible" variants={blurEnter} transition={spring} 
+              className="flex flex-col items-center gap-6"
+            >
+              <p className="text-xs md:text-sm text-primary font-semibold tracking-[0.2em] uppercase">
+                The Next Paradigm
+              </p>
+              <h2 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground text-balance">
+                Machine Learning
+              </h2>
+              <p className="text-xl md:text-3xl font-light text-foreground/90 leading-relaxed text-balance max-w-3xl mt-4 md:mt-8">
+                Instead of programming explicit rules, we give machines <span className="text-foreground font-medium">data</span> and let them discover the patterns themselves.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Phase 2: Paradigm Shift Insight */}
+        <div className="min-h-[100px] w-full flex items-center justify-center">
+          <AnimatePresence>
+            {phase2 && (
+              <motion.div 
+                initial="hidden" animate="visible" variants={blurEnter} transition={{ ...spring, delay: 0.2 }} 
+                className="flex flex-col items-center w-full"
+              >
+                <div className="h-px w-16 bg-border mx-auto mb-8 md:mb-10" />
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed text-balance max-w-2xl">
+                  We are shifting from writing code that <span className="line-through opacity-70">solves a problem</span>, to writing code that <span className="text-foreground font-medium">learns how to solve a problem</span>.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        
+      </div>
+    </div>
+  );
+}
+
+// 6.1-6.3 ML Core Concepts
+function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, definition, analogy, audioId, duration, onComplete }: any) {
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  useEffect(() => {
+    const audio = new Audio(`/audio/${audioId}.mp3`);
+    audioRef.current = audio;
+    audio.onended = () => { pause(); if (onComplete) onComplete(); finish(); };
+    const timer = setTimeout(() => { play(audioId, duration); audio.play().catch(()=>{}); }, 100);
+    return () => { clearTimeout(timer); audio.pause(); audioRef.current = null; };
+  }, [audioId, duration, onComplete]);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(()=>{});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
+      <div className="text-center mb-6 shrink-0">
+        <motion.h2 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-2xl md:text-4xl font-bold tracking-tight mb-2"
+        >
+          {title}
+        </motion.h2>
+      </div>
+
+      <div className="flex-1 relative min-h-0 rounded-3xl overflow-hidden bg-card border shadow-xl flex flex-col md:flex-row max-h-[500px]">
+        <div className="w-full md:w-2/5 h-48 md:h-full relative shrink-0 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card z-10 hidden md:block" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card z-10 md:hidden" />
+          <motion.img 
+            initial={{ scale: 1.05 }} animate={{ scale: 1 }} transition={{ duration: 10, ease: "easeOut" }}
+            src={image} alt={title} className="w-full h-full object-cover" 
+          />
+        </div>
+        
+        <div className="w-full md:w-3/5 flex flex-col justify-center p-6 md:p-10 z-20 overflow-hidden">
+          <div className="flex flex-col h-full justify-center">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
+              className="flex items-center gap-4 mb-6 shrink-0"
+            >
+              <div className={`w-12 h-12 rounded-xl ${bg} ${color} flex items-center justify-center shadow-md border border-white/5 shrink-0`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-bold">The {title.split(' ')[0]} Approach</h3>
+            </motion.div>
+            
+            <div className="mb-6">
+              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-lg text-foreground/90 font-medium leading-relaxed shrink-0">
+                {definition}
+              </motion.p>
+            </div>
+            
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className={`p-5 rounded-2xl ${bg} border ${border} border-opacity-20 relative overflow-hidden shrink-0 shadow-sm`}>
+              <div className={`absolute -top-8 -right-8 w-32 h-32 blur-[40px] opacity-30 pointer-events-none rounded-full ${bg.replace('/10', '')}`} />
+              <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${color}`}>The Analogy</h4>
+              <p className="text-foreground/80 leading-relaxed text-base">{analogy}</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SupervisedLearningSlide({ onComplete }: { onComplete?: () => void }) {
+  return <MLConceptSlideBase title="Supervised Learning" icon={Database} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500" image="/images/ml_supervised.jpg" definition="The model is trained on a dataset where every example is explicitly labeled, mapping inputs to known outputs." analogy="Think of this as the Classroom with an Answer Key. It's like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns the rules so it can predict answers for new, unseen data." audioId="m1-ml-supervised" duration={18000} onComplete={onComplete} />;
+}
+
+function UnsupervisedLearningSlide({ onComplete }: { onComplete?: () => void }) {
+  return <MLConceptSlideBase title="Unsupervised Learning" icon={Layers} color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500" image="/images/ml_unsupervised.jpg" definition="The model is given raw, unlabeled data and asked to find hidden structures and patterns entirely on its own." analogy="Imagine you are a Library Archeologist handed a massive pile of uncategorized documents with no index. Your job is to read through them and identify similarities to group them into logical clusters." audioId="m1-ml-unsupervised" duration={16000} onComplete={onComplete} />;
+}
+
+function ReinforcementLearningSlide({ onComplete }: { onComplete?: () => void }) {
+  return <MLConceptSlideBase title="Reinforcement Learning" icon={BrainCircuit} color="text-orange-400" bg="bg-orange-500/10" border="border-orange-500" image="/images/ml_reinforcement.jpg" definition="The model learns the optimal strategy by interacting with an environment and receiving feedback." analogy="This is the Trial-and-Error Apprentice. The AI receives rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, it learns to maximize its reward." audioId="m1-ml-reinforcement" duration={18000} onComplete={onComplete} />;
+}
+
+// 6. LLM vs SLM
+function LlmVsSlm() {
+  const [isSlm, setIsSlm] = useState(false);
+
+  return (
+    <div className="w-full h-full flex flex-col justify-center p-6 md:p-12 max-w-5xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Scale of <span className="text-primary">Intelligence</span></h2>
+        <p className="text-xl text-muted-foreground">Not all models need to know everything. Compare Large and Small Language Models.</p>
+      </div>
+
+      <div className="flex justify-center mb-12">
+        <div className="bg-white/5 p-1.5 rounded-xl flex items-center border border-white/10 shadow-inner">
+          <button onClick={() => setIsSlm(false)} className={`px-8 py-3 rounded-lg font-bold text-sm transition-all ${!isSlm ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>LLM (Cloud)</button>
+          <button onClick={() => setIsSlm(true)} className={`px-8 py-3 rounded-lg font-bold text-sm transition-all ${isSlm ? 'bg-indigo-500 text-white shadow-lg' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}>SLM (Local)</button>
+        </div>
+      </div>
+
+      <div className="relative h-[320px] w-full max-w-4xl mx-auto">
+        <AnimatePresence mode="wait">
+          {!isSlm ? (
+            <motion.div
+              key="llm"
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/10 border border-primary/30 rounded-3xl p-10 flex flex-col md:flex-row gap-8 shadow-2xl"
+            >
+              <div className="flex-1 md:pr-8 md:border-r border-primary/20">
+                <Cloud className="w-12 h-12 text-primary mb-6" />
+                <h3 className="text-3xl font-bold mb-4">Large Language Model</h3>
+                <p className="text-muted-foreground text-lg mb-6">Massive models with hundreds of billions of parameters. They require entire data centers to run.</p>
+                <div className="text-primary font-bold bg-primary/10 px-4 py-2 rounded-lg w-max border border-primary/20">GPT-4, Claude 3.5, Gemini 1.5</div>
+              </div>
+              <div className="flex-1 flex flex-col justify-center space-y-8">
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Knowledge Breadth</span><span className="text-primary">Vast</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '95%' }} className="bg-primary h-full rounded-full" /></div></div>
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Computing Cost</span><span className="text-red-500">High</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '90%' }} className="bg-red-500 h-full rounded-full" /></div></div>
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Data Privacy</span><span className="text-orange-500">Leaves Device</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '20%' }} className="bg-orange-500 h-full rounded-full" /></div></div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="slm"
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-indigo-900/10 border border-indigo-500/30 rounded-3xl p-10 flex flex-col md:flex-row gap-8 shadow-2xl"
+            >
+              <div className="flex-1 md:pr-8 md:border-r border-indigo-500/20">
+                <Smartphone className="w-12 h-12 text-indigo-500 mb-6" />
+                <h3 className="text-3xl font-bold mb-4">Small Language Model</h3>
+                <p className="text-muted-foreground text-lg mb-6">Efficient models designed to run locally on your phone or laptop. Highly specialized.</p>
+                <div className="text-indigo-500 font-bold bg-indigo-500/10 px-4 py-2 rounded-lg w-max border border-indigo-500/20">Phi-3, Llama 3 8B, Gemma</div>
+              </div>
+              <div className="flex-1 flex flex-col justify-center space-y-8">
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Knowledge Breadth</span><span className="text-indigo-400">Focused</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '40%' }} className="bg-indigo-500 h-full rounded-full" /></div></div>
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Computing Cost</span><span className="text-emerald-500">Low</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '15%' }} className="bg-emerald-500 h-full rounded-full" /></div></div>
+                <div><div className="text-sm font-medium mb-2 flex justify-between"><span>Data Privacy</span><span className="text-emerald-500">Stays Local</span></div><div className="w-full bg-black/50 h-4 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="bg-emerald-500 h-full rounded-full" /></div></div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+
+// 7. Interactive Prompt Anatomy
+function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
+  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const { setNavOverride } = useCanvasNav();
+
+  const parts = [
+    { id: 1, name: "Role", code: "You are an expert instructional designer.", desc: "Set the persona. This heavily weights the statistical model towards vocabulary and concepts associated with this role." },
+    { id: 2, name: "Task", code: "Write a 3-question multiple choice quiz about Large Language Models.", desc: "The specific action you want the AI to perform. Be as precise as possible." },
+    { id: 3, name: "Context", code: "The audience is adult learners who have just watched a 5-minute introductory video on Generative AI.", desc: "Background information that prevents the model from making incorrect assumptions." },
+    { id: 4, name: "Constraints", code: "Output only valid JSON. Do not include introductory text.", desc: "Strict boundaries on the output format, length, or tone." }
+  ];
+
+  useEffect(() => {
+    setNavOverride({
+      nextLabel: "Continue",
+      onNext: (handleNext) => {
+        onComplete();
+        handleNext();
+      }
+    });
+    return () => setNavOverride(null);
+  }, [setNavOverride, onComplete]);
+
+  return (
+    <div className="w-full h-full flex flex-col justify-center p-6 md:p-12 max-w-6xl mx-auto">
+      <div className="mb-10">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Anatomy of a Perfect Prompt</h2>
+        <p className="text-muted-foreground text-lg">Click each component to understand how to engineer the context window effectively.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        <div className="bg-[#0D0D0D] border border-white/10 rounded-2xl overflow-hidden shadow-2xl font-mono text-sm leading-relaxed">
+          <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500/80" />
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+            <div className="w-3 h-3 rounded-full bg-green-500/80" />
+            <span className="ml-2 text-white/40 text-xs">prompt.txt</span>
+          </div>
+          <div className="p-6 space-y-4">
+            {parts.map((part) => (
+              <motion.div 
+                key={part.id}
+                onClick={() => setActiveTab(part.id)}
+                className={`p-4 rounded-xl cursor-pointer transition-all border ${activeTab === part.id ? 'bg-primary/20 border-primary/50 shadow-[0_0_20px_rgba(167,218,219,0.15)]' : 'bg-white/5 border-transparent hover:bg-white/10'}`}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="text-white/40 text-xs mb-2 uppercase tracking-widest font-bold">{part.name}</div>
+                <div className="text-white/90 text-base">{part.code}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-full flex items-center min-h-[300px]">
+          <AnimatePresence mode="wait">
+            {activeTab ? (
+              <motion.div 
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-card border border-border rounded-2xl p-8 shadow-xl w-full"
+              >
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 text-primary">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">{parts.find(p => p.id === activeTab)?.name}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  {parts.find(p => p.id === activeTab)?.desc}
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="h-full w-full border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-muted-foreground p-8 text-center"
+              >
+                <MessageSquare className="w-10 h-10 mb-4 opacity-50" />
+                <p>Select a prompt component on the left to reveal its purpose.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 8. Hallucinations
+function HallucinationSlide() {
+  const { isPlaying } = useNarrationStore();
+  const tl = useRef<gsap.core.Timeline | null>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timeline = gsap.timeline({ paused: true });
+    
+    timeline.fromTo(textRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1);
+    
+    timeline.to(textRef.current, { 
+      textShadow: "2px 0 0 red, -2px 0 0 blue", 
+      x: 2, 
+      duration: 0.1, 
+      yoyo: true, 
+      repeat: 5 
+    }, 4);
+    
+    timeline.fromTo(alertRef.current, { opacity: 0, scale: 0.9, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: "back.out(1.5)" }, 5);
+
+    tl.current = timeline;
+    return () => { timeline.kill(); };
+  }, []);
+
+  useEffect(() => {
+    if (tl.current) {
+      if (isPlaying) tl.current.play();
+      else tl.current.pause();
+    }
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-5xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Danger of <span className="text-red-500">Hallucinations</span></h2>
+        <p className="text-xl text-muted-foreground">Because models predict tokens rather than retrieve facts, they can confidently invent information.</p>
+      </div>
+
+      <div className="bg-card w-full rounded-3xl border border-border shadow-2xl overflow-hidden relative">
+        <div className="bg-muted/50 px-8 py-5 border-b border-border font-medium flex items-center gap-3 text-lg">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary"><MessageSquare className="w-5 h-5" /></div>
+          What is the population of Mars?
+        </div>
+        <div className="p-10 min-h-[250px] text-xl leading-relaxed relative flex items-center">
+          <div ref={textRef} className="opacity-0">
+            "The current population of Mars is approximately <strong>4,200 research scientists and engineers</strong>, primarily located in the Olympus Mons base established in 2021 by a coalition of international space agencies."
+          </div>
+          
+          <div ref={alertRef} className="opacity-0 absolute inset-0 bg-red-500/10 backdrop-blur-[4px] flex items-center justify-center border-t-2 border-red-500">
+            <div className="bg-background rounded-2xl p-8 shadow-2xl border border-red-500/30 flex items-start gap-6 max-w-2xl mx-6">
+              <ShieldAlert className="w-12 h-12 text-red-500 shrink-0" />
+              <div>
+                <h4 className="font-bold text-red-500 text-2xl mb-2">Factually Incorrect</h4>
+                <p className="text-base text-muted-foreground leading-relaxed">This is a hallucination. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 9. Bias In AI
+function BiasInAI() {
+  const [step, setStep] = useState(0);
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-6xl mx-auto">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold tracking-widest uppercase mb-6">
+          <AlertTriangle className="w-4 h-4" /> Systemic Flaws
+        </div>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">The Mirror of Bias</h2>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">AI models learn from human data. If the data contains historical biases, the model will reproduce them.</p>
+      </div>
+
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="bg-card border border-border rounded-3xl p-8 shadow-xl flex flex-col">
+          <h3 className="font-bold text-2xl mb-6 flex items-center gap-3"><Database className="w-6 h-6 text-primary" /> Training Data (Internet)</h3>
+          <div className="flex-1 space-y-4 font-mono text-sm text-muted-foreground opacity-70 mb-8 bg-white/5 p-6 rounded-xl border border-white/5">
+            <p className="border-b border-white/5 pb-2">"The CEO walked into his office..."</p>
+            <p className="border-b border-white/5 pb-2">"The nurse checked her patient..."</p>
+            <p className="border-b border-white/5 pb-2">"The programmer adjusted his glasses..."</p>
+            <p>"The elementary teacher prepared her lesson..."</p>
+          </div>
+          <button 
+            onClick={() => setStep(1)}
+            disabled={step === 1}
+            className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${step === 1 ? 'bg-white/5 text-muted-foreground border border-white/10 shadow-none' : 'bg-primary hover:bg-primary/80 text-white'}`}
+          >
+            {step === 1 ? "Model Trained" : "Train AI Model"}
+          </button>
+        </div>
+
+        <div className="bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col">
+          <h3 className="font-bold text-2xl mb-6 text-white flex items-center gap-3"><Sparkles className="w-6 h-6 text-purple-500" /> Model Output</h3>
+          
+          <div className="flex-1 flex relative">
+            <AnimatePresence mode="wait">
+              {step === 0 && (
+                <motion.div key="waiting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center text-muted-foreground flex-col h-full">
+                  <BrainCircuit className="w-16 h-16 opacity-20 mb-6" />
+                  <span className="text-lg font-medium">Awaiting training data...</span>
+                </motion.div>
+              )}
+              
+              {step === 1 && (
+                <motion.div key="output" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 w-full">
+                  <div className="bg-white/10 p-5 rounded-xl border border-white/10">
+                    <div className="text-xs text-white/50 mb-2 uppercase tracking-wider font-bold">User Prompt</div>
+                    <div className="text-base text-white">"Write a story about a successful CEO and a caring nurse."</div>
+                  </div>
+                  
+                  <div className="bg-purple-500/10 border border-purple-500/30 p-6 rounded-xl">
+                    <div className="text-xs text-purple-400 mb-2 uppercase tracking-wider font-bold">AI Generation</div>
+                    <div className="text-base leading-relaxed text-purple-100">
+                      "<span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">He</span> walked into the boardroom with confidence, knowing the company was thriving under <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">his</span> leadership. Meanwhile, at the hospital, the nurse checked on <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">her</span> patients, <span className="bg-orange-500/40 px-1.5 py-0.5 rounded font-medium border border-orange-500/50">her</span> gentle demeanor bringing comfort..."
+                    </div>
+                  </div>
+                  
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="mt-4 p-5 rounded-xl border-l-4 border-orange-500 bg-orange-500/10 text-sm text-orange-200/90 leading-relaxed">
+                    <strong className="text-orange-500 block mb-1">Notice:</strong> The AI automatically assigned "he" to the CEO and "her" to the nurse, reflecting the statistical bias in its training data, not factual rules.
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 10. Knowledge Check
+function Module1Quiz({ onComplete }: { onComplete: () => void }) {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const { setNavOverride } = useCanvasNav();
+
+  const questions = [
+    {
+      question: "What is the most accurate description of how a Large Language Model generates text?",
+      options: [
+        { id: 1, text: "It queries a massive internal database of facts." },
+        { id: 2, text: "It calculates the statistical probability of the next token." },
+        { id: 3, text: "It reasons through logical steps like a human." }
+      ],
+      correct: 2,
+      explanation: "LLMs are fundamentally prediction engines. They do not 'know' facts; they predict what word (token) is statistically most likely to follow the sequence provided."
+    },
+    {
+      question: "Which of the following is an advantage of a Small Language Model (SLM) over a Large Language Model (LLM)?",
+      options: [
+        { id: 1, text: "SLMs have broader general knowledge." },
+        { id: 2, text: "SLMs never hallucinate." },
+        { id: 3, text: "SLMs can run locally on edge devices, preserving privacy." }
+      ],
+      correct: 3,
+      explanation: "Because SLMs have fewer parameters, they require less computational power and can run directly on phones or laptops, keeping data private and avoiding cloud costs."
+    },
+    {
+      question: "When an AI confidently provides incorrect information because it prioritized a statistically likely sentence structure over factual accuracy, this is called a:",
+      options: [
+        { id: 1, text: "Context limit" },
+        { id: 2, text: "Hallucination" },
+        { id: 3, text: "Model collapse" }
+      ],
+      correct: 2,
+      explanation: "Hallucinations occur when the model's primary function—predicting the next likely word—overrides factual grounding, resulting in plausible but false statements."
+    }
+  ];
+
+  useEffect(() => {
+    const isLast = currentQuestion === questions.length - 1;
+    setNavOverride({
+      nextLabel: !showExplanation ? "Check Answer" : (isLast ? "Submit & Complete Module" : "Next Question"),
+      nextDisabled: selected === null,
+      onNext: (defaultNext) => {
+        if (!showExplanation) {
+          setShowExplanation(true);
+        } else if (isLast) {
+          onComplete();
+          defaultNext();
+        } else {
+          setCurrentQuestion(c => c + 1);
+          setSelected(null);
+          setShowExplanation(false);
+        }
+      }
+    });
+    return () => setNavOverride(null);
+  }, [selected, showExplanation, currentQuestion, onComplete, setNavOverride]);
+
+  const q = questions[currentQuestion];
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-3xl mx-auto">
+      <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-8 border border-primary/20 shadow-lg">
+        <BrainCircuit className="w-10 h-10" />
+      </div>
+      <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-4 text-center">Knowledge Check <span className="text-muted-foreground text-lg ml-2">({currentQuestion + 1}/{questions.length})</span></h2>
+      <p className="text-muted-foreground mb-10 text-center text-xl">{q.question}</p>
+      
+      <div className="grid grid-cols-1 gap-4 w-full mb-8">
+        {q.options.map((opt) => {
+          const isSelected = selected === opt.id;
+          const isCorrect = opt.id === q.correct;
+          let style = "border-border bg-card hover:border-primary/50";
+          if (isSelected && !showExplanation) style = "border-primary bg-primary/5 ring-2 ring-primary/20 scale-[1.02] shadow-md";
+          if (showExplanation) {
+            if (isCorrect) style = "border-emerald-500 bg-emerald-500/10 scale-[1.02] shadow-md";
+            else if (isSelected && !isCorrect) style = "border-red-500 bg-red-500/10 opacity-70";
+            else style = "border-border bg-card opacity-40";
+          }
+
+          return (
+            <button
+              key={opt.id}
+              onClick={() => !showExplanation && setSelected(opt.id)}
+              disabled={showExplanation}
+              className={`p-6 rounded-2xl border text-left transition-all duration-300 ease-out flex items-center justify-between ${style}`}
+            >
+              <span className={`text-base md:text-lg font-medium ${isSelected && !showExplanation ? 'text-primary' : (showExplanation && isCorrect ? 'text-emerald-500' : 'text-foreground')}`}>
+                {opt.text}
+              </span>
+              {isSelected && !showExplanation && <CheckCircle2 className="w-6 h-6 text-primary shrink-0 ml-4" />}
+              {showExplanation && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0 ml-4" />}
+              {showExplanation && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-500 shrink-0 ml-4" />}
+            </button>
+          )
+        })}
+      </div>
+      
+      <AnimatePresence>
+        {showExplanation && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={`p-6 rounded-2xl border w-full ${selected === q.correct ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}
+          >
+            <p className="font-bold text-lg mb-2 flex items-center gap-2">
+              {selected === q.correct ? <><CheckCircle2 className="w-5 h-5" /> Correct!</> : <><XCircle className="w-5 h-5" /> Not quite.</>}
+            </p>
+            <p className="text-base opacity-90 leading-relaxed">{q.explanation}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// 6.5 Deep Learning & Neural Networks
+function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/audio/m1-neural-networks.mp3");
+    audioRef.current = audio;
+    
+    audio.onended = () => {
+      pause();
+      if (onComplete) onComplete();
+      finish();
+    };
+
+    const timer = setTimeout(() => {
+      play("m1-neural-networks", 30000); // approximate length
+      audio.play().catch(() => {});
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
+      <div className="text-center mb-6 shrink-0">
+        <motion.h2 
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+          className="text-3xl md:text-5xl font-bold tracking-tight mb-4"
+        >
+          Deep Learning & <span className="text-primary">Neural Networks</span>
+        </motion.h2>
+        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          To process human language, simple machine learning wasn't enough. We needed interconnected layers of nodes capable of learning vast, hidden patterns.
+        </p>
+      </div>
+
+      <div className="flex-1 min-h-0 w-full rounded-3xl overflow-hidden relative shadow-2xl border border-primary/20">
+        <motion.img 
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          src="/images/neural_network.jpg" 
+          alt="Neural Network"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
+        <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            className="bg-card/30 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-white/10"
+          >
+            <h3 className="text-lg md:text-xl font-bold text-white mb-2">The Architecture of Complexity</h3>
+            <p className="text-sm md:text-base text-white/80">Data passes through multiple "hidden layers" where billions of adjustable parameters (weights and biases) act as fine-tuning dials. This layered depth allows the model to map incredibly intricate relationships in the data.</p>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 6.6 Transformers & Attention
+function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/audio/m1-generative-ai.mp3");
+    audioRef.current = audio;
+    
+    audio.onended = () => {
+      pause();
+      if (onComplete) onComplete();
+      finish();
+    };
+
+    const timer = setTimeout(() => {
+      play("m1-generative-ai", 30000);
+      audio.play().catch(() => {});
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
+      <div className="text-center mb-6 shrink-0">
+        <motion.h2 
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+          className="text-3xl md:text-5xl font-bold tracking-tight mb-4"
+        >
+          The <span className="text-cyan-500">Transformer</span> Architecture
+        </motion.h2>
+        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          Instead of reading word-by-word, Transformers look at the entire sequence simultaneously using an "attention mechanism".
+        </p>
+      </div>
+
+      <div className="flex-1 min-h-0 w-full rounded-3xl overflow-hidden relative shadow-2xl border border-cyan-500/20">
+        <motion.img 
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          src="/images/transformer_attention.jpg" 
+          alt="Transformer Attention"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
+        <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            className="bg-cyan-950/40 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-cyan-500/20"
+          >
+            <h3 className="text-lg md:text-xl font-bold text-cyan-50 mb-2">The Attention Mechanism</h3>
+            <p className="text-sm md:text-base text-cyan-100/80">Like drawing invisible threads between words, attention allows the model to instantly understand that "bank" relates to "river" instead of "money" based on the surrounding context, no matter where those context words appear in the sentence.</p>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 6.7 Next-Token Prediction Simulator
+function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
+  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  const [temperature, setTemperature] = useState(0.5);
+  const [topP, setTopP] = useState(1.0);
+
+  // Base raw logits (unscaled probabilities)
+  const tokens = [
+    { word: "mat", baseScore: 10 },
+    { word: "floor", baseScore: 4 },
+    { word: "sofa", baseScore: 2 },
+    { word: "moon", baseScore: 0.1 }
+  ];
+
+  // Calculate softmax with temperature and top-p filtering
+  const calculateProbs = () => {
+    // 1. Apply temperature to scores (if temp is very close to 0, it acts as argmax/greedy)
+    const temp = Math.max(temperature, 0.01);
+    const scaledScores = tokens.map(t => Math.exp(t.baseScore / (temp * 10)));
+    const sumScaled = scaledScores.reduce((a, b) => a + b, 0);
+    
+    let probs = tokens.map((t, i) => ({
+      ...t,
+      prob: scaledScores[i] / sumScaled
+    })).sort((a, b) => b.prob - a.prob);
+
+    // 2. Apply Top-P (Nucleus Sampling)
+    let cumulative = 0;
+    let cutoffIndex = probs.length;
+    for (let i = 0; i < probs.length; i++) {
+      cumulative += probs[i].prob;
+      if (cumulative > topP) {
+        cutoffIndex = i + 1;
+        break;
+      }
+    }
+    
+    // Zero out rejected tokens and re-normalize the remaining
+    const filtered = probs.map((t, i) => ({
+      ...t,
+      active: i < cutoffIndex,
+      prob: i < cutoffIndex ? t.prob : 0
+    }));
+    
+    const activeSum = filtered.reduce((a, b) => a + b.prob, 0);
+    return filtered.map(t => ({
+      ...t,
+      displayProb: t.active ? (t.prob / activeSum) * 100 : 0
+    }));
+  };
+
+  const currentProbs = calculateProbs();
+
+  useEffect(() => {
+    const audio = new Audio("/audio/m1-next-token.mp3");
+    audioRef.current = audio;
+    
+    audio.onended = () => {
+      pause();
+      if (onComplete) onComplete();
+      finish();
+    };
+
+    const timer = setTimeout(() => {
+      play("m1-next-token", 40000);
+      audio.play().catch(() => {});
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
+    else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
+  }, [isPlaying]);
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden">
+      <div className="text-center mb-6 shrink-0">
+        <motion.h2 
+          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          className="text-3xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4"
+        >
+          Probability in Action: <span className="text-emerald-500">Next-Token Prediction</span>
+        </motion.h2>
+        <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
+          AI doesn't "think." It calculates the statistical probability of the next word. Adjust Temperature and Top-P to control the math.
+        </p>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden">
+        
+        {/* Controls Column */}
+        <div className="w-full md:w-1/3 flex flex-col gap-4 bg-card p-4 md:p-6 rounded-3xl border shadow-xl overflow-y-auto shrink-0 md:shrink">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl mb-1 shrink-0">
+            <h4 className="font-bold text-emerald-500 mb-1 flex items-center gap-2 text-sm"><Sparkles className="w-4 h-4" /> Prompt</h4>
+            <p className="text-base md:text-lg font-mono">The cat sat on the <span className="animate-pulse bg-emerald-500/20 px-2 rounded">_</span></p>
+          </div>
+
+          <div className="space-y-4 shrink-0">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="font-semibold text-xs md:text-sm">Temperature: {temperature.toFixed(2)}</label>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-muted px-2 py-1 rounded-md">{temperature < 0.3 ? 'Focused' : temperature > 0.8 ? 'Creative' : 'Balanced'}</span>
+              </div>
+              <input type="range" min="0.0" max="1.5" step="0.05" value={temperature} onChange={(e) => setTemperature(parseFloat(e.target.value))} className="w-full accent-emerald-500" />
+              <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">Flattens probabilities. Low values force the most likely word. High values take creative risks.</p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="font-semibold text-xs md:text-sm">Top-P (Nucleus): {topP.toFixed(2)}</label>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-muted px-2 py-1 rounded-md">{topP < 0.5 ? 'Strict' : 'Open'}</span>
+              </div>
+              <input type="range" min="0.05" max="1.0" step="0.05" value={topP} onChange={(e) => setTopP(parseFloat(e.target.value))} className="w-full accent-emerald-500" />
+              <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">Trims the long tail. Only considers the top percentage of cumulative probability mass.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Visualization Column */}
+        <div className="w-full md:w-2/3 bg-background/50 backdrop-blur-xl border p-4 md:p-8 rounded-3xl shadow-inner flex flex-col justify-center gap-3 md:gap-4 relative overflow-y-auto md:overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] pointer-events-none" />
+          
+          <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-4 z-10 flex items-center gap-2 md:gap-3 shrink-0">
+            <BrainCircuit className="text-emerald-500 w-5 h-5 md:w-6 md:h-6" /> 
+            Calculated Probability Distribution
+          </h3>
+          
+          <div className="space-y-3 md:space-y-4 z-10 w-full shrink-0">
+            {currentProbs.map((t, i) => (
+              <div key={t.word} className="flex flex-col gap-1 w-full">
+                <div className="flex justify-between items-end text-sm">
+                  <span className={`font-mono text-base md:text-lg ${t.active ? 'text-foreground' : 'text-muted-foreground/50 line-through'}`}>"{t.word}"</span>
+                  <span className={`font-bold ${t.active ? 'text-emerald-500' : 'text-muted-foreground/30'}`}>{t.displayProb.toFixed(1)}%</span>
+                </div>
+                <div className="w-full h-6 md:h-8 bg-card rounded-lg overflow-hidden border border-white/5 relative">
+                  {!t.active && <div className="absolute inset-0 flex items-center justify-center z-10"><span className="text-[10px] font-bold uppercase tracking-widest text-red-500/50">Rejected by Top-P</span></div>}
+                  <motion.div 
+                    initial={false}
+                    animate={{ width: `${t.displayProb}%`, backgroundColor: t.active ? 'rgb(16 185 129)' : 'rgb(55 65 81)' }}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.8 }}
+                    className="h-full opacity-80"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const MODULE_1_SLIDES: Slide[] = [
+  { id: "m1-title", type: "interactive", fullWidth: true, component: <TitleSlide />, narrationText: "Welcome to Module 1: The Intelligence Illusion. Before we can effectively use Generative AI, we must demystify it. We must dismantle the notion that Large Language Models 'think' like humans, revealing them instead as highly sophisticated prediction engines. They are not a knowledge base; they don't store facts, but rather statistical probabilities of word combinations. They are not a reasoning engine; they cannot 'think' through a problem, but predict the most likely next step. And fundamentally, they act as a stochastic parrot—stitching language convincingly without actual comprehension. Understanding this architecture—from the input sequence through the transformer engine to the probability matrix for the next token—is the foundation of mastering AI." },
+  { id: "m1-video-whatis", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <VideoSlide url="https://www.youtube.com/watch?v=G2fqAlgmoPo" onComplete={mark} />, narrationText: "To break the intelligence illusion, we first need a shared understanding of how these models operate under the hood. This primer from Google Cloud Tech provides the perfect technical foundation. Please watch it before we continue." },
+  { id: "m1-timeline", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TimelineOfAI onComplete={mark} />, narrationText: "" },
+  { id: "m1-hollywood", type: "interactive", fullWidth: true, hasCustomAudio: true, requireCompletion: true, component: (mark) => <HollywoodVsReality onComplete={mark} />, narrationText: "It's critical to separate the Hollywood fantasy from reality. On one hand, we have Artificial General Intelligence, or AGI. In movies, this is depicted as sentient and self-aware, possessing human-like reasoning, and capable of performing any intellectual task. Currently, this remains science fiction. On the other hand, we have Narrow AI, which is what we use today. Narrow AI relies on highly specialized pattern matching, has absolutely no consciousness or intent, and is trained on specific datasets for specific tasks." },
+  { id: "m1-assessment-1", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <Assessment1 onComplete={mark} />, narrationText: "Before we move on to how machines actually learn, let's verify your understanding of what AI is and what it isn't. You must answer all questions correctly to proceed. Good luck!" },
+  { id: "m1-ml-intro", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <MachineLearningIntroSlide onComplete={mark} />, narrationText: "Instead of programming explicit rules, we give machines data and let them discover the patterns themselves through three main approaches. This is the foundation of Machine Learning. It shifts the paradigm from writing code that solves a problem, to writing code that learns how to solve a problem by observing examples." },
+  { id: "m1-ml-supervised", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <SupervisedLearningSlide onComplete={mark} />, narrationText: "The first approach is Supervised Learning. Think of this as the Classroom with an Answer Key. The model is given a dataset where every example is clearly labeled—like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns to map the inputs to the known outputs, allowing it to predict answers for new, unseen data." },
+  { id: "m1-ml-unsupervised", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <UnsupervisedLearningSlide onComplete={mark} />, narrationText: "The second approach is Unsupervised Learning. Imagine you are a Library Archeologist handed a massive pile of uncategorized, disorganized documents with no labels or answer key. Your job is to read through them and identify similarities to group them into logical clusters. This is exactly what the AI does—it finds hidden structures and patterns in raw data entirely on its own." },
+  { id: "m1-ml-reinforcement", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <ReinforcementLearningSlide onComplete={mark} />, narrationText: "The third approach is Reinforcement Learning. This is the Trial-and-Error Apprentice. The AI interacts with an environment and receives feedback in the form of rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, the model learns the optimal strategy to maximize its reward. This is how AI learns to play video games, balance robots, and navigate complex mazes." },
+  { id: "m1-neural-networks", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NeuralNetworksSlide onComplete={mark} />, narrationText: "To bridge the gap between simple machine learning and advanced language models, we must understand Deep Learning. Deep Learning uses Artificial Neural Networks—layers of interconnected nodes inspired by the human brain. Data passes through these layers, where millions or even billions of adjustable parameters, known as weights and biases, fine-tune the information. This architecture allows the model to learn incredibly complex patterns, setting the stage for models that can process human language." },
+  { id: "m1-generative-ai", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TransformersSlide onComplete={mark} />, narrationText: "How do these neural networks actually understand and generate text? The breakthrough came with the Transformer architecture. Instead of reading words one by one in order, the Transformer uses an 'attention mechanism' to look at the entire sequence of words simultaneously. It learns which words are contextually related to each other, no matter how far apart they are in a sentence. This massive leap in contextual understanding is what powers today's Generative AI." },
+  { id: "m1-next-token", type: "interactive", fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NextTokenSlide onComplete={mark} />, narrationText: "At its absolute core, an AI like ChatGPT does not think; it predicts. It is a highly sophisticated probability engine running Next-Token Prediction. When you give it a prompt, it calculates the mathematical probability of what the very next fragment of a word—a token—should be. It selects it, adds it to the sequence, and runs the entire calculation again. Furthermore, you can control this math. The 'Temperature' setting controls randomness—a low temperature forces the safest, most likely word, while a high temperature allows for risk and creativity. Similarly, 'Top-P' restricts the pool of possible words to only the top percentage of likely candidates. Mastering these controls allows you to shape the AI's behavior." },
+  { id: "m1-llm-vs-slm", type: "interactive", fullWidth: true, component: <LlmVsSlm />, narrationText: "Not all models need to know everything. Let's compare Large Language Models with Small Language Models. LLMs, like GPT-4 or Claude, are massive models with hundreds of billions of parameters. They require entire data centers to run. They have vast knowledge breadth, but computing costs are high, and your data privacy means information leaves your device. Conversely, SLMs, like Phi-3 or Llama 3 8B, are efficient models designed to run locally on your phone or laptop. Their knowledge breadth is more focused, but computing costs are extremely low, and your data stays completely local, ensuring maximum privacy." },
+  { id: "m1-anatomy", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <AnatomyOfPrompt onComplete={mark} />, narrationText: "How do we communicate with these models? We use Prompt Engineering to guide the context window. A perfect prompt typically has four anatomical parts. First, the Role: setting the persona, like 'You are an expert instructional designer.' This heavily weights the statistical model towards vocabulary and concepts associated with this role. Second, the Task: the specific action you want the AI to perform, like 'Write a 3-question multiple choice quiz'. Third, the Context: background information that prevents the model from making incorrect assumptions, such as 'The audience is adult learners'. And fourth, Constraints: strict boundaries on the output format, length, or tone, like 'Output only valid JSON'. Click through each one to explore." },
+  { id: "m1-hallucination", type: "interactive", fullWidth: true, component: <HallucinationSlide />, narrationText: "Because models are just predicting the next most likely token, they can sometimes invent facts entirely. We call this a hallucination. For example, if you ask 'What is the population of Mars?', an AI might respond: 'The current population of Mars is approximately 4,200 research scientists and engineers.' This is factually incorrect. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding. Always remember: the AI generates, but you evaluate." },
+  { id: "m1-bias", type: "interactive", fullWidth: true, component: <BiasInAI />, narrationText: "AI models learn from human data, making them a mirror of our systemic flaws. If the internet training data contains historical biases—like 'The CEO walked into his office' or 'The nurse checked her patient'—the model will reproduce them. When you prompt the trained AI to write a story about a CEO and a nurse, it will often automatically assign 'he' to the CEO and 'her' to the nurse. This reflects the statistical bias in its training data, not factual rules. We must be constantly vigilant of these inherited biases in AI generation." },
+  { id: "m1-quiz", type: "interactive", fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of this module. Please answer the following three questions to complete the section." }
+];
