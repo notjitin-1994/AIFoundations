@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Quicksand, Lato } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { AppShell } from "@/components/layout/app-shell";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -28,13 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lato.variable} ${quicksand.variable} antialiased flex h-screen overflow-hidden bg-background text-foreground`}>
-        <Sidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -1,0 +1,32 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+
+const AUTH_ROUTES = ["/login", "/signup", "/auth"];
+
+function isAuthRoute(pathname: string): boolean {
+  return AUTH_ROUTES.some((route) => pathname.startsWith(route));
+}
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const showChrome = !isAuthRoute(pathname);
+
+  if (!showChrome) {
+    // Auth pages: bare layout, no sidebar/header
+    return <>{children}</>;
+  }
+
+  // Lesson/module pages: full layout with sidebar + header
+  return (
+    <>
+      <Sidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
+    </>
+  );
+}
