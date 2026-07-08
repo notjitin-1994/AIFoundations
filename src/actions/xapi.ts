@@ -1,68 +1,48 @@
 "use server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function sendXAPIStatement(
-  verbId: string, 
-  verbDisplay: string, 
-  objectId: string, 
-  objectName: string, 
-  objectDescription?: string
+  verbId: string,
+  verbDisplay: string,
+  objectId: string,
+  objectName: string,
+  objectDescription?: string,
+  context?: { moduleId?: string; slideId?: string; lessonIndex?: number; result?: { score?: number; success?: boolean; completion?: boolean } }
 ) {
-  const LRS_ENDPOINT = process.env.LRS_ENDPOINT;
-  const LRS_USERNAME = process.env.LRS_USERNAME;
-  const LRS_PASSWORD = process.env.LRS_PASSWORD;
-  
-  if (!LRS_ENDPOINT || !LRS_USERNAME || !LRS_PASSWORD) {
-    console.warn("xAPI variables not configured in .env.local. Skipping LRS POST, but registering statement:");
-    console.warn(`[xAPI Statement] User ${verbDisplay} ${objectName}`);
-    return { success: false, reason: "Missing LRS configuration." };
-  }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, reason: "Not authenticated" };
 
-  // Phase 1-4 uses a dummy actor. This will be replaced with real user data in Phase 5.
-  const actorEmail = "guest@smartslate.local";
-  const actorName = "Guest Learner";
+  // Get user's profile (first_name, last_name, organization_id)
+  const { data: profile } = await supabase.from('profiles').select('first_name, last_name, email, organization_id').eq('id', user.id).single();
+  const fullName = profile ? `${profile.first_name} ${profile.last_name}`.trim() : 'Learner';
 
   const statement = {
-    actor: {
-      mbox: `mailto:${actorEmail}`,
-      name: actorName,
-      objectType: "Agent"
-    },
-    verb: {
-      id: verbId,
-      display: { "en-US": verbDisplay }
-    },
-    object: {
-      id: objectId,
-      definition: {
-        name: { "en-US": objectName },
-        description: { "en-US": objectDescription || objectName }
-      },
-      objectType: "Activity"
-    }
+    actor: { mbox: `mailto:${user.email}`, name: fullName, objectType: "Agent" },
+    verb: { id: verbId, display: { "en-US": verbDisplay } },
+    object: { id: objectId, definition: { name: { "en-US": objectName }, description: { "en-US": objectDescription || objectName } }, objectType: "Activity" },
+    ...(context?.result ? { result: context.result } : {}),
+    timestamp: new Date().toISOString(),
   };
 
-  try {
-    const authHeader = "Basic " + Buffer.from(`${LRS_USERNAME}:${LRS_PASSWORD}`).toString("base64");
-    
-    const response = await fetch(LRS_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Experience-API-Version": "1.0.3",
-        "Authorization": authHeader
-      },
-      body: JSON.stringify(statement)
-    });
+  const { error } = await supabase.from('xapi_statements').insert({
+    user_id: user.id,
+    organization_id: profile?.organization_id ?? null,
+    actor_id: user.email!,
+    verb_id: verbId,
+    verb_display: verbDisplay,
+    object_id: objectId,
+    object_name: objectName,
+    object_description: objectDescription,
+    result_score: context?.result?.score ?? null,
+    result_success: context?.result?.success ?? null,
+    result_completion: context?.result?.completion ?? null,
+    context_module_id: context?.moduleId ?? null,
+    context_slide_id: context?.slideId ?? null,
+    context_lesson_index: context?.lessonIndex ?? null,
+    statement: statement,
+  });
 
-    if (!response.ok) {
-      console.error("Failed to send xAPI statement to LRS:", await response.text());
-      return { success: false };
-    }
-    
-    console.log(`[xAPI Statement Delivered] User ${verbDisplay} ${objectName}`);
-    return { success: true };
-  } catch (error) {
-    console.error("Error sending xAPI statement:", error);
-    return { success: false };
-  }
+  if (error) { console.error("xAPI insert error:", error); return { success: false }; }
+  return { success: true };
 }
