@@ -80,6 +80,7 @@ export function AssessmentRunner({
   const [startTime, setStartTime] = useState<number>(0);
   const [finished, setFinished] = useState(false);
   const canvasNav = useContext(CanvasNavContext);
+  const thisModuleId = moduleIds?.[0] ?? kind;
 
   useEffect(() => {
     if (!started || finished) {
@@ -128,7 +129,8 @@ export function AssessmentRunner({
       "attempted",
       `https://aifoundations.xapi/assessment/${kind}`,
       `${kind === "baseline" ? "Baseline" : "Final"} Knowledge Assessment`,
-      `Learner attempted ${kind} assessment with ${qs.length} questions`
+      `Learner attempted ${kind} assessment with ${qs.length} questions`,
+      { moduleId: thisModuleId, slideId: "assessment" }
     );
   }
 
@@ -138,6 +140,7 @@ export function AssessmentRunner({
     if (!current) return;
     const response = answers[currentIdx];
     const result = gradeQuestion(current.question, response);
+    const score = Math.round((result.partial ?? (result.correct ? 1 : 0)) * 100);
     setGraded((g) => ({ ...g, [currentIdx]: result }));
     setSubmitted((s) => ({ ...s, [currentIdx]: true }));
     sendXAPIStatement(
@@ -145,7 +148,8 @@ export function AssessmentRunner({
       "answered",
       `https://aifoundations.xapi/question/${current.question.id}`,
       `Question ${current.question.id}`,
-      `Learner answered question (correct: ${result.correct})`
+      `Learner answered question (correct: ${result.correct})`,
+      { moduleId: thisModuleId, slideId: "assessment", result: { score, success: result.correct, completion: false } }
     );
   }
 
@@ -193,6 +197,7 @@ export function AssessmentRunner({
     const overall = questions.length > 0
       ? Math.round((Object.values(byModule).reduce((s, m) => s + m.correct, 0) / questions.length) * 100)
       : 0;
+    const passingScore = 70;
     const result = {
       overall,
       byModule,
@@ -207,7 +212,8 @@ export function AssessmentRunner({
       "completed",
       `https://aifoundations.xapi/assessment/${kind}`,
       `${kind === "baseline" ? "Baseline" : "Final"} Knowledge Assessment`,
-      `Learner completed assessment with score ${overall}%`
+      `Learner completed assessment with score ${overall}%`,
+      { moduleId: thisModuleId, slideId: "assessment", result: { score: overall, success: overall >= passingScore, completion: true } }
     );
     alert(`${kind === "baseline" ? "Baseline" : "Final"} assessment complete! You scored ${overall}%.`);
   }
