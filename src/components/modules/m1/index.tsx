@@ -804,23 +804,19 @@ function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) 
   useEffect(() => {
     const audio = new Audio("/audio/m1-ml-intro.mp3");
     audioRef.current = audio;
-    
+
     const handleTimeUpdate = () => {
       setT(audio.currentTime);
-      if (audio.currentTime >= 16) {
-        audio.pause(); pause(); if (onComplete) onComplete(); finish();
-      }
     };
-
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.onended = () => { pause(); if (onComplete) onComplete(); finish(); };
-    
-    const timer = setTimeout(() => { play("m1-ml-intro", 16000); audio.play().catch(()=>{}); }, 100);
-    return () => { 
-      clearTimeout(timer); 
+
+    const timer = setTimeout(() => { play("m1-ml-intro", 18000); audio.play().catch(()=>{}); }, 100);
+    return () => {
+      clearTimeout(timer);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.pause(); 
-      audioRef.current = null; 
+      audio.pause();
+      audioRef.current = null;
     };
   }, [onComplete, play, pause, finish]);
 
