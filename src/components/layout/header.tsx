@@ -1,18 +1,33 @@
 "use client";
 
-import { useUser } from "@/hooks/use-user";
+import { useUser, getDisplayName } from "@/hooks/use-user";
+import { createClient } from "@/lib/supabase/client";
 import { useProgressStore } from "@/store/progress";
 import { useEffect, useState } from "react";
 import { Library, HelpCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { AssetsModal } from "./assets-modal";
 import { HelpTour } from "./help-tour";
 
 export function Header() {
+  const router = useRouter();
   const { user, isLoading } = useUser();
   const { completedModules, activeSlideIndex, totalSlidesInModule } = useProgressStore();
   const [mounted, setMounted] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await createClient().auth.signOut();
+    } catch (error) {
+      console.error("Logout failed:", error instanceof Error ? error.message : String(error));
+    }
+    router.push("/login");
+    router.refresh();
+  };
 
   // Prevent hydration mismatch for zustand local storage values
   useEffect(() => {
@@ -71,10 +86,17 @@ export function Header() {
           <div className="w-8 h-8 rounded-full bg-accent animate-pulse" />
         ) : (
           <div className="flex items-center space-x-3">
-            <span className="text-sm font-medium text-foreground">{user?.name}</span>
+            <span className="text-sm font-medium text-foreground">{getDisplayName(user)}</span>
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30">
-              {user?.name.charAt(0)}
+              {getDisplayName(user).charAt(0)}
             </div>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoggingOut ? "Logging out..." : "Log out"}
+            </button>
           </div>
         )}
       </div>
