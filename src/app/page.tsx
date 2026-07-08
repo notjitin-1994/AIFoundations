@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useProgressStore } from "@/store/progress";
 import { sendXAPIStatement } from "@/actions/xapi";
+import { imageUrl, videoUrl } from "@/lib/media";
 import { CanvasViewer, Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { AssessmentRunner } from "@/components/lesson/assessment-runner";
 import { CheckCircle, Bot, PenTool, LayoutDashboard, ArrowRight, Play, AlertTriangle } from "lucide-react";
@@ -48,21 +49,21 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
       title: 'Research Companion',
       description: 'An AI assistant that synthesizes information and accelerates deep research.',
       icon: <Bot className="w-5 h-5 text-primary" />,
-      image: "/images/research_companion.jpg"
+      image: imageUrl("research_companion.jpg")
     },
     {
       id: 'content_engine',
       title: 'Content Engine',
       description: 'An ideation-to-draft workflow that helps you produce high-quality written content.',
       icon: <PenTool className="w-5 h-5 text-primary" />,
-      image: "/images/content_engine.jpg"
+      image: imageUrl("content_engine.jpg")
     },
     {
       id: 'creative_studio',
       title: 'Creative Studio',
       description: 'A visual generation pipeline for creating consistent brand imagery and mockups.',
       icon: <LayoutDashboard className="w-5 h-5 text-primary" />,
-      image: "/images/creative_studio.jpg"
+      image: imageUrl("creative_studio.jpg")
     }
   ] as const;
 
@@ -182,7 +183,7 @@ function ConfidenceCheck({ onComplete }: { onComplete: () => void }) {
           muted 
           playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-80"
-          src="/video/tech-pulse.mp4"
+          src={videoUrl("tech-pulse.mp4")}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">

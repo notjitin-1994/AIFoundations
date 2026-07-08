@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, cloneElement, ReactElement, Fragment } fro
 import gsap from "gsap";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useNarrationStore } from "@/store/narration";
+import { audioUrl, imageUrl } from "@/lib/media";
 import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { KnowledgeCheck, type KnowledgeCheckQuestion } from "@/components/lesson/knowledge-check";
 import { Button } from "@/components/ui/button";
@@ -510,7 +511,7 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/audio/m1-hollywood.mp3");
+    const audio = new Audio(audioUrl("m1-hollywood.mp3"));
     audioRef.current = audio;
     
     const handleTimeUpdate = () => {
@@ -595,7 +596,7 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-purple-500/5 opacity-50 z-0 pointer-events-none" />
               
               <div className="w-full h-32 md:h-40 relative rounded-2xl overflow-hidden mb-4 z-10 shrink-0">
-                <img src="/images/agi.jpg" alt="AGI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                <img src={imageUrl("agi.jpg")} alt="AGI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                 <div className="absolute bottom-3 left-4 flex items-center gap-3">
                   <div className="w-8 h-8 bg-red-500/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-red-500/30 text-red-400">
@@ -660,7 +661,7 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 opacity-50 z-0 pointer-events-none" />
               
               <div className="w-full h-32 md:h-40 relative rounded-2xl overflow-hidden mb-4 z-10 shrink-0">
-                <img src="/images/narrow_ai.jpg" alt="Narrow AI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                <img src={imageUrl("narrow_ai.jpg")} alt="Narrow AI Concept" className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-out" />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                 <div className="absolute bottom-3 left-4 flex items-center gap-3">
                   <div className="w-8 h-8 bg-emerald-500/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-emerald-500/30 text-emerald-400">
@@ -802,7 +803,7 @@ function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/audio/m1-ml-intro.mp3");
+    const audio = new Audio(audioUrl("m1-ml-intro.mp3"));
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
@@ -893,7 +894,7 @@ function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, defin
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
-    const audio = new Audio(`/audio/${audioId}.mp3`);
+    const audio = new Audio(audioUrl(`${audioId}.mp3`));
     audioRef.current = audio;
     audio.onended = () => { pause(); if (onComplete) onComplete(); finish(); };
     const timer = setTimeout(() => { play(audioId, duration); audio.play().catch(()=>{}); }, 100);
@@ -959,15 +960,15 @@ function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, defin
 }
 
 function SupervisedLearningSlide({ onComplete }: { onComplete?: () => void }) {
-  return <MLConceptSlideBase title="Supervised Learning" icon={Database} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500" image="/images/ml_supervised.jpg" definition="The model is trained on a dataset where every example is explicitly labeled, mapping inputs to known outputs." analogy="Think of this as the Classroom with an Answer Key. It's like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns the rules so it can predict answers for new, unseen data." audioId="m1-ml-supervised" duration={18000} onComplete={onComplete} />;
+  return <MLConceptSlideBase title="Supervised Learning" icon={Database} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500" image={imageUrl("ml_supervised.jpg")} definition="The model is trained on a dataset where every example is explicitly labeled, mapping inputs to known outputs." analogy="Think of this as the Classroom with an Answer Key. It's like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns the rules so it can predict answers for new, unseen data." audioId="m1-ml-supervised" duration={18000} onComplete={onComplete} />;
 }
 
 function UnsupervisedLearningSlide({ onComplete }: { onComplete?: () => void }) {
-  return <MLConceptSlideBase title="Unsupervised Learning" icon={Layers} color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500" image="/images/ml_unsupervised.jpg" definition="The model is given raw, unlabeled data and asked to find hidden structures and patterns entirely on its own." analogy="Imagine you are a Library Archeologist handed a massive pile of uncategorized documents with no index. Your job is to read through them and identify similarities to group them into logical clusters." audioId="m1-ml-unsupervised" duration={16000} onComplete={onComplete} />;
+  return <MLConceptSlideBase title="Unsupervised Learning" icon={Layers} color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500" image={imageUrl("ml_unsupervised.jpg")} definition="The model is given raw, unlabeled data and asked to find hidden structures and patterns entirely on its own." analogy="Imagine you are a Library Archeologist handed a massive pile of uncategorized documents with no index. Your job is to read through them and identify similarities to group them into logical clusters." audioId="m1-ml-unsupervised" duration={16000} onComplete={onComplete} />;
 }
 
 function ReinforcementLearningSlide({ onComplete }: { onComplete?: () => void }) {
-  return <MLConceptSlideBase title="Reinforcement Learning" icon={BrainCircuit} color="text-orange-400" bg="bg-orange-500/10" border="border-orange-500" image="/images/ml_reinforcement.jpg" definition="The model learns the optimal strategy by interacting with an environment and receiving feedback." analogy="This is the Trial-and-Error Apprentice. The AI receives rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, it learns to maximize its reward." audioId="m1-ml-reinforcement" duration={18000} onComplete={onComplete} />;
+  return <MLConceptSlideBase title="Reinforcement Learning" icon={BrainCircuit} color="text-orange-400" bg="bg-orange-500/10" border="border-orange-500" image={imageUrl("ml_reinforcement.jpg")} definition="The model learns the optimal strategy by interacting with an environment and receiving feedback." analogy="This is the Trial-and-Error Apprentice. The AI receives rewards for good actions, or penalties for bad ones—much like training a dog with treats. Over thousands of iterations, it learns to maximize its reward." audioId="m1-ml-reinforcement" duration={18000} onComplete={onComplete} />;
 }
 
 // 6. LLM vs SLM — see STYLE.md §5 for the canvas-fit hard rule.
@@ -1742,7 +1743,7 @@ function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/audio/m1-neural-networks.mp3");
+    const audio = new Audio(audioUrl("m1-neural-networks.mp3"));
     audioRef.current = audio;
     
     audio.onended = () => {
@@ -1788,7 +1789,7 @@ function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
           initial={{ scale: 1.1, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          src="/images/neural_network.jpg" 
+          src={imageUrl("neural_network.jpg")}
           alt="Neural Network"
           className="w-full h-full object-cover"
         />
@@ -1815,7 +1816,7 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/audio/m1-generative-ai.mp3");
+    const audio = new Audio(audioUrl("m1-generative-ai.mp3"));
     audioRef.current = audio;
     
     audio.onended = () => {
@@ -1861,7 +1862,7 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
           initial={{ scale: 1.1, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          src="/images/transformer_attention.jpg" 
+          src={imageUrl("transformer_attention.jpg")}
           alt="Transformer Attention"
           className="w-full h-full object-cover"
         />
@@ -1938,7 +1939,7 @@ function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
   const currentProbs = calculateProbs();
 
   useEffect(() => {
-    const audio = new Audio("/audio/m1-next-token.mp3");
+    const audio = new Audio(audioUrl("m1-next-token.mp3"));
     audioRef.current = audio;
     
     audio.onended = () => {
