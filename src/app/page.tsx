@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useProgressStore } from "@/store/progress";
-import { sendXAPIStatement } from "@/actions/xapi";
+import { useLRS } from "@/hooks/use-lrs";
 import { imageUrl, videoUrl } from "@/lib/media";
 import { CanvasViewer, Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { AssessmentRunner } from "@/components/lesson/assessment-runner";
@@ -15,6 +15,7 @@ import { useNarrationStore } from "@/store/narration";
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
   const router = useRouter();
+  const { track } = useLRS();
 
   const [selectedSpine, setSelectedSpine] = useState<'research_companion' | 'content_engine' | 'creative_studio' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,19 +30,28 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
         setIsSubmitting(true);
         setProjectSpine(selectedSpine);
         markModuleComplete("0");
-        await sendXAPIStatement(
+        track(
           "http://activitystrea.ms/schema/1.0/choose",
           "selected_template",
           `http://smartslate.com/activities/templates/${selectedSpine}`,
           `Project Template: ${selectedSpine}`,
-          `Learner selected the ${selectedSpine} project spine.`
+          `Learner selected the ${selectedSpine} project spine.`,
+          { moduleId: "0", slideId: "project-selector" }
+        );
+        track(
+          "http://adlnet.gov/expapi/verbs/completed",
+          "completed",
+          "http://smartslate.com/activities/modules/0",
+          "Module 0",
+          "Learner completed Module 0.",
+          { moduleId: "0", slideId: "project-selector", result: { completion: true } }
         );
         onComplete();
         setTimeout(() => { router.push('/modules/1'); }, 1500);
       }
     });
     return () => setNavOverride(null);
-  }, [selectedSpine, isSubmitting, setNavOverride, setProjectSpine, markModuleComplete, onComplete, router]);
+  }, [selectedSpine, isSubmitting, setNavOverride, setProjectSpine, markModuleComplete, onComplete, router, track]);
 
   const spines = [
     {
@@ -123,6 +133,7 @@ function ConfidenceCheck({ onComplete }: { onComplete: () => void }) {
   const [selected, setSelected] = useState<number | null>(null);
   const { setNavOverride } = useCanvasNav();
   const { isPlaying } = useNarrationStore();
+  const { track } = useLRS();
   
   const tl = useRef<gsap.core.Timeline | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -219,7 +230,17 @@ function ConfidenceCheck({ onComplete }: { onComplete: () => void }) {
           ].map((opt) => (
             <button
               key={opt.level}
-              onClick={() => setSelected(opt.level)}
+              onClick={() => {
+                setSelected(opt.level);
+                track(
+                  "http://adlnet.gov/expapi/verbs/interacted",
+                  "interacted",
+                  "http://smartslate.com/activities/confidence-check",
+                  "Confidence Level Check",
+                  undefined,
+                  { moduleId: "0", slideId: "confidence-pulse" }
+                );
+              }}
               className={`opacity-0 p-4 rounded-xl border text-left transition-all duration-300 ease-out group ${
                 selected === opt.level 
                   ? 'border-primary bg-primary/5 ring-2 ring-primary/20 scale-[1.01] shadow-md' 
@@ -390,6 +411,7 @@ function VisionRoadmapSlide() {
 
 function WhatIsGenAISlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, isFinished } = useNarrationStore();
+  const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -434,6 +456,16 @@ function WhatIsGenAISlide({ onComplete }: { onComplete?: () => void }) {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen
                 className="absolute inset-0 w-full h-full"
+                onLoad={() => {
+                  track(
+                    "http://adlnet.gov/expapi/verbs/launched",
+                    "launched",
+                    "http://smartslate.com/activities/module-0/video/what-is-gen-ai",
+                    "What is Generative AI?",
+                    "Learner launched the Module 0 Generative AI primer video.",
+                    { moduleId: "0", slideId: "what-is-gen-ai" }
+                  );
+                }}
               >
               </iframe>
            </div>
@@ -470,7 +502,17 @@ function WhatIsGenAISlide({ onComplete }: { onComplete?: () => void }) {
                 </a>
               </Button>
               {onComplete && (
-                <Button className="flex-1 h-8 text-xs group/btn bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30" variant="outline" onClick={() => onComplete()}>
+                <Button className="flex-1 h-8 text-xs group/btn bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30" variant="outline" onClick={() => {
+                  track(
+                    "http://adlnet.gov/expapi/verbs/completed",
+                    "completed",
+                    "http://smartslate.com/activities/module-0/video/what-is-gen-ai",
+                    "What is Generative AI?",
+                    "Learner marked the Module 0 Generative AI primer video as watched.",
+                    { moduleId: "0", slideId: "what-is-gen-ai", result: { completion: true } }
+                  );
+                  onComplete();
+                }}>
                   Mark Watched
                   <CheckCircle className="w-3 h-3 ml-1 group-hover/btn:scale-110 transition-transform" />
                 </Button>
