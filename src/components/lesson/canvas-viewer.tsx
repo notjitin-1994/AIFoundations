@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2 } from "lucide-react";
 import { useProgressStore } from "@/store/progress";
 import { useNarrationStore } from "@/store/narration";
+import { sendXAPIStatement } from "@/actions/xapi";
 import { createContext, useContext } from "react";
 
 export interface CanvasNavOverride {
@@ -121,6 +122,20 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, slides, setActiveLessonIndex]);
+
+  useEffect(() => {
+    const slide = slides[currentIndex];
+    if (!slide) return;
+
+    sendXAPIStatement(
+      "http://adlnet.gov/expapi/verbs/experienced",
+      "experienced",
+      `http://smartslate.com/activities/${moduleId}/slides/${slide.id}`,
+      `Slide ${currentIndex + 1}: ${slide.id}`,
+      undefined,
+      { moduleId, slideId: slide.id, lessonIndex: currentIndex }
+    ).catch(() => {}); // fire and forget, never block UI
+  }, [currentIndex, moduleId, slides]);
 
   // Handle play/pause state from the global store
   useEffect(() => {
