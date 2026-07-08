@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# voiceover generation scripts (contain API keys — do NOT commit)
+generate-voiceovers.mjs
+generate-voiceovers-m1.mjs
+generate-myth-busting.mjs
