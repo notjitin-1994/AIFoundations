@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, cloneElement, ReactElement, Fragment } fro
 import gsap from "gsap";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useNarrationStore } from "@/store/narration";
+import { useLRS } from "@/hooks/use-lrs";
 import { audioUrl, imageUrl } from "@/lib/media";
 import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { KnowledgeCheck, type KnowledgeCheckQuestion } from "@/components/lesson/knowledge-check";
@@ -188,6 +189,7 @@ function TitleSlide() {
 // 2. Video Slide
 function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }) {
   const { isPlaying, isFinished } = useNarrationStore();
+  const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -240,6 +242,16 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen
                 className="absolute inset-0 w-full h-full"
+                onLoad={() => {
+                  track(
+                    "http://adlnet.gov/expapi/verbs/launched",
+                    "launched",
+                    "http://smartslate.com/activities/module-1/video/what-is-generative-ai",
+                    "What is Generative AI?",
+                    "Learner launched the Module 1 Generative AI primer video.",
+                    { moduleId: "1", slideId: "m1-video-whatis" }
+                  );
+                }}
               >
               </iframe>
            </div>
@@ -295,6 +307,7 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
   const [introFinished, setIntroFinished] = useState(false);
   const [waitingForInteraction, setWaitingForInteraction] = useState(false);
   const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { track } = useLRS();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const milestones = [
@@ -395,6 +408,15 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
 
   const handleNodeClick = (idx: number) => {
     if (idx <= unlockedIdx) {
+      const milestone = milestones[idx].title.toLowerCase().replace(/\s+/g, "-");
+      track(
+        "http://adlnet.gov/expapi/verbs/interacted",
+        "interacted",
+        `http://smartslate.com/activities/module-1/timeline/${milestone}`,
+        milestones[idx].title,
+        `Learner selected the ${milestones[idx].title} milestone on the Module 1 AI timeline.`,
+        { moduleId: "1", slideId: "m1-timeline" }
+      );
       setWaitingForInteraction(false);
       setActiveIdx(idx);
       loadAndPlayAudio(idx);
@@ -903,7 +925,7 @@ function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, defin
 
   useEffect(() => {
     if (!audioRef.current) return;
-    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(()=>{});
+    if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
 
@@ -974,6 +996,7 @@ function ReinforcementLearningSlide({ onComplete }: { onComplete?: () => void })
 // 6. LLM vs SLM — see STYLE.md §5 for the canvas-fit hard rule.
 function LlmVsSlm() {
   const [isSlm, setIsSlm] = useState(false);
+  const { track } = useLRS();
   const reduce = useReducedMotion();
   const easeDrawer: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
@@ -997,7 +1020,17 @@ function LlmVsSlm() {
           <button
             role="tab"
             aria-pressed={!isSlm}
-            onClick={() => setIsSlm(false)}
+            onClick={() => {
+              track(
+                "http://adlnet.gov/expapi/verbs/interacted",
+                "interacted",
+                "http://smartslate.com/activities/module-1/llm-vs-slm/toggle",
+                "Large Language Model",
+                "Learner selected the Large Language Model comparison tab.",
+                { moduleId: "1", slideId: "m1-llm-vs-slm" }
+              );
+              setIsSlm(false);
+            }}
             className={`px-5 md:px-7 py-2 rounded-full font-bold text-xs md:text-sm transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-muted/40 ${
               !isSlm
                 ? "bg-primary text-primary-foreground shadow-md"
@@ -1009,7 +1042,17 @@ function LlmVsSlm() {
           <button
             role="tab"
             aria-pressed={isSlm}
-            onClick={() => setIsSlm(true)}
+            onClick={() => {
+              track(
+                "http://adlnet.gov/expapi/verbs/interacted",
+                "interacted",
+                "http://smartslate.com/activities/module-1/llm-vs-slm/toggle",
+                "Small Language Model",
+                "Learner selected the Small Language Model comparison tab.",
+                { moduleId: "1", slideId: "m1-llm-vs-slm" }
+              );
+              setIsSlm(true);
+            }}
             className={`px-5 md:px-7 py-2 rounded-full font-bold text-xs md:text-sm transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-muted/40 ${
               isSlm
                 ? "bg-secondary text-secondary-foreground shadow-md"
@@ -1275,6 +1318,7 @@ function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
   const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
   const { setNavOverride } = useCanvasNav();
   const { isFinished } = useNarrationStore();
+  const { track } = useLRS();
 
   const parts = [
     { id: 1, name: "Role", code: "You are an expert instructional designer.", desc: "Set the persona. This heavily weights the statistical model towards vocabulary and concepts associated with this role." },
@@ -1298,6 +1342,17 @@ function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
   }, [setNavOverride, onComplete, allViewed]);
 
   const handlePick = (id: number) => {
+    const part = parts.find(p => p.id === id);
+    if (part) {
+      track(
+        "http://adlnet.gov/expapi/verbs/interacted",
+        "interacted",
+        `http://smartslate.com/activities/module-1/anatomy/${part.name.toLowerCase()}`,
+        part.name,
+        `Learner explored the ${part.name} component of a prompt.`,
+        { moduleId: "1", slideId: "m1-anatomy" }
+      );
+    }
     setActiveTab(id);
     setViewed(prev => {
       if (prev.has(id)) return prev;
@@ -1506,6 +1561,7 @@ function HallucinationSlide() {
 // 9. Bias In AI — see STYLE.md §5 for the canvas-fit hard rule.
 function BiasInAI() {
   const [step, setStep] = useState(0);
+  const { track } = useLRS();
   const reduce = useReducedMotion();
   const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
   const trained = step === 1;
@@ -1539,7 +1595,17 @@ function BiasInAI() {
             <p>&ldquo;The elementary teacher prepared her lesson...&rdquo;</p>
           </div>
           <button
-            onClick={() => setStep(1)}
+            onClick={() => {
+              track(
+                "http://adlnet.gov/expapi/verbs/interacted",
+                "interacted",
+                "http://smartslate.com/activities/module-1/bias/train-model",
+                "Train AI Model",
+                "Learner trained the AI model on biased training data in the Module 1 bias demonstration.",
+                { moduleId: "1", slideId: "m1-bias" }
+              );
+              setStep(1);
+            }}
             disabled={trained}
             className={`w-full py-2.5 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card shrink-0 ${
               trained
@@ -1886,8 +1952,10 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
 // 6.7 Next-Token Prediction Simulator
 function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { track } = useLRS();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+  const sliderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [temperature, setTemperature] = useState(0.5);
   const [topP, setTopP] = useState(1.0);
 
@@ -1906,7 +1974,7 @@ function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
     const scaledScores = tokens.map(t => Math.exp(t.baseScore / (temp * 10)));
     const sumScaled = scaledScores.reduce((a, b) => a + b, 0);
     
-    let probs = tokens.map((t, i) => ({
+    const probs = tokens.map((t, i) => ({
       ...t,
       prob: scaledScores[i] / sumScaled
     })).sort((a, b) => b.prob - a.prob);
@@ -1965,6 +2033,21 @@ function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (sliderTimeoutRef.current) clearTimeout(sliderTimeoutRef.current);
+    sliderTimeoutRef.current = setTimeout(() => {
+      track(
+        "http://adlnet.gov/expapi/verbs/interacted",
+        "interacted",
+        "http://smartslate.com/activities/module-1/next-token/controls",
+        "Next-Token Prediction Controls",
+        `Learner adjusted Temperature (${temperature.toFixed(2)}) and Top-P (${topP.toFixed(2)}).`,
+        { moduleId: "1", slideId: "m1-next-token" }
+      );
+    }, 2000);
+    return () => { if (sliderTimeoutRef.current) clearTimeout(sliderTimeoutRef.current); };
+  }, [temperature, topP, track]);
 
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden">
