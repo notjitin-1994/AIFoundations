@@ -1,43 +1,37 @@
 "use client";
-
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-};
+export type { User };
 
-// This is a mock hook that will be replaced with a real auth provider (e.g., Clerk or NextAuth) later.
-// Currently, it generates a unique guest session ID in localStorage so the course functions without auth.
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
-    try {
-      let sessionId = localStorage.getItem("dummy_session_id");
-      if (!sessionId) {
-        sessionId = crypto.randomUUID();
-        localStorage.setItem("dummy_session_id", sessionId);
-      }
-      
-      setUser({
-        id: sessionId,
-        name: "Guest Learner",
-        email: `guest-${sessionId.substring(0, 8)}@local.learner`,
-      });
-    } catch (e) {
-      // Fallback for environments where localStorage isn't available
-      setUser({
-        id: "fallback-id",
-        name: "Guest Learner",
-        email: "guest@local.learner",
-      });
-    } finally {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
       setIsLoading(false);
-    }
+    };
+    getUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return { user, isLoading };
+}
+
+export function getDisplayName(user: User | null): string {
+  if (!user) return 'Learner';
+  const firstName = user.user_metadata?.first_name as string | undefined;
+  const lastName = user.user_metadata?.last_name as string | undefined;
+  if (firstName && lastName) return `${firstName} ${lastName}`;
+  if (firstName) return firstName;
+  return user.email ?? 'Learner';
 }

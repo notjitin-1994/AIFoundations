@@ -44,3 +44,4 @@ next-env.d.ts
 generate-voiceovers.mjs
 generate-voiceovers-m1.mjs
 generate-myth-busting.mjs
+supabase/.temp/
