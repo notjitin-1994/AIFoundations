@@ -79,7 +79,7 @@ function TitleSlide() {
             {[
               { title: "Not a Knowledge Base", desc: "LLMs don't store facts; they store statistical probabilities of word combinations.", icon: Database },
               { title: "Not a Reasoning Engine", desc: "They cannot 'think' through a problem; they predict the most likely next step.", icon: BrainCircuit },
-              { title: "A Stochastic Parrot", desc: "They stitch language convincingly without actual comprehension.", icon: MessageSquare }
+              { title: "A Stochastic Parrot", desc: "Coined by Bender, Gebru, et al. (2021). They stitch language convincingly without actual comprehension.", icon: MessageSquare }
             ].map((item, i) => (
               <li 
                 key={i} 
@@ -754,7 +754,7 @@ const WHAT_AI_ASSESSMENT_QUESTIONS: KnowledgeCheckQuestion[] = [
     prompt: "Which statement best describes a 'Stochastic Parrot'?",
     options: ["An AI that repeats information with perfect human comprehension", "An AI that stitches language convincingly without actual comprehension", "A reasoning engine that stores factual knowledge", "An AI used exclusively for biological research"],
     correctIndex: 1,
-    explanation: "A stochastic parrot stitches language together based on probabilistic patterns, creating convincing text without any actual understanding of the meaning.",
+    explanation: "Coined by Bender, Gebru, et al. (2021) in 'On the Dangers of Stochastic Parrots.' A stochastic parrot stitches language together based on probabilistic patterns, creating convincing text without any actual understanding of the meaning.",
   },
   {
     prompt: "What event in 2012 marked a major turning point for Deep Learning?",
