@@ -63,7 +63,7 @@ export default function LoginPage() {
       : { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: EASE_OUT, delay } };
 
   return (
-    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-background lg:grid lg:grid-cols-[3fr_2fr]">
+    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-background lg:grid lg:grid-cols-[60%_40%]">
       {/* ═══ LEFT — marketing panel (60% on desktop, hidden on mobile) ═══ */}
       <aside aria-hidden="true" className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex xl:p-14">
         {/* Contextually relevant background — AI/neural network themed */}
