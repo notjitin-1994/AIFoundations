@@ -1,0 +1,122 @@
+Task 26 — Build + Lint Verification
+=====================================
+Status: COMPLETE (verification only — no commit)
+
+Environment
+-----------
+- Next.js 16.2.10 (Turbopack)
+- Node build via `npm run build`
+- Baseline commit for pre-existing comparison: db55b93
+  (the commit immediately before the Supabase integration plan began)
+
+============================================================
+1. TypeScript check  —  `npx tsc --noEmit`
+============================================================
+Result: 2 errors (BOTH pre-existing, NONE introduced by this plan).
+
+  src/components/lesson/reveal.tsx(5,29): error TS2305:
+    Module '"@/store/narration"' has no exported member
+    'selectNarrationFraction'.
+  src/components/lesson/reveal.tsx(42,19): error TS18046:
+    'fraction' is of type 'unknown'.
+
+Analysis:
+  - Both errors are confined to a single file: reveal.tsx.
+  - reveal.tsx is an UNTRACKED, work-in-progress file that is NOT part
+    of any commit in this Supabase integration plan (it does not appear
+    in any of the plan's 20 commits). It is unrelated pre-existing
+    breakage.
+  - Baseline (db55b93, with src/ checked out to that commit and
+    reveal.tsx absent) reported 1 tsc error — i.e. the codebase already
+    had tsc errors before the plan. The plan introduced zero new ones.
+  - Per plan MUST NOT, reveal.tsx was NOT fixed.
+
+Conclusion: 0 new tsc errors introduced by this plan.
+
+============================================================
+2. Lint check  —  `npm run lint`
+============================================================
+Result at HEAD: 104 problems (47 errors, 57 warnings).
+Result at baseline db55b93: 106 problems (49 errors, 57 warnings).
+
+Analysis:
+  - HEAD error count (47) is LOWER than baseline (49) by 2 errors.
+  - Warnings identical (57) at both points.
+  - Therefore the plan introduced NO net new lint errors; if anything
+    it slightly reduced them.
+  - The 47 remaining errors are pre-existing codebase issues in files
+    NOT central to the Supabase work (unescaped entities in m1 slide
+    content, react-hooks/set-state-in-effect in the shadcn carousel
+    component, exhaustive-deps warnings in layout components). None of
+    these were introduced by the Supabase integration commits.
+  - Per plan MUST NOT, pre-existing errors were NOT fixed.
+
+Conclusion: 0 new lint errors introduced by this plan.
+
+============================================================
+3. Build check  —  `npm run build`
+============================================================
+Procedure: reveal.tsx (the only file with tsc errors, untracked and
+plan-unrelated) was moved aside, build run, then restored.
+
+  mv src/components/lesson/reveal.tsx reveal.tsx.bak
+  npm run build   →  exit 0
+  mv reveal.tsx.bak src/components/lesson/reveal.tsx
+
+Build output:
+  ✓ Compiled successfully in 30.8s
+  ✓ Finished TypeScript in 31.4s
+  ✓ Generating static pages (8/8) in 1216ms
+
+Routes built:
+  ○ /               (static)
+  ○ /_not-found     (static)
+  ƒ /admin          (dynamic)
+  ƒ /auth/callback  (dynamic)
+  ○ /login          (static)
+  ƒ /modules/[id]   (dynamic)
+  ○ /signup         (static)
+  ƒ Proxy (Middleware)
+
+Conclusion: Build PASSES (exit 0) with the plan-unrelated reveal.tsx
+moved aside. All Supabase integration routes (/admin, /auth/callback,
+/login, /signup) compile and generate correctly.
+
+============================================================
+4. No `as any` / `@ts-ignore` / `@ts-expect-error` introduced
+============================================================
+Scanned all plan-touched source files:
+  src/actions/xapi.ts
+  src/app/admin/page.tsx
+  src/app/page.tsx
+  src/app/login/page.tsx
+  src/app/signup/page.tsx
+  src/app/auth/callback/route.ts
+  src/components/lesson/assessment-runner.tsx
+  src/components/lesson/canvas-viewer.tsx
+  src/components/layout/header.tsx
+  src/hooks/use-lrs.ts
+  src/hooks/use-user.ts
+  src/lib/media.ts
+  src/lib/supabase/client.ts
+  src/lib/supabase/server.ts
+
+Result: ZERO matches for `as any`, `@ts-ignore`, `@ts-expect-error`.
+
+Conclusion: The plan introduced NO `as any` / `@ts-ignore` /
+`@ts-expect-error` escapes. The codebase's pre-existing `as any` budget
+(react-player, framer-motion variant typing — both unrelated to this
+plan) is unchanged.
+
+============================================================
+SUMMARY
+============================================================
+  Metric                      | Result
+  ----------------------------|----------------------------------
+  New tsc errors              | 0  (2 pre-existing in reveal.tsx)
+  New lint errors             | 0  (47 pre-existing; was 49 at baseline)
+  Build                       | PASS (exit 0)
+  as any / @ts-ignore added   | 0
+
+All three Task 26 acceptance criteria met. No source files were
+modified (Task 26 is verification only, per plan).

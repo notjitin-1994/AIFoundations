@@ -1,0 +1,3 @@
+commit: d4b2855dc43fce9d11fb533dc1861ae8c91dcbac
+message: feat(lrs): enrich assessment xAPI statements with module and slide context
+files: src/components/lesson/assessment-runner.tsx

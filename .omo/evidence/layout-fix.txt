@@ -1,0 +1,6 @@
+commit: 7721d46933e9b176a2456188c573e23413149601
+subject: fix(layout): hide sidebar and header on auth pages (login, signup, auth callback)
+files:
+  - src/components/layout/app-shell.tsx (new)
+  - src/app/layout.tsx (replaced Sidebar/Header wrapping with <AppShell>)
+verify: npx tsc --noEmit -> no errors in layout|app-shell

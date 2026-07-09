@@ -1,0 +1,19 @@
+# Task 14: Supabase Integration — Slide-view xAPI tracking
+
+## Evidence log
+
+### Slide-view tracking added to CanvasViewer
+- File modified: `src/components/lesson/canvas-viewer.tsx`
+- Imported `sendXAPIStatement` from `@/actions/xapi`
+- Added `useEffect` keyed on `[currentIndex, moduleId, slides]` that fires an `experienced` xAPI statement when the user navigates to a new slide
+- Statement object IRI: `http://smartslate.com/activities/${moduleId}/slides/${slide.id}`
+- Context includes `moduleId`, `slideId`, and `lessonIndex`
+- Promise is fire-and-forget (`.catch(() => {})`) so navigation is never blocked
+
+### Verification
+Command: `npx tsc --noEmit 2>&1 | grep "canvas-viewer"`
+Result: no output (0 errors)
+
+### Commit
+Hash: 344888b
+Message: feat(lrs): add slide-view xAPI tracking to CanvasViewer

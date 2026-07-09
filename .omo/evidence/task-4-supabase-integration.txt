@@ -1,0 +1,45 @@
+Task 4 — Initial Supabase Schema Migration Evidence
+Generated: 2026-07-08 09:43:24 UTC
+
+1. File created
+-----------
+Path: supabase/migrations/001_initial_schema.sql
+Size: 91 lines
+
+2. Schema contents
+------------------
+- organizations table (no foreign keys)
+- profiles table (FK to auth.users, organizations)
+- xapi_statements table (FK to auth.users, organizations)
+- 5 indexes on xapi_statements:
+  - idx_xapi_user_time
+  - idx_xapi_org_time
+  - idx_xapi_verb_time
+  - idx_xapi_object_time
+  - idx_xapi_statement_gin
+- module_progress table (FK to auth.users, organizations)
+- assessment_results table (FK to auth.users, organizations)
+- Row Level Security enabled on all 5 tables
+
+3. Verification output
+----------------------
+SQL syntax validation via pgsql-parser (Node):
+- Result: SQL parsed successfully
+- Number of statements: 15
+- Element counts:
+  - CREATE TABLE: 5
+  - CREATE INDEX: 5
+  - ALTER TABLE: 5
+  - ENABLE ROW LEVEL SECURITY: 5
+
+4. Commit
+---------
+Hash: ebcdcf8aa7fbdf951c78e650cbd499d5b548b51d
+Message: feat(db): create initial schema with xAPI statements, profiles, organizations
+Files committed: supabase/migrations/001_initial_schema.sql
+
+5. Notes
+--------
+- RLS policies intentionally NOT added (reserved for Task 5)
+- Triggers intentionally NOT added (reserved for Task 6)
+- Foreign keys reference auth.users directly for RLS simplicity, per spec

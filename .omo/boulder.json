@@ -1,0 +1,265 @@
+{
+  "schema_version": 2,
+  "active_work_id": "supabase-integration-8c1b7f9e",
+  "works": {
+    "supabase-integration-8c1b7f9e": {
+      "work_id": "supabase-integration-8c1b7f9e",
+      "active_plan": "/home/jitin/AIFoundations/.omo/plans/supabase-integration.md",
+      "plan_name": "supabase-integration",
+      "status": "active",
+      "started_at": "2026-07-08T08:53:23.564Z",
+      "updated_at": "2026-07-08T14:09:57.350Z",
+      "session_ids": [
+        "opencode:ses_0bfb6bc52ffe4MQ6cOo74B8tOc"
+      ],
+      "session_origins": {
+        "opencode:ses_0bfb6bc52ffe4MQ6cOo74B8tOc": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "Install Supabase packages, configure environment variables, and set Auth dashboard settings",
+          "session_id": "opencode:ses_0bf0e0a5dffegWiLdwrIS6QfHu",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-07-08T09:05:14.717Z",
+          "started_at": "2026-07-08T09:04:39.909Z",
+          "status": "completed",
+          "ended_at": "2026-07-08T09:05:14.717Z",
+          "elapsed_ms": 34808
+        },
+        "todo:2": {
+          "task_key": "todo:2",
+          "task_label": "2",
+          "task_title": "Create Supabase browser client utility",
+          "session_id": "opencode:ses_0bf063895ffexW7tM2AUlCfAv2",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-07-08T10:32:08.386Z",
+          "started_at": "2026-07-08T09:09:51.376Z",
+          "status": "completed",
+          "ended_at": "2026-07-08T10:32:08.386Z",
+          "elapsed_ms": 4937010
+        },
+        "todo:5": {
+          "task_key": "todo:5",
+          "task_label": "5",
+          "task_title": "Create RLS policies for 3-tier access",
+          "session_id": "opencode:ses_0be77643effek6feXm9oGdzNWh",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "started_at": "2026-07-08T11:15:26.120Z",
+          "status": "completed",
+          "updated_at": "2026-07-08T11:43:04.419Z",
+          "ended_at": "2026-07-08T11:43:04.419Z",
+          "elapsed_ms": 1658299
+        },
+        "todo:7": {
+          "task_key": "todo:7",
+          "task_label": "7",
+          "task_title": "Create login page",
+          "session_id": "opencode:ses_0be686f0affeXMvxDc2ZraTafD",
+          "agent": "Sisyphus-Junior",
+          "category": "visual-engineering",
+          "started_at": "2026-07-08T11:46:59.297Z",
+          "status": "completed",
+          "updated_at": "2026-07-08T12:04:17.855Z",
+          "ended_at": "2026-07-08T12:04:17.855Z",
+          "elapsed_ms": 1038558
+        },
+        "todo:12": {
+          "task_key": "todo:12",
+          "task_label": "12",
+          "task_title": "Rewrite sendXAPIStatement server action",
+          "session_id": "opencode:ses_0be622e15ffeYYtVhbAmlPeXyV",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-07-08T12:10:18.089Z",
+          "started_at": "2026-07-08T12:08:19.220Z",
+          "status": "completed",
+          "ended_at": "2026-07-08T12:10:18.089Z",
+          "elapsed_ms": 118869
+        },
+        "todo:13": {
+          "task_key": "todo:13",
+          "task_label": "13",
+          "task_title": "Create useLRS hook for client-side tracking",
+          "session_id": "opencode:ses_0be5cc82dffeRz40SISx9Wc0Ua",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-07-08T12:17:32.699Z",
+          "started_at": "2026-07-08T12:17:13.854Z",
+          "status": "completed",
+          "ended_at": "2026-07-08T12:17:32.699Z",
+          "elapsed_ms": 18845
+        },
+        "todo:20": {
+          "task_key": "todo:20",
+          "task_label": "20",
+          "task_title": "Add xAPI tracking for Module 0 untracked interactions",
+          "session_id": "opencode:ses_0bdffaddfffeeezDRJSbTykYIw",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "started_at": "2026-07-08T13:45:21.390Z",
+          "status": "completed",
+          "updated_at": "2026-07-08T14:02:40.692Z",
+          "ended_at": "2026-07-08T14:02:40.692Z",
+          "elapsed_ms": 1039302
+        },
+        "todo:23": {
+          "task_key": "todo:23",
+          "task_label": "23",
+          "task_title": "Create admin dashboard page",
+          "session_id": "opencode:ses_0bdf5f572ffejFimhFsFKSBoPL",
+          "agent": "Sisyphus-Junior",
+          "category": "visual-engineering",
+          "updated_at": "2026-07-08T14:07:00.688Z",
+          "started_at": "2026-07-08T14:06:46.938Z",
+          "status": "completed",
+          "ended_at": "2026-07-08T14:07:00.688Z",
+          "elapsed_ms": 13750
+        },
+        "todo:24": {
+          "task_key": "todo:24",
+          "task_label": "24",
+          "task_title": "RLS policy verification tests",
+          "session_id": "opencode:ses_0bdf1e84dffelMT9AYSrwx1L8u",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-07-08T14:09:57.351Z",
+          "started_at": "2026-07-08T14:09:57.351Z",
+          "status": "running"
+        }
+      }
+    }
+  },
+  "active_plan": "/home/jitin/AIFoundations/.omo/plans/supabase-integration.md",
+  "started_at": "2026-07-08T08:53:23.564Z",
+  "status": "active",
+  "updated_at": "2026-07-08T14:09:57.350Z",
+  "session_ids": [
+    "opencode:ses_0bfb6bc52ffe4MQ6cOo74B8tOc"
+  ],
+  "session_origins": {
+    "opencode:ses_0bfb6bc52ffe4MQ6cOo74B8tOc": "direct"
+  },
+  "plan_name": "supabase-integration",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Install Supabase packages, configure environment variables, and set Auth dashboard settings",
+      "session_id": "opencode:ses_0bf0e0a5dffegWiLdwrIS6QfHu",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-08T09:05:14.717Z",
+      "started_at": "2026-07-08T09:04:39.909Z",
+      "status": "completed",
+      "ended_at": "2026-07-08T09:05:14.717Z",
+      "elapsed_ms": 34808
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "Create Supabase browser client utility",
+      "session_id": "opencode:ses_0bf063895ffexW7tM2AUlCfAv2",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-08T10:32:08.386Z",
+      "started_at": "2026-07-08T09:09:51.376Z",
+      "status": "completed",
+      "ended_at": "2026-07-08T10:32:08.386Z",
+      "elapsed_ms": 4937010
+    },
+    "todo:5": {
+      "task_key": "todo:5",
+      "task_label": "5",
+      "task_title": "Create RLS policies for 3-tier access",
+      "session_id": "opencode:ses_0be77643effek6feXm9oGdzNWh",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "started_at": "2026-07-08T11:15:26.120Z",
+      "status": "completed",
+      "updated_at": "2026-07-08T11:43:04.419Z",
+      "ended_at": "2026-07-08T11:43:04.419Z",
+      "elapsed_ms": 1658299
+    },
+    "todo:7": {
+      "task_key": "todo:7",
+      "task_label": "7",
+      "task_title": "Create login page",
+      "session_id": "opencode:ses_0be686f0affeXMvxDc2ZraTafD",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "started_at": "2026-07-08T11:46:59.297Z",
+      "status": "completed",
+      "updated_at": "2026-07-08T12:04:17.855Z",
+      "ended_at": "2026-07-08T12:04:17.855Z",
+      "elapsed_ms": 1038558
+    },
+    "todo:12": {
+      "task_key": "todo:12",
+      "task_label": "12",
+      "task_title": "Rewrite sendXAPIStatement server action",
+      "session_id": "opencode:ses_0be622e15ffeYYtVhbAmlPeXyV",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-08T12:10:18.089Z",
+      "started_at": "2026-07-08T12:08:19.220Z",
+      "status": "completed",
+      "ended_at": "2026-07-08T12:10:18.089Z",
+      "elapsed_ms": 118869
+    },
+    "todo:13": {
+      "task_key": "todo:13",
+      "task_label": "13",
+      "task_title": "Creat
+      "task_key": "todo:13",
+      "task_label": "13",
+      "task_title": "Create useLRS hook for client-side tracking",
+      "session_id": "opencode:ses_0be5cc82dffeRz40SISx9Wc0Ua",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-08T12:17:32.699Z",
+      "started_at": "2026-07-08T12:17:13.854Z",
+      "status": "completed",
+      "ended_at": "2026-07-08T12:17:32.699Z",
+      "elapsed_ms": 18845
+    },
+    "todo:20": {
+      "task_key": "todo:20",
+      "task_label": "20",
+      "task_title": "Add xAPI tracking for Module 0 untracked interactions",
+      "session_id": "opencode:ses_0bdffaddfffeeezDRJSbTykYIw",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "started_at": "2026-07-08T13:45:21.390Z",
+      "status": "completed",
+      "updated_at": "2026-07-08T14:02:40.692Z",
+      "ended_at": "2026-07-08T14:02:40.692Z",
+      "elapsed_ms": 1039302
+    },
+    "todo:23": {
+      "task_key": "todo:23",
+      "task_label": "23",
+      "task_title": "Create admin dashboard page",
+      "session_id": "opencode:ses_0bdf5f572ffejFimhFsFKSBoPL",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-07-08T14:07:00.688Z",
+      "started_at": "2026-07-08T14:06:46.938Z",
+      "status": "completed",
+      "ended_at": "2026-07-08T14:07:00.688Z",
+      "elapsed_ms": 13750
+    },
+    "todo:24": {
+      "task_key": "todo:24",
+      "task_label": "24",
+      "task_title": "RLS policy verification tests",
+      "session_id": "opencode:ses_0bdf1e84dffelMT9AYSrwx1L8u",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-08T14:09:57.351Z",
+      "started_at": "20

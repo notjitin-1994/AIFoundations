@@ -1,0 +1,17 @@
+Task 11: Update header for authenticated user display and logout
+Completed: 2026-07-08
+
+Changes made to src/components/layout/header.tsx:
+- Imported useUser and getDisplayName from @/hooks/use-user
+- Imported createClient from @/lib/supabase/client
+- Imported useRouter from next/navigation
+- Added isLoggingOut state and handleLogout async handler
+- handleLogout calls await createClient().auth.signOut(), then router.push("/login") and router.refresh()
+- Replaced user?.name with getDisplayName(user) for both display text and avatar initial
+- Added subtle "Log out" text button with loading state (shows "Logging out..." when pending)
+- Preserved existing header layout, styling, and structure
+
+Verification:
+- npx tsc --noEmit 2>&1 | grep "header" returned no output (no type errors in header.tsx)
+
+Commit: d362ab9 feat(auth): update header for authenticated user display and logout

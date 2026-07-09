@@ -1,0 +1,21 @@
+Supabase Storage media migration
+Date: 2026-07-08
+Script: scripts/migrate-to-supabase-storage.mjs
+Run: node scripts/migrate-to-supabase-storage.mjs (with .env.local sourced)
+
+Results:
+- course-audio: 41 uploaded, 0 failed, 0 skipped
+- course-images: 10 uploaded, 0 failed, 0 skipped
+- course-videos: 2 uploaded, 0 failed, 0 skipped
+- Total: 53 uploaded, 0 failed
+
+Public URL verification:
+- course-audio/m1-title.mp3 -> HTTP 200
+- course-images/agi.jpg -> HTTP 200
+- course-videos/tech-pulse.mp4 -> HTTP 200
+- course-videos/tech-network.mp4 -> HTTP 200
+
+Notes:
+- Added a minimal WebSocket polyfill so the script runs on Node.js 20, which lacks a global WebSocket but still initialises the Supabase realtime client.
+- Set contentType per file extension because the target buckets enforce allowed_mime_types.
+- Local files were not deleted or renamed.

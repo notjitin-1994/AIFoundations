@@ -1,0 +1,36 @@
+Task 25 — End-to-End Auth Flow Test Doc
+========================================
+Status: COMPLETE
+
+Deliverable
+-----------
+File: src/__tests__/auth-flow.md
+Commit: ef9abdd "test(auth): document end-to-end auth flow test checklist"
+
+The checklist documents 8 manual end-to-end auth scenarios:
+
+  1. Unauthenticated redirect (visit / → /login)
+  2. Signup flow (first/last name, password strength meter, profile row)
+  3. Slide tracking (experienced xAPI statements in Supabase)
+  4. Logout flow
+  5. Login flow
+  6. Invalid login (error message, field persistence)
+  7. Admin access (set app_role='admin' → /admin renders)
+  8. Non-admin blocked (non-admin → /admin redirects to /)
+
+Prerequisites documented: dev server running, Supabase email
+confirmation OFF.
+
+Note: the committed file uses prose-style checkbox items that cover the
+exact same 8 scenarios as the plan's suggested content (identical test
+matrix, slightly more conversational wording). The coverage is
+equivalent — all 8 scenarios and all sub-checkpoints are present.
+
+Verification
+------------
+- File exists on disk: YES (49 lines)
+- File is tracked in git: YES (committed in ef9abdd)
+- Commit message matches plan spec: YES
+  "test(auth): document end-to-end auth flow test checklist"
+
+No source files were modified. No `as any` / `@ts-ignore` introduced.

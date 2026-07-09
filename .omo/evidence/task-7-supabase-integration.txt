@@ -1,0 +1,33 @@
+Task 7 — Supabase Auth Login Page Integration
+=============================================
+
+Evidence of completion
+----------------------
+- File created: src/app/login/page.tsx
+- Commit: 96ad5ab feat(auth): create premium login page with email/password and accessibility
+
+Verification
+------------
+- npx tsc --noEmit: No login-related TypeScript errors found.
+- npx eslint src/app/login/page.tsx: No lint errors or warnings.
+
+Implementation highlights
+-------------------------
+- "use client" Next.js page using App Router.
+- React Hook Form + Zod resolver for email/password validation.
+- Calls supabase.auth.signInWithPassword() via @/lib/supabase/client createClient().
+- Redirects to / on success with router.refresh().
+- Shows generic "Invalid email or password. Please try again." error on failure.
+- Preserves email value and clears password on failed login.
+- Password show/hide toggle with aria-label and aria-pressed.
+- Autofocus on email field; autocomplete attributes set.
+- ARIA live regions for validation and auth errors.
+- Labels via shadcn/ui Label component with htmlFor.
+- Indigo CTA (Button variant="secondary") per STYLE.md two-accent rule.
+- Glassmorphism card with teal ambient glow on dark navy background.
+- Link to /signup at bottom of card.
+
+Notes
+-----
+- Pre-existing TypeScript errors remain in src/components/lesson/reveal.tsx (not modified).
+- Pre-existing lint errors remain in other files (not modified).

@@ -1,0 +1,23 @@
+Task 8 Evidence — Premium Signup Page
+Date: 2026-07-08
+
+File created: src/app/signup/page.tsx
+
+Implementation summary:
+- Client-side Next.js page ("use client") with React Hook Form + Zod validation.
+- Fields: first_name, last_name, email, password (with show/hide toggle via Eye/EyeOff).
+- Real-time password strength meter (Weak/Fair/Good/Strong) with role="progressbar" and ARIA attributes.
+- Calls supabase.auth.signUp() with first_name/last_name passed in options.data.
+- Redirects to "/" on success; surfaces duplicate-email message with link to /login.
+- Preserves field values on error; does not clear the form.
+- Full ARIA support: Label htmlFor, aria-invalid, aria-describedby, aria-live="polite" errors.
+- Visual design matches Smartslate tokens: dark navy page background, glass card, indigo CTA button.
+
+Verification:
+- npx tsc --noEmit: No signup-related type errors found.
+- npx eslint src/app/signup/page.tsx: 0 errors, 1 React Compiler warning about react-hook-form watch() (known incompatibility; no way to avoid while fulfilling the real-time meter requirement).
+
+Notes:
+- Did not add OAuth, magic link, or confirm-password field.
+- Did not create profile manually (DB trigger handles it).
+- Did not modify any other files.

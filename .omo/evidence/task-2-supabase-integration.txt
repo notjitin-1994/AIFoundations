@@ -1,0 +1,11 @@
+
+---
+Task: Create src/lib/supabase/client.ts
+Completed: 2026-07-08T09:09:09Z
+Commit: 978cda3
+File: src/lib/supabase/client.ts
+Type check: npx tsc --noEmit
+- New file: zero errors
+- Pre-existing errors in src/components/lesson/reveal.tsx (unrelated to this change):
+  - TS2305: Module '@/store/narration' has no exported member 'selectNarrationFraction'
+  - TS18046: 'fraction' is of type 'unknown'

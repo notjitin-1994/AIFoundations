@@ -1,0 +1,43 @@
+# Task 13-19: Supabase Integration — useLRS hook and media URL utilities
+
+## Evidence log
+
+### Created `src/hooks/use-lrs.ts`
+- Client-side hook wrapping `sendXAPIStatement` from `@/actions/xapi`
+- Exports `useLRS()` returning `{ track }`
+- `track` accepts verb, verbDisplay, objectId, objectName, optional objectDescription, and optional context with moduleId/slideId/lessonIndex/result
+- Errors are logged to console without blocking the caller
+
+### Created `src/lib/media.ts`
+- Reads `NEXT_PUBLIC_SUPABASE_URL` environment variable
+- Exports three utilities:
+  - `audioUrl(filename)` → `${SUPABASE_URL}/storage/v1/object/public/course-audio/${filename}`
+  - `imageUrl(filename)` → `${SUPABASE_URL}/storage/v1/object/public/course-images/${filename}`
+  - `videoUrl(filename)` → `${SUPABASE_URL}/storage/v1/object/public/course-videos/${filename}`
+
+### Updated media references in `src/`
+- `src/app/page.tsx`
+  - Replaced `/images/research_companion.jpg`, `/images/content_engine.jpg`, `/images/creative_studio.jpg` with `imageUrl(...)`
+  - Replaced `/video/tech-pulse.mp4` with `videoUrl(...)`
+- `src/components/modules/m1/index.tsx`
+  - Replaced all `/audio/*.mp3` references with `audioUrl(...)`
+  - Replaced all `/images/*.jpg` references with `imageUrl(...)`
+- YouTube embed URLs and Unsplash URLs were left unchanged
+- Files in `public/` were not modified or deleted
+
+### Verification
+Command: `grep -rn '"/audio/' src/ | grep -v node_modules`
+Result: no output (0 matches)
+
+Command: `grep -rn '"/images/' src/ | grep -v node_modules`
+Result: no output (0 matches)
+
+Command: `grep -rn '"/video/' src/ | grep -v node_modules`
+Result: no output (0 matches)
+
+Command: `npx tsc --noEmit 2>&1 | grep -E "(use-lrs|media)"`
+Result: no output (0 errors)
+
+### Commit
+Hash: 6ad59d7
+Message: feat(lrs,storage): create useLRS hook, media URL utilities, and update all references

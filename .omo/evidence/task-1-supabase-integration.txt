@@ -1,0 +1,67 @@
+Task 1 — Supabase Integration Setup Evidence
+Generated: 2026-07-08
+
+1. Packages installed
+---------------------
+- @supabase/supabase-js
+- @supabase/ssr
+- react-hook-form
+- zod
+- @hookform/resolvers
+
+2. Verification output
+----------------------
+$ npm ls @supabase/supabase-js @supabase/ssr
+temp_app@0.1.0 /home/jitin/AIFoundations
+├─┬ @supabase/ssr@0.12.0
+│ └── @supabase/supabase-js@2.109.0 deduped
+└── @supabase/supabase-js@2.109.0
+
+$ npm ls react-hook-form zod @hookform/resolvers
+temp_app@0.1.0 /home/jitin/AIFoundations
+├─┬ @hookform/resolvers@5.4.0
+│ └── react-hook-form@7.81.0 deduped
+├─┬ eslint-config-next@16.2.10
+│ └─┬ eslint-plugin-react-hooks@7.1.1
+│   ├─┬ zod-validation-error@4.0.2
+│   │ └── zod@4.4.3 deduped
+│   └── zod@4.4.3 deduped
+├── react-hook-form@7.81.0
+├─┬ shadcn@4.13.0
+│ ├─┬ @modelcontextprotocol/sdk@1.29.0
+│ │ └── zod@4.4.3 deduped
+│ ├─┬ zod-to-json-schema@3.25.2
+│ │ └── zod@4.4.3 deduped
+│ └── zod@3.25.76
+└── zod@4.4.3
+
+3. Environment variables
+------------------------
+File: .env.local
+Added:
+  NEXT_PUBLIC_SUPABASE_URL=https://lymilwegnuzimngpawik.supabase.co
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_tT7RlIlWh1MyDmjD0n9Ekw_kYjt1tWB
+
+Note: .env.local is ignored by .gitignore (.env* pattern). It was NOT staged or committed.
+
+4. Supabase Auth dashboard configuration (manual)
+--------------------------------------------------
+Project URL: https://lymilwegnuzimngpawik.supabase.co
+Required settings to apply in the Supabase Dashboard:
+- Authentication → Providers → Email: Turn OFF "Confirm email"
+- Authentication → Policies / Passwords: Set minimum password length to 8 characters
+- Authentication → Policies / Passwords: Require uppercase, lowercase, digits, and symbols
+- Authentication → Policies / Passwords: Enable leaked password protection (if on Pro plan)
+- Authentication → Rate Limits: Verify 5 attempts per minute per IP is enabled
+- Authentication → Providers → Email: Ensure magic link / passwordless login is NOT the primary method
+
+5. What was NOT done (per task constraints)
+-------------------------------------------
+- No OAuth packages installed
+- @supabase/supabase-client-nextjs (deprecated) NOT installed
+- Supabase client files NOT created (reserved for Task 2 and 3)
+
+6. Commit
+---------
+Commit message: chore: install supabase packages and configure env vars
+Files committed: package.json, package-lock.json

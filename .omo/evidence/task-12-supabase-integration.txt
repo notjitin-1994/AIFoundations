@@ -1,0 +1,6 @@
+Task: Rewrite src/actions/xapi.ts to insert xAPI statements into Supabase instead of POSTing to an external LRS.
+Date: 2026-07-08
+Commit: a02a787 feat(lrs): rewrite xAPI server action to insert into Supabase
+Verification: npx tsc --noEmit 2>&1 | grep "xapi" produced no output (no xapi-related TypeScript errors).
+Note: Full project type-check still has two unrelated pre-existing errors in src/components/lesson/reveal.tsx.
+Changes: Replaced external LRS fetch with Supabase server-client insert into xapi_statements. Added optional 6th context parameter. No call sites modified.

@@ -1,0 +1,52 @@
+Task 15 — Create Public Supabase Storage Buckets
+Generated: 2026-07-08T11:15:00Z
+Project: lymilwegnuzimngpawik (https://lymilwegnuzimngpawik.supabase.co)
+
+Goal
+----
+Create three public Storage buckets:
+- course-audio  (50 MB limit, audio/mpeg audio/mp3)
+- course-images (10 MB limit, image/jpeg image/png image/webp image/gif)
+- course-videos (512 MB limit, video/mp4 video/webm)
+
+Credentials available in workspace
+----------------------------------
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_tT7RlIlWh1MyDmjD0n9Ekw_kYjt1tWB
+- Supabase CLI access token in ~/.supabase/access-token belongs to project yzidfofruhqoxujkbvdi,
+  not the target project lymilwegnuzimngpawik.
+- No SUPABASE_SERVICE_ROLE_KEY or project-specific management token found in .env*, .omo/, or ~/.supabase/.
+
+Attempts
+--------
+1. Supabase Storage REST API with publishable key (POST /storage/v1/bucket)
+   Result: HTTP 403 Unauthorized — "new row violates row-level security policy"
+   Buckets requested: course-audio, course-images, course-videos
+   Root cause: publishable/anon key does not have INSERT privileges on storage.buckets.
+
+2. Supabase CLI (supabase storage create-bucket)
+   Result: CLI linked project is yzidfofruhqoxujkbvdi. Attempt to relink to lymilwegnuzimngpawik
+   failed with: "Your account does not have the necessary privileges to access this endpoint."
+
+3. Supabase Management API (api.supabase.com) with local access token
+   Result: Token only lists project yzidfofruhqoxujkbvdi. Calls for lymilwegnuzimngpawik
+   return privilege errors.
+
+Verification
+------------
+- List existing buckets (GET /storage/v1/bucket with publishable key): [] (empty array)
+- No buckets named course-audio, course-images, or course-videos exist yet.
+
+Blocker
+-------
+Bucket creation requires a service-role key or a management access token for project
+lymilwegnuzimngpawik. Neither is present in the workspace, so the buckets could not be created
+automatically.
+
+Next step
+---------
+Provide either:
+- SUPABASE_SERVICE_ROLE_KEY for project lymilwegnuzimngpawik, or
+- A Supabase management access token that has privileges on project lymilwegnuzimngpawik.
+
+Once either credential is available, re-run the bucket creation commands and update this file
+with success confirmation.
