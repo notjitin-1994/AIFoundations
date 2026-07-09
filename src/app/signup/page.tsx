@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Sparkles, TrendingUp } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 const schema = z.object({
@@ -28,8 +28,9 @@ const schema = z.object({
 
 type SignupFormData = z.infer<typeof schema>;
 
-/* Emil-design-eng: strong ease-out, under 300ms for UI */
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+
+const LOGO_URL = "https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png";
 
 type StrengthLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -78,11 +79,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
                 className={`h-full rounded-full ${color}`}
                 initial={false}
                 animate={{ width: active ? "100%" : "0%" }}
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 300, damping: 30 }
-                }
+                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
               />
             </div>
           );
@@ -90,9 +87,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="font-medium text-foreground/80">{label}</span>
-        <span className="text-muted-foreground/60">
-          Use 8+ characters with uppercase, lowercase, numbers &amp; symbols
-        </span>
+        <span className="text-muted-foreground/60">8+ chars · upper · lower · number · symbol</span>
       </div>
     </div>
   );
@@ -125,12 +120,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      options: {
-        data: {
-          first_name: data.first_name,
-          last_name: data.last_name,
-        },
-      },
+      options: { data: { first_name: data.first_name, last_name: data.last_name } },
     });
 
     setIsLoading(false);
@@ -145,10 +135,7 @@ export default function SignupPage() {
         setAuthError(
           <span>
             An account with this email already exists.{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
-            >
+            <Link href="/login" className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline">
               Would you like to sign in instead?
             </Link>
           </span>
@@ -163,140 +150,114 @@ export default function SignupPage() {
     router.refresh();
   };
 
-  /* Emil: stagger — 60ms between siblings, scale(0.95) + opacity entrance */
   const stagger = (delay: number) =>
     reduce
       ? { initial: false as const, animate: { opacity: 1, y: 0 }, transition: { duration: 0 } }
       : { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: EASE_OUT, delay } };
 
   return (
-    <main className="relative grid min-h-[100dvh] grid-cols-1 overflow-hidden bg-background lg:grid-cols-[5fr_6fr]">
-      {/* ═══ LEFT — branding panel ═══ */}
-      <aside
-        aria-hidden="true"
-        className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex xl:p-16"
-      >
-        {/* Background image — subtle, dark, AI/tech themed */}
+    <main className="relative flex h-[100dvh] flex-col overflow-hidden bg-background lg:grid lg:grid-cols-[3fr_2fr]">
+      {/* ═══ LEFT — marketing panel (60%) ═══ */}
+      <aside aria-hidden="true" className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex xl:p-14">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.12]"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.14]"
           style={{
             backgroundImage:
-              "url(https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80)",
+              "url(https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80)",
           }}
         />
-        {/* Dark overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#020C1B] via-[#020C1B]/95 to-[#0d1b2a]/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#020C1B] via-[#020C1B]/90 to-[#0d1b2a]/70" />
 
-        {/* Floating orbs */}
         <motion.div
-          className="absolute -left-20 top-10 size-[28rem] rounded-full bg-primary/8 blur-[100px]"
+          className="absolute -left-20 top-10 size-[26rem] rounded-full bg-primary/8 blur-[100px]"
           animate={reduce ? undefined : { y: [0, -18, 0], x: [0, 12, 0] }}
           transition={reduce ? undefined : { duration: 14, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute -right-16 bottom-8 size-[24rem] rounded-full bg-secondary/8 blur-[100px]"
+          className="absolute right-0 bottom-0 size-[22rem] rounded-full bg-secondary/8 blur-[100px]"
           animate={reduce ? undefined : { y: [0, 16, 0], x: [0, -14, 0] }}
           transition={reduce ? undefined : { duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* ── Top: SmartSlate logo ── */}
+        {/* SmartSlate logo */}
         <div className="relative">
-          <img
-            src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png"
-            alt="SmartSlate"
-            className="h-9 w-auto"
-          />
+          <img src={LOGO_URL} alt="SmartSlate" className="h-9 w-auto" />
         </div>
 
-        {/* ── Middle: headline + feature cards ── */}
-        <div className="relative max-w-sm space-y-8">
+        {/* Enriched headline + features */}
+        <div className="relative max-w-md space-y-7">
           <div>
-            <h2 className="font-heading text-[2.25rem] font-bold leading-[1.15] tracking-tight text-foreground xl:text-5xl">
-              Start your{" "}
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                AI journey
-              </span>
+            <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-primary/70">GenAI Foundations</p>
+            <h2 className="font-heading text-2xl font-bold leading-tight tracking-tight text-foreground xl:text-[1.75rem]">
+              Concept to{" "}
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Application</span>
             </h2>
-            <p className="mt-5 max-w-xs text-[0.925rem] leading-relaxed text-muted-foreground">
-              Join a hands-on, narrated course that takes you from core concepts to confident, real-world application.
+            <p className="mt-4 max-w-sm text-[0.9rem] leading-relaxed text-muted-foreground">
+              Join learners from non-technical backgrounds who are building real GenAI fluency. No coding experience
+              required — just curiosity and a willingness to engage.
             </p>
           </div>
 
-          {/* Feature cards */}
-          <div className="space-y-3">
-            <div className="flex items-start gap-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4 backdrop-blur-sm transition-colors duration-300 hover:border-white/10">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                <Mail className="size-[17px]" />
+          <div className="space-y-2.5">
+            <div className="flex items-start gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] p-3.5 backdrop-blur-sm">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <Sparkles className="size-[16px]" />
               </div>
               <div>
-                <p className="text-[0.825rem] font-medium text-foreground">Hands-on, not passive</p>
+                <p className="text-[0.8rem] font-medium text-foreground">Zero to confident</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Build a real project spine as you learn — apply each concept immediately.
+                  Start from absolute basics. Each module builds on the last — no prior technical knowledge assumed.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4 backdrop-blur-sm transition-colors duration-300 hover:border-white/10">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                <User className="size-[17px]" />
+            <div className="flex items-start gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] p-3.5 backdrop-blur-sm">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <TrendingUp className="size-[16px]" />
               </div>
               <div>
-                <p className="text-[0.825rem] font-medium text-foreground">Built for non-technical pros</p>
+                <p className="text-[0.8rem] font-medium text-foreground">Build a real project</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  No coding experience needed. Start from zero, build real fluency.
+                  Choose a project spine — Research Companion, Content Engine, or Creative Studio — and apply every concept.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Bottom ── */}
-        <p className="relative text-xs text-muted-foreground/50">
-          Free to start. No credit card required.
-        </p>
+        <p className="relative text-xs text-muted-foreground/40">Free to start. No credit card required.</p>
       </aside>
 
-      {/* ═══ RIGHT — form panel ═══ */}
-      <section className="relative flex items-center justify-center px-5 py-12 sm:px-8">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.05] blur-[120px]" />
+      {/* ═══ RIGHT — form panel (40% on desktop, full screen on mobile) ═══ */}
+      <section className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-5 lg:justify-center">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 size-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.04] blur-[120px]" />
 
-        {/* Mobile header — SmartSlate logo */}
-        <div className="absolute left-0 top-0 flex w-full items-center justify-center px-5 py-6 lg:hidden">
-          <img
-            src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png"
-            alt="SmartSlate"
-            className="h-7 w-auto"
-          />
+        {/* Mobile: logo centered at top */}
+        <div className="flex shrink-0 justify-center pb-3 pt-5 lg:hidden">
+          <img src={LOGO_URL} alt="SmartSlate" className="h-7 w-auto" />
         </div>
 
         <motion.div
-          initial={reduce ? false : { opacity: 0, y: 14, scale: 0.97 }}
+          initial={reduce ? false : { opacity: 0, y: 12, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={reduce ? { duration: 0 } : { duration: 0.5, ease: EASE_OUT }}
-          className="relative w-full max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-card/60 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:p-10"
+          className="relative my-auto w-full max-w-[24rem] overflow-y-auto overflow-x-hidden rounded-[1.5rem] border border-white/[0.08] bg-card/60 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-7 lg:max-w-[22rem] lg:p-7"
         >
-          {/* Top-edge gradient highlight */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-          {/* Header */}
-          <motion.div {...stagger(0.06)} className="mb-7 space-y-1.5">
-            <h1 className="font-heading text-[1.75rem] font-bold tracking-tight text-foreground md:text-[2rem]">
+          <motion.div {...stagger(0.06)} className="mb-5 space-y-1">
+            <h1 className="font-heading text-[1.5rem] font-bold tracking-tight text-foreground sm:text-[1.75rem]">
               Create your account
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Start learning AI foundations today
-            </p>
+            <p className="text-[0.825rem] text-muted-foreground">Start learning AI foundations today</p>
           </motion.div>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
             {/* Name fields */}
-            <motion.div {...stagger(0.12)} className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="first_name" className="text-[0.825rem] font-medium text-foreground">
-                  First name
-                </Label>
+            <motion.div {...stagger(0.12)} className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="first_name" className="text-[0.8rem] font-medium text-foreground">First name</Label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
+                  <User className="pointer-events-none absolute left-3 top-1/2 size-[17px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
                   <Input
                     id="first_name"
                     type="text"
@@ -304,45 +265,33 @@ export default function SignupPage() {
                     autoFocus
                     aria-invalid={!!errors.first_name}
                     aria-describedby={errors.first_name ? "first_name-error" : undefined}
-                    className="h-12 rounded-xl border-white/[0.08] bg-white/[0.03] pl-11 text-[0.95rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15"
+                    className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] pl-10 text-[0.875rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15 sm:h-11 sm:text-[0.9rem]"
                     {...register("first_name")}
                   />
                 </div>
-                {errors.first_name && (
-                  <p id="first_name-error" className="text-sm text-destructive" aria-live="polite">
-                    {errors.first_name.message}
-                  </p>
-                )}
+                {errors.first_name && <p id="first_name-error" className="text-xs text-destructive" aria-live="polite">{errors.first_name.message}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name" className="text-[0.825rem] font-medium text-foreground">
-                  Last name
-                </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="last_name" className="text-[0.8rem] font-medium text-foreground">Last name</Label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
+                  <User className="pointer-events-none absolute left-3 top-1/2 size-[17px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
                   <Input
                     id="last_name"
                     type="text"
                     autoComplete="family-name"
                     aria-invalid={!!errors.last_name}
                     aria-describedby={errors.last_name ? "last_name-error" : undefined}
-                    className="h-12 rounded-xl border-white/[0.08] bg-white/[0.03] pl-11 text-[0.95rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15"
+                    className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] pl-10 text-[0.875rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15 sm:h-11 sm:text-[0.9rem]"
                     {...register("last_name")}
                   />
                 </div>
-                {errors.last_name && (
-                  <p id="last_name-error" className="text-sm text-destructive" aria-live="polite">
-                    {errors.last_name.message}
-                  </p>
-                )}
+                {errors.last_name && <p id="last_name-error" className="text-xs text-destructive" aria-live="polite">{errors.last_name.message}</p>}
               </div>
             </motion.div>
 
             {/* Email */}
-            <motion.div {...stagger(0.18)} className="space-y-2">
-              <Label htmlFor="email" className="text-[0.825rem] font-medium text-foreground">
-                Email
-              </Label>
+            <motion.div {...stagger(0.18)} className="space-y-1.5">
+              <Label htmlFor="email" className="text-[0.8rem] font-medium text-foreground">Email</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
                 <Input
@@ -352,22 +301,16 @@ export default function SignupPage() {
                   inputMode="email"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? "email-error" : undefined}
-                  className="h-12 rounded-xl border-white/[0.08] bg-white/[0.03] pl-11 text-[0.95rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15"
+                  className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] pl-10 text-[0.875rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15 sm:h-11 sm:text-[0.9rem]"
                   {...register("email")}
                 />
               </div>
-              {errors.email && (
-                <p id="email-error" className="text-sm text-destructive" aria-live="polite">
-                  {errors.email.message}
-                </p>
-              )}
+              {errors.email && <p id="email-error" className="text-xs text-destructive" aria-live="polite">{errors.email.message}</p>}
             </motion.div>
 
             {/* Password */}
-            <motion.div {...stagger(0.24)} className="space-y-2">
-              <Label htmlFor="password" className="text-[0.825rem] font-medium text-foreground">
-                Password
-              </Label>
+            <motion.div {...stagger(0.24)} className="space-y-1.5">
+              <Label htmlFor="password" className="text-[0.8rem] font-medium text-foreground">Password</Label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground/40" aria-hidden="true" />
                 <Input
@@ -376,7 +319,7 @@ export default function SignupPage() {
                   autoComplete="new-password"
                   aria-invalid={!!errors.password}
                   aria-describedby={errors.password ? "password-error" : "password-strength"}
-                  className="h-12 rounded-xl border-white/[0.08] bg-white/[0.03] pl-11 pr-11 text-[0.95rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15"
+                  className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] pl-10 pr-10 text-[0.875rem] text-foreground transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground/40 focus-visible:border-primary/30 focus-visible:bg-white/[0.05] focus-visible:ring-primary/15 sm:h-11 sm:text-[0.9rem]"
                   {...register("password")}
                 />
                 <button
@@ -391,11 +334,7 @@ export default function SignupPage() {
               <div id="password-strength">
                 <PasswordStrengthMeter password={passwordValue} />
               </div>
-              {errors.password && (
-                <p id="password-error" className="text-sm text-destructive" aria-live="polite">
-                  {errors.password.message}
-                </p>
-              )}
+              {errors.password && <p id="password-error" className="text-xs text-destructive" aria-live="polite">{errors.password.message}</p>}
             </motion.div>
 
             {/* Auth error */}
@@ -404,7 +343,7 @@ export default function SignupPage() {
                 initial={reduce ? false : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={reduce ? { duration: 0 } : { duration: 0.25, ease: EASE_OUT }}
-                className="rounded-xl border border-destructive/20 bg-destructive/8 p-3 text-sm text-destructive"
+                className="rounded-xl border border-destructive/20 bg-destructive/8 p-3 text-xs text-destructive"
                 aria-live="polite"
                 role="alert"
               >
@@ -412,18 +351,15 @@ export default function SignupPage() {
               </motion.div>
             )}
 
-            {/* Submit — emil: scale(0.97) on active, gradient bg */}
+            {/* Submit */}
             <motion.div {...stagger(0.3)}>
               <Button
                 type="submit"
-                className="h-12 w-full rounded-xl bg-gradient-to-b from-secondary to-secondary/90 text-[0.95rem] font-semibold tracking-tight text-secondary-foreground shadow-[0_4px_14px_-2px_rgba(79,70,229,0.35)] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-[0_6px_20px_-2px_rgba(79,70,229,0.45)] active:scale-[0.97]"
+                className="h-11 w-full rounded-xl bg-gradient-to-b from-secondary to-secondary/90 text-[0.9rem] font-semibold tracking-tight text-secondary-foreground shadow-[0_4px_14px_-2px_rgba(79,70,229,0.35)] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-[0_6px_20px_-2px_rgba(79,70,229,0.45)] active:scale-[0.97]"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    <span>Creating account...</span>
-                  </>
+                  <><Loader2 className="size-4 animate-spin" aria-hidden="true" /><span>Creating account...</span></>
                 ) : (
                   "Create account"
                 )}
@@ -431,16 +367,9 @@ export default function SignupPage() {
             </motion.div>
           </form>
 
-          {/* Footer link */}
-          <motion.p
-            {...stagger(0.36)}
-            className="mt-7 text-center text-sm text-muted-foreground"
-          >
+          <motion.p {...stagger(0.36)} className="mt-5 text-center text-[0.825rem] text-muted-foreground">
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary underline-offset-4 transition-colors duration-200 hover:text-primary/80 hover:underline"
-            >
+            <Link href="/login" className="font-medium text-primary underline-offset-4 transition-colors duration-200 hover:text-primary/80 hover:underline">
               Sign in
             </Link>
           </motion.p>
