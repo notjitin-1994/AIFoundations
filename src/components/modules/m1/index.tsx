@@ -1687,46 +1687,250 @@ function BiasInAI() {
 // 10. Knowledge Check
 function Module1Quiz({ onComplete }: { onComplete: () => void }) {
   const questions: KnowledgeCheckQuestion[] = [
+    // ── What is AI / The Intelligence Illusion (Q1-4) ──
     {
-      prompt: "What is the most accurate description of how a Large Language Model generates text?",
+      prompt: "What is the fundamental way Large Language Models generate text?",
       options: [
-        "It queries a massive internal database of facts.",
-        "It calculates the statistical probability of the next token.",
-        "It reasons through logical steps like a human."
+        "They query a massive internal database of facts.",
+        "They calculate the statistical probability of the next token.",
+        "They reason through logical steps like a human brain."
       ],
       correctIndex: 1,
-      explanation: "LLMs are fundamentally prediction engines. They do not 'know' facts; they predict what word (token) is statistically most likely to follow the sequence provided."
+      explanation: "LLMs are prediction engines. They do not store facts or reason — they predict what token is statistically most likely to follow the sequence provided."
     },
     {
-      prompt: "Which of the following is an advantage of a Small Language Model (SLM) over a Large Language Model (LLM)?",
+      prompt: "What does the term 'stochastic parrot' describe about LLMs?",
       options: [
-        "SLMs have broader general knowledge.",
-        "SLMs never hallucinate.",
-        "SLMs can run locally on edge devices, preserving privacy."
+        "They can learn multiple languages simultaneously.",
+        "They stitch language convincingly without actual comprehension.",
+        "They repeat everything they hear exactly as trained.",
+        "They can only generate text about birds."
+      ],
+      correctIndex: 1,
+      explanation: "Coined by Bender, Gebru, et al. (2021), a stochastic parrot convincingly combines words based on statistical patterns without any understanding of meaning."
+    },
+    {
+      prompt: "What is the difference between AGI and Narrow AI?",
+      options: [
+        "AGI is what we use today; Narrow AI is science fiction.",
+        "AGI can perform any intellectual task; Narrow AI is specialized for specific tasks.",
+        "AGI runs on phones; Narrow AI requires data centers.",
+        "There is no difference — they are the same thing."
+      ],
+      correctIndex: 1,
+      explanation: "AGI (Artificial General Intelligence) would possess human-like reasoning across any domain — currently science fiction. Narrow AI performs highly specialized pattern matching for specific tasks."
+    },
+    {
+      prompt: "Which statement about LLMs is accurate?",
+      options: [
+        "They are a knowledge base that stores verified facts.",
+        "They are a reasoning engine that thinks through problems.",
+        "They store statistical probabilities of word combinations.",
+        "They have consciousness and intent."
       ],
       correctIndex: 2,
-      explanation: "Because SLMs have fewer parameters, they require less computational power and can run directly on phones or laptops, keeping data private and avoiding cloud costs."
+      explanation: "LLMs are neither a knowledge base nor a reasoning engine. They store statistical probabilities and predict likely word sequences — they have no consciousness or intent."
+    },
+
+    // ── Machine Learning Types (Q5-7) ──
+    {
+      prompt: "In Supervised Learning, how is the training data structured?",
+      options: [
+        "Every example is clearly labeled with the correct answer.",
+        "Data is completely unlabeled and unorganized.",
+        "The model receives rewards and penalties for actions.",
+        "Data is generated randomly by the model itself."
+      ],
+      correctIndex: 0,
+      explanation: "Supervised Learning is like a classroom with an answer key — every training example comes with a known label (e.g., 'This is a cat', 'This is a dog')."
     },
     {
-      prompt: "When an AI confidently provides incorrect information because it prioritized a statistically likely sentence structure over factual accuracy, this is called a:",
+      prompt: "Which type of machine learning finds hidden structures in unlabeled data?",
       options: [
-        "Context limit",
-        "Hallucination",
-        "Model collapse"
+        "Supervised Learning",
+        "Unsupervised Learning",
+        "Reinforcement Learning",
+        "Transfer Learning"
       ],
       correctIndex: 1,
-      explanation: "Hallucinations occur when the model's primary function—predicting the next likely word—overrides factual grounding, resulting in plausible but false statements."
+      explanation: "Unsupervised Learning works like a library archeologist — given uncategorized, unorganized data with no labels, it identifies similarities and groups items into logical clusters."
+    },
+    {
+      prompt: "How does Reinforcement Learning differ from Supervised and Unsupervised Learning?",
+      options: [
+        "It requires labeled data like Supervised Learning.",
+        "It finds patterns in unlabeled data like Unsupervised Learning.",
+        "The model learns through trial and error using rewards and penalties.",
+        "It can only be used for language tasks."
+      ],
+      correctIndex: 2,
+      explanation: "Reinforcement Learning is trial-and-error — the AI interacts with an environment, receives rewards for good actions and penalties for bad ones, and iteratively learns the optimal strategy."
+    },
+
+    // ── Deep Learning, Neural Networks & Transformers (Q8-10) ──
+    {
+      prompt: "What are the adjustable parameters in a neural network called?",
+      options: [
+        "Tokens and prompts",
+        "Weights and biases",
+        "Layers and nodes",
+        "Inputs and outputs"
+      ],
+      correctIndex: 1,
+      explanation: "Neural networks have millions or billions of adjustable parameters called weights and biases. These fine-tune how data passes through layers of interconnected nodes."
+    },
+    {
+      prompt: "What architectural breakthrough enables Transformers to process entire sequences simultaneously?",
+      options: [
+        "Reading words one at a time in sequential order",
+        "The attention mechanism",
+        "Reinforcement learning loops",
+        "Stochastic gradient descent"
+      ],
+      correctIndex: 1,
+      explanation: "The Transformer's attention mechanism looks at the entire sequence of words at once, learning which words are contextually related regardless of their distance in the sentence."
+    },
+    {
+      prompt: "What is Deep Learning?",
+      options: [
+        "Machine learning that uses artificial neural networks with multiple layers.",
+        "Learning that requires human supervision at every step.",
+        "A type of reinforcement learning with deep rewards.",
+        "Learning that happens without any data."
+      ],
+      correctIndex: 0,
+      explanation: "Deep Learning uses artificial neural networks — layers of interconnected nodes inspired by the human brain — to learn incredibly complex patterns from data."
+    },
+
+    // ── Next-Token Prediction: Temperature & Top-P (Q11-13) ──
+    {
+      prompt: "What does the 'Temperature' setting control in a language model?",
+      options: [
+        "The speed at which the model generates text.",
+        "The number of tokens the model can process.",
+        "The randomness vs. determinism of word selection.",
+        "The accuracy of factual responses."
+      ],
+      correctIndex: 2,
+      explanation: "Temperature controls randomness. Low temperature forces the safest, most likely word (deterministic). High temperature allows risk and creativity (more random)."
+    },
+    {
+      prompt: "What does a HIGH temperature setting produce?",
+      options: [
+        "Safe, predictable, repetitive output.",
+        "More creative, varied, and risk-taking output.",
+        "Faster response times.",
+        "More factually accurate answers."
+      ],
+      correctIndex: 1,
+      explanation: "High temperature allows the model to select less probable tokens, producing more creative, varied, and unexpected output — useful for brainstorming but less reliable for factual tasks."
+    },
+    {
+      prompt: "What does the 'Top-P' (nucleus sampling) setting restrict?",
+      options: [
+        "The maximum length of the response.",
+        "The pool of possible words to only the top percentage of likely candidates.",
+        "The number of languages the model can use.",
+        "The total compute cost per request."
+      ],
+      correctIndex: 1,
+      explanation: "Top-P restricts the candidate pool to only the most likely tokens whose cumulative probability reaches P. This filters out extremely unlikely words while preserving natural variation."
+    },
+
+    // ── LLMs vs SLMs (Q14-15) ──
+    {
+      prompt: "Which is an advantage of a Small Language Model (SLM) over a Large Language Model (LLM)?",
+      options: [
+        "SLMs have broader general knowledge.",
+        "SLMs can run locally on edge devices, preserving privacy.",
+        "SLMs never hallucinate.",
+        "SLMs can process more tokens at once."
+      ],
+      correctIndex: 1,
+      explanation: "SLMs have fewer parameters, requiring less computational power. They can run directly on phones or laptops, keeping data completely local and ensuring maximum privacy."
+    },
+    {
+      prompt: "Why do Large Language Models (LLMs) typically require data centers to run?",
+      options: [
+        "They need physical security for their training data.",
+        "They have hundreds of billions of parameters requiring massive compute.",
+        "They can only run on specialized AI hardware unavailable to consumers.",
+        "They require constant internet connectivity to function."
+      ],
+      correctIndex: 1,
+      explanation: "LLMs like GPT-5.6 or Claude Sonnet 5 have hundreds of billions of parameters. Running inference on these requires massive computational resources found only in data centers."
+    },
+
+    // ── Prompt Engineering (Q16-17) ──
+    {
+      prompt: "What are the four anatomical parts of a well-structured prompt?",
+      options: [
+        "Input, Processing, Output, Feedback",
+        "Role, Task, Context, Constraints",
+        "Question, Answer, Explanation, Example",
+        "Language, Tone, Length, Format"
+      ],
+      correctIndex: 1,
+      explanation: "A perfect prompt has: Role (persona), Task (specific action), Context (background info to prevent wrong assumptions), and Constraints (boundaries on format, length, or tone)."
+    },
+    {
+      prompt: "Why does setting a 'Role' in a prompt (e.g., 'You are an expert instructional designer') affect the output?",
+      options: [
+        "It activates a different model variant.",
+        "It weights the statistical model towards vocabulary and concepts associated with that role.",
+        "It increases the temperature setting automatically.",
+        "It restricts the model to only produce factual content."
+      ],
+      correctIndex: 1,
+      explanation: "Setting a role heavily weights the model's statistical probabilities toward the vocabulary, tone, and conceptual framework associated with that professional domain."
+    },
+
+    // ── Hallucinations (Q18-19) ──
+    {
+      prompt: "When an AI confidently provides incorrect information because it prioritized plausible sentence structure over factual accuracy, this is called:",
+      options: [
+        "A context limit",
+        "A hallucination",
+        "Model collapse",
+        "Overfitting"
+      ],
+      correctIndex: 1,
+      explanation: "Hallucinations occur when the model's primary function — predicting the next likely word — overrides factual grounding, producing plausible-sounding but false statements."
+    },
+    {
+      prompt: "What is the key takeaway regarding AI-generated content?",
+      options: [
+        "AI output should always be trusted as factual.",
+        "The AI generates, but you evaluate.",
+        "Hallucinations only happen with low-quality models.",
+        "AI hallucinations can be eliminated with better prompts alone."
+      ],
+      correctIndex: 1,
+      explanation: "Always remember: the AI generates, but you evaluate. LLMs produce statistically plausible text — it is your responsibility to verify factual accuracy."
+    },
+
+    // ── Bias (Q20) ──
+    {
+      prompt: "Why do AI models reproduce societal biases (e.g., gender stereotypes in professions)?",
+      options: [
+        "Models are explicitly programmed with biased rules.",
+        "Models learn from human data that contains historical and systemic biases.",
+        "Bias is introduced during the prompt engineering phase.",
+        "Models randomly generate biased output regardless of training data."
+      ],
+      correctIndex: 1,
+      explanation: "AI models are mirrors of their training data. If the internet contains historical biases — like 'the CEO walked into his office' — the model reproduces these statistical patterns, reflecting societal bias, not factual rules."
     }
   ];
 
   return (
     <KnowledgeCheck
-      title="Module 1 Knowledge Check"
-      description="Answer all three questions correctly to complete the module."
+      title="Module 1 Final Assessment"
+      description="20 questions covering all Module 1 lessons. Answer each correctly to proceed."
       questions={questions}
       onComplete={onComplete}
-      successHeadline="Module Complete!"
-      successSubline="You've successfully demonstrated your understanding of Module 1 — from core concepts to the reality of hallucination."
+      successHeadline="Module 1 Complete!"
+      successSubline="You've demonstrated comprehensive understanding of AI foundations — from the intelligence illusion to bias awareness."
     />
   );
 }
