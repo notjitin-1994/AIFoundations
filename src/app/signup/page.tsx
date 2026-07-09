@@ -185,14 +185,14 @@ export default function SignupPage() {
         </div>
 
         {/* Enriched headline + features */}
-        <div className="relative max-w-md space-y-7">
+        <div className="relative max-w-3xl space-y-7">
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-primary/70">GenAI Foundations</p>
             <h2 className="font-heading text-2xl font-bold leading-tight tracking-tight text-foreground xl:text-[1.75rem]">
               Concept to{" "}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Application</span>
             </h2>
-            <p className="mt-4 max-w-sm text-[0.9rem] leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-lg text-[0.9rem] leading-relaxed text-muted-foreground">
               Join learners from non-technical backgrounds who are building real GenAI fluency. No coding experience
               required — just curiosity and a willingness to engage.
             </p>
@@ -240,7 +240,7 @@ export default function SignupPage() {
           initial={reduce ? false : { opacity: 0, y: 12, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={reduce ? { duration: 0 } : { duration: 0.5, ease: EASE_OUT }}
-          className="relative my-auto w-full max-w-[24rem] overflow-y-auto overflow-x-hidden rounded-[1.5rem] border border-white/[0.08] bg-card/60 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-7 lg:max-w-xl lg:p-7"
+          className="relative my-auto w-full max-w-[24rem] overflow-y-auto overflow-x-hidden rounded-[1.5rem] border border-white/[0.08] bg-card/60 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-7 lg:max-w-2xl lg:p-7"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
