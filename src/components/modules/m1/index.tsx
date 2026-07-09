@@ -1686,120 +1686,48 @@ function BiasInAI() {
 
 // 10. Knowledge Check
 function Module1Quiz({ onComplete }: { onComplete: () => void }) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const { setNavOverride } = useCanvasNav();
-
-  const questions = [
+  const questions: KnowledgeCheckQuestion[] = [
     {
-      question: "What is the most accurate description of how a Large Language Model generates text?",
+      prompt: "What is the most accurate description of how a Large Language Model generates text?",
       options: [
-        { id: 1, text: "It queries a massive internal database of facts." },
-        { id: 2, text: "It calculates the statistical probability of the next token." },
-        { id: 3, text: "It reasons through logical steps like a human." }
+        "It queries a massive internal database of facts.",
+        "It calculates the statistical probability of the next token.",
+        "It reasons through logical steps like a human."
       ],
-      correct: 2,
+      correctIndex: 1,
       explanation: "LLMs are fundamentally prediction engines. They do not 'know' facts; they predict what word (token) is statistically most likely to follow the sequence provided."
     },
     {
-      question: "Which of the following is an advantage of a Small Language Model (SLM) over a Large Language Model (LLM)?",
+      prompt: "Which of the following is an advantage of a Small Language Model (SLM) over a Large Language Model (LLM)?",
       options: [
-        { id: 1, text: "SLMs have broader general knowledge." },
-        { id: 2, text: "SLMs never hallucinate." },
-        { id: 3, text: "SLMs can run locally on edge devices, preserving privacy." }
+        "SLMs have broader general knowledge.",
+        "SLMs never hallucinate.",
+        "SLMs can run locally on edge devices, preserving privacy."
       ],
-      correct: 3,
+      correctIndex: 2,
       explanation: "Because SLMs have fewer parameters, they require less computational power and can run directly on phones or laptops, keeping data private and avoiding cloud costs."
     },
     {
-      question: "When an AI confidently provides incorrect information because it prioritized a statistically likely sentence structure over factual accuracy, this is called a:",
+      prompt: "When an AI confidently provides incorrect information because it prioritized a statistically likely sentence structure over factual accuracy, this is called a:",
       options: [
-        { id: 1, text: "Context limit" },
-        { id: 2, text: "Hallucination" },
-        { id: 3, text: "Model collapse" }
+        "Context limit",
+        "Hallucination",
+        "Model collapse"
       ],
-      correct: 2,
+      correctIndex: 1,
       explanation: "Hallucinations occur when the model's primary function—predicting the next likely word—overrides factual grounding, resulting in plausible but false statements."
     }
   ];
 
-  useEffect(() => {
-    const isLast = currentQuestion === questions.length - 1;
-    setNavOverride({
-      nextLabel: !showExplanation ? "Check Answer" : (isLast ? "Submit & Complete Module" : "Next Question"),
-      nextDisabled: selected === null,
-      onNext: (defaultNext) => {
-        if (!showExplanation) {
-          setShowExplanation(true);
-        } else if (isLast) {
-          onComplete();
-          defaultNext();
-        } else {
-          setCurrentQuestion(c => c + 1);
-          setSelected(null);
-          setShowExplanation(false);
-        }
-      }
-    });
-    return () => setNavOverride(null);
-  }, [selected, showExplanation, currentQuestion, onComplete, setNavOverride]);
-
-  const q = questions[currentQuestion];
-
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-12 max-w-3xl mx-auto">
-      <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-8 border border-primary/20 shadow-lg">
-        <BrainCircuit className="w-10 h-10" />
-      </div>
-      <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-4 text-center">Knowledge Check <span className="text-muted-foreground text-lg ml-2">({currentQuestion + 1}/{questions.length})</span></h2>
-      <p className="text-muted-foreground mb-10 text-center text-xl">{q.question}</p>
-      
-      <div className="grid grid-cols-1 gap-4 w-full mb-8">
-        {q.options.map((opt) => {
-          const isSelected = selected === opt.id;
-          const isCorrect = opt.id === q.correct;
-          let style = "border-border bg-card hover:border-primary/50";
-          if (isSelected && !showExplanation) style = "border-primary bg-primary/5 ring-2 ring-primary/20 scale-[1.02] shadow-md";
-          if (showExplanation) {
-            if (isCorrect) style = "border-emerald-500 bg-emerald-500/10 scale-[1.02] shadow-md";
-            else if (isSelected && !isCorrect) style = "border-red-500 bg-red-500/10 opacity-70";
-            else style = "border-border bg-card opacity-40";
-          }
-
-          return (
-            <button
-              key={opt.id}
-              onClick={() => !showExplanation && setSelected(opt.id)}
-              disabled={showExplanation}
-              className={`p-6 rounded-2xl border text-left transition-all duration-300 ease-out flex items-center justify-between ${style}`}
-            >
-              <span className={`text-base md:text-lg font-medium ${isSelected && !showExplanation ? 'text-primary' : (showExplanation && isCorrect ? 'text-emerald-500' : 'text-foreground')}`}>
-                {opt.text}
-              </span>
-              {isSelected && !showExplanation && <CheckCircle2 className="w-6 h-6 text-primary shrink-0 ml-4" />}
-              {showExplanation && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0 ml-4" />}
-              {showExplanation && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-500 shrink-0 ml-4" />}
-            </button>
-          )
-        })}
-      </div>
-      
-      <AnimatePresence>
-        {showExplanation && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className={`p-6 rounded-2xl border w-full ${selected === q.correct ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}
-          >
-            <p className="font-bold text-lg mb-2 flex items-center gap-2">
-              {selected === q.correct ? <><CheckCircle2 className="w-5 h-5" /> Correct!</> : <><XCircle className="w-5 h-5" /> Not quite.</>}
-            </p>
-            <p className="text-base opacity-90 leading-relaxed">{q.explanation}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <KnowledgeCheck
+      title="Module 1 Knowledge Check"
+      description="Answer all three questions correctly to complete the module."
+      questions={questions}
+      onComplete={onComplete}
+      successHeadline="Module Complete!"
+      successSubline="You've successfully demonstrated your understanding of Module 1 — from core concepts to the reality of hallucination."
+    />
   );
 }
 
