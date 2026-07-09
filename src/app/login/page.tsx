@@ -264,9 +264,9 @@ export default function LoginPage() {
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
                     className="border-white/15 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="remember" className="text-[0.8rem] font-normal text-muted-foreground cursor-pointer select-none">
-                    Remember me
-                  </Label>
+                <Label htmlFor="remember" className="text-[0.8rem] font-normal text-muted-foreground cursor-pointer select-none">
+                  Keep me logged in
+                </Label>
                 </motion.div>
 
                 <motion.div {...stagger(0.26)}>
