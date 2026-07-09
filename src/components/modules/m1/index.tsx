@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, cloneElement, ReactElement, Fragment } fro
 import gsap from "gsap";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useNarrationStore } from "@/store/narration";
+import { useProgressStore } from "@/store/progress";
 import { useLRS } from "@/hooks/use-lrs";
 import { audioUrl, imageUrl } from "@/lib/media";
 import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
@@ -1931,7 +1932,191 @@ function Module1Quiz({ onComplete }: { onComplete: () => void }) {
       onComplete={onComplete}
       successHeadline="Module 1 Complete!"
       successSubline="You've demonstrated comprehensive understanding of AI foundations — from the intelligence illusion to bias awareness."
-    />
+     />
+  );
+}
+
+// Project Application — Apply Module 1 knowledge to the learner's chosen project spine
+const PROJECT_PROMPTS: Record<string, {
+  challenge: string;
+  roleHint: string;
+  taskHint: string;
+  contextHint: string;
+  constraintHint: string;
+  recommendedTemp: string;
+  tempReason: string;
+  hallucinationRisk: string;
+  modelPrompt: string;
+}> = {
+  research_companion: {
+    challenge: "You need to synthesize findings from 5 research abstracts into a summary your team can act on. Write a prompt that produces a structured, citation-aware synthesis.",
+    roleHint: "e.g., \"You are a senior research analyst specializing in technology trends\"",
+    taskHint: "e.g., \"Synthesize the key findings from these 5 abstracts into a single coherent summary\"",
+    contextHint: "e.g., \"The audience is a product team deciding whether to invest in this technology\"",
+    constraintHint: "e.g., \"Output a table with columns: Finding, Source, Confidence (High/Med/Low). Max 300 words.\"",
+    recommendedTemp: "Low (0.2–0.3)",
+    tempReason: "Research synthesis demands factual accuracy and low creativity. A low temperature forces the model to select the most probable, safest tokens — reducing the chance of fabrication.",
+    hallucinationRisk: "The model may fabricate citations, invent statistics that don't exist in the source material, or misattribute findings to the wrong abstract. Always cross-check every claim against the original text.",
+    modelPrompt: "Role: You are a senior research analyst specializing in technology trends.\nTask: Synthesize the key findings from these 5 abstracts into a single coherent summary.\nContext: The audience is a product team deciding whether to invest in this technology. They need actionable insights, not academic jargon.\nConstraints: Output a table with columns: Finding, Source, Confidence (High/Med/Low). Max 300 words. If a finding cannot be traced to a specific source, mark it as 'Unverified'.",
+  },
+  content_engine: {
+    challenge: "You need to create a blog post outline that ranks on search engines AND reads naturally. Write a prompt that produces an SEO-aware, brand-aligned content structure.",
+    roleHint: "e.g., \"You are a content strategist and SEO specialist\"",
+    taskHint: "e.g., \"Create a detailed blog post outline for the topic: 'How AI is transforming small businesses'\"",
+    contextHint: "e.g., \"Target audience is small business owners with no technical background. Brand voice: approachable, practical, jargon-free.\"",
+    constraintHint: "e.g., \"Include H2/H3 headings, a meta description (155 chars), and 3 CTA options. Max 800 words outline.\"",
+    recommendedTemp: "Medium (0.5–0.7)",
+    tempReason: "Content creation benefits from a balance of structure and creativity. Medium temperature allows natural, engaging language while maintaining coherence. Too low feels robotic; too high introduces tangents.",
+    hallucinationRisk: "The model may invent statistics (e.g., '73% of businesses...'), cite non-existent case studies, or suggest outdated SEO practices. Verify all numbers and claims before publishing.",
+    modelPrompt: "Role: You are a content strategist and SEO specialist.\nTask: Create a detailed blog post outline for the topic: 'How AI is transforming small businesses'.\nContext: Target audience is small business owners with no technical background. Brand voice: approachable, practical, jargon-free. The blog should rank for 'AI for small business'.\nConstraints: Include H2/H3 headings, a meta description (max 155 characters), and 3 CTA options. Max 800 words. Do NOT include fabricated statistics — mark places where data is needed with [INSERT STAT].",
+  },
+  creative_studio: {
+    challenge: "You need to generate 5 distinct visual concepts for a brand campaign. Write a prompt that produces vivid, actionable art direction that a designer (or image AI) can execute.",
+    roleHint: "e.g., \"You are a creative director and brand designer\"",
+    taskHint: "e.g., \"Generate 5 visual concepts for a sustainability campaign launch\"",
+    contextHint: "e.g., \"Brand identity: warm, earthy, optimistic. Target platform: Instagram + billboard. Audience: Gen Z and millennials.\"",
+    constraintHint: "e.g., \"For each concept: 2-3 sentence description, color palette (hex codes), mood word, and composition notes.\"",
+    recommendedTemp: "High (0.8–1.0)",
+    tempReason: "Creative ideation thrives on unexpected connections and novel combinations. High temperature allows the model to explore less probable — but more original — creative directions. Precision matters less than inspiration here.",
+    hallucinationRisk: "The model may suggest impossible visual elements (e.g., colors that clash physically), reference non-existent Pantone codes, or describe compositions that violate design principles. Use the output as inspiration, not specification.",
+    modelPrompt: "Role: You are a creative director and brand designer.\nTask: Generate 5 distinct visual concepts for a sustainability campaign launch.\nContext: Brand identity: warm, earthy, optimistic. Target platform: Instagram + billboard. Audience: Gen Z and millennials. The campaign tagline is 'Grow With Us'.\nConstraints: For each concept: provide a 2-3 sentence description, a color palette (3-5 hex codes), a single mood word, and composition notes (focal point, balance, texture). Label each concept with a working title.",
+  },
+};
+
+function ProjectApplicationSlide({ onComplete }: { onComplete?: () => void }) {
+  const { projectSpine } = useProgressStore();
+  const { track } = useLRS();
+  const { setNavOverride } = useCanvasNav();
+  const [userPrompt, setUserPrompt] = useState("");
+  const [tempChoice, setTempChoice] = useState<string | null>(null);
+  const [hallucinationNote, setHallucinationNote] = useState("");
+  const [showModel, setShowModel] = useState(false);
+
+  const spineKey = projectSpine ?? "research_companion";
+  const config = PROJECT_PROMPTS[spineKey] ?? PROJECT_PROMPTS.research_companion;
+  const spineName = spineKey === "research_companion" ? "Research Companion" : spineKey === "content_engine" ? "Content Engine" : "Creative Studio";
+
+  useEffect(() => {
+    const canComplete = userPrompt.trim().length > 20 && tempChoice !== null;
+    setNavOverride({
+      nextLabel: showModel ? "Complete Module" : "Reveal Model Answer",
+      nextDisabled: !canComplete,
+      onNext: (defaultNext) => {
+        if (!showModel) {
+          setShowModel(true);
+          track(
+            "http://adlnet.gov/expapi/verbs/interacted",
+            "interacted",
+            `http://smartslate.com/activities/module-1/project-application/${spineKey}`,
+            `Project Application: ${spineName}`,
+            "Learner completed the Module 1 project application exercise.",
+            { moduleId: "1", slideId: "m1-project-application", result: { completion: true } }
+          );
+        } else {
+          onComplete?.();
+          defaultNext();
+        }
+      },
+    });
+    return () => setNavOverride(null);
+  }, [userPrompt, tempChoice, showModel, onComplete, setNavOverride, track, spineKey, spineName]);
+
+  return (
+    <div className="w-full h-full flex flex-col overflow-y-auto p-6 md:p-8 max-w-3xl mx-auto">
+      <div className="shrink-0 mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary/70 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+            Project Application · {spineName}
+          </span>
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-2">Apply Module 1 to Your Project</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">{config.challenge}</p>
+      </div>
+
+      <div className="flex-1 min-h-0 space-y-4">
+        <div>
+          <label className="text-xs font-medium text-foreground mb-1.5 block">Write your prompt using the 4-part anatomy (Role · Task · Context · Constraints)</label>
+          <textarea
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value)}
+            disabled={showModel}
+            placeholder={`Role: ${config.roleHint}\nTask: ${config.taskHint}\nContext: ${config.contextHint}\nConstraints: ${config.constraintHint}`}
+            className="w-full h-40 rounded-xl border border-border/50 bg-card/40 p-3 text-sm text-foreground leading-relaxed resize-none transition-all duration-200 focus-visible:border-primary/30 focus-visible:bg-card/60 focus-visible:ring-primary/15 focus-visible:ring-2 outline-none placeholder:text-muted-foreground/40 disabled:opacity-60"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-foreground mb-1.5 block">What temperature would you set, and why?</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Low (0.2–0.3)", desc: "Factual" },
+              { label: "Medium (0.5–0.7)", desc: "Balanced" },
+              { label: "High (0.8–1.0)", desc: "Creative" },
+            ].map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                disabled={showModel}
+                onClick={() => setTempChoice(opt.label)}
+                className={`p-2.5 rounded-xl border text-center transition-all duration-200 ${
+                  tempChoice === opt.label
+                    ? "border-primary bg-primary/10 shadow-[0_0_12px_rgba(167,218,219,0.12)]"
+                    : "border-border/50 hover:border-primary/40 bg-card/40"
+                } ${showModel ? "opacity-60" : ""}`}
+              >
+                <p className="text-xs font-medium text-foreground">{opt.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-foreground mb-1.5 block">What hallucination risk should you watch for with this prompt?</label>
+          <input
+            type="text"
+            value={hallucinationNote}
+            onChange={(e) => setHallucinationNote(e.target.value)}
+            disabled={showModel}
+            placeholder="e.g., The model might fabricate statistics or citations..."
+            className="w-full rounded-xl border border-border/50 bg-card/40 p-2.5 text-sm text-foreground transition-all duration-200 focus-visible:border-primary/30 focus-visible:bg-card/60 focus-visible:ring-primary/15 focus-visible:ring-2 outline-none placeholder:text-muted-foreground/40 disabled:opacity-60"
+          />
+        </div>
+
+        <AnimatePresence>
+          {showModel && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-3"
+            >
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <h4 className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Model Answer — Prompt</h4>
+                <pre className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap font-sans">{config.modelPrompt}</pre>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-muted/30 p-4 space-y-2">
+                <div>
+                  <span className="text-xs font-semibold text-emerald-500">✓ Recommended Temperature: </span>
+                  <span className="text-sm text-foreground/90">{config.recommendedTemp}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{config.tempReason}</p>
+              </div>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <h4 className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-1">Hallucination Risk</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{config.hallucinationRisk}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!showModel && (
+          <p className="text-xs text-muted-foreground/60 text-center pt-2">
+            Write your prompt, pick a temperature, and note a hallucination risk — then click "Reveal Model Answer" to compare.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -2277,5 +2462,6 @@ export const MODULE_1_SLIDES: Slide[] = [
   { id: "m1-anatomy", type: "interactive", lessonIndex: 3, fullWidth: true, requireCompletion: true, component: (mark) => <AnatomyOfPrompt onComplete={mark} />, narrationText: "How do we communicate with these models? We use Prompt Engineering to guide the context window. A perfect prompt typically has four anatomical parts. First, the Role: setting the persona, like 'You are an expert instructional designer.' This heavily weights the statistical model towards vocabulary and concepts associated with this role. Second, the Task: the specific action you want the AI to perform, like 'Write a 3-question multiple choice quiz'. Third, the Context: background information that prevents the model from making incorrect assumptions, such as 'The audience is adult learners'. And fourth, Constraints: strict boundaries on the output format, length, or tone, like 'Output only valid JSON'. Click through each one to explore." },
   { id: "m1-hallucination", type: "interactive", lessonIndex: 4, fullWidth: true, component: <HallucinationSlide />, narrationText: "Because models are just predicting the next most likely token, they can sometimes invent facts entirely. We call this a hallucination. For example, if you ask 'What is the population of Mars?', an AI might respond: 'The current population of Mars is approximately 4,200 research scientists and engineers.' This is factually incorrect. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding. Always remember: the AI generates, but you evaluate." },
   { id: "m1-bias", type: "interactive", lessonIndex: 4, fullWidth: true, component: <BiasInAI />, narrationText: "AI models learn from human data, making them a mirror of our systemic flaws. If the internet training data contains historical biases—like 'The CEO walked into his office' or 'The nurse checked her patient'—the model will reproduce them. When you prompt the trained AI to write a story about a CEO and a nurse, it will often automatically assign 'he' to the CEO and 'her' to the nurse. This reflects the statistical bias in its training data, not factual rules. We must be constantly vigilant of these inherited biases in AI generation." },
-  { id: "m1-quiz", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of this module. Please answer the following three questions to complete the section." }
+  { id: "m1-quiz", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of everything covered in this module — from what AI actually is, through machine learning types, neural networks, transformers, next-token prediction, LLMs versus SLMs, prompt anatomy, hallucinations, and bias. This final assessment has 20 questions covering all Module 1 lessons. Take your time, read each question carefully, and answer all correctly to proceed." },
+  { id: "m1-project-application", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <ProjectApplicationSlide onComplete={mark} />, narrationText: "You've proven your knowledge — now let's apply it. Using the four-part prompt anatomy you learned — Role, Task, Context, and Constraints — write a real prompt for your chosen project. Choose the right temperature setting for your use case, and identify the hallucination risk you need to watch for. This is where Module 1 moves from theory to practice." }
 ];
