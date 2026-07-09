@@ -151,7 +151,7 @@ export default function LoginPage() {
           initial={reduce ? false : { opacity: 0, y: 12, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={reduce ? { duration: 0 } : { duration: 0.5, ease: EASE_OUT }}
-          className="relative my-auto w-full max-w-[24rem] overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-card/60 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8 lg:max-w-[22rem] lg:p-8"
+          className="relative my-auto w-full max-w-[24rem] overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-card/60 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8 lg:max-w-xl lg:p-8"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
