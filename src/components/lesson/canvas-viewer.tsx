@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import ReactMarkdown from "react-markdown";
-import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2, VolumeX, Library, HelpCircle } from "lucide-react";
 import { useProgressStore } from "@/store/progress";
 import { useNarrationStore } from "@/store/narration";
 import { sendXAPIStatement } from "@/actions/xapi";
@@ -12,6 +12,19 @@ import { createContext, useContext } from "react";
 import { COURSE_MODULES } from "@/lib/course-data";
 import { M5_TEMPLATE_DATA } from "@/lib/m5-template-data";
 import { syncModuleProgress } from "@/actions/sync-progress";
+import { AssetsModal } from "@/components/layout/assets-modal";
+import { HelpTour } from "@/components/layout/help-tour";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export interface CanvasNavOverride {
   disablePrev?: boolean;
@@ -153,11 +166,20 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const [hasInteracted, setHasInteracted] = useState(initialIndex > 0);
   
   const reduce = useReducedMotion();
-  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons } = useProgressStore();
+  const router = useRouter();
+  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons, resetProgress } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isAssetsOpen, setIsAssetsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRestart = () => {
+    resetProgress();
+    router.push("/courses/aifoundations-concept2application/modules/0");
+    router.refresh();
+  };
 
   const markCompleted = useCallback(() => {
     setCompletedSlides((prev) => {
@@ -400,7 +422,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const NextIcon = navOverride?.nextIcon || (currentIndex === slides.length - 1 ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />);
 
   return (
-    <CanvasNavContext.Provider value={{ setNavOverride, goToSlide: setCurrentIndex }}>
+    <>
+      <CanvasNavContext.Provider value={{ setNavOverride, goToSlide: setCurrentIndex }}>
       <div className="w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center relative">
         {/* Canvas Container */}
         <div className="relative w-full aspect-[16/10] max-h-[90vh] bg-card border border-border shadow-2xl rounded-xl overflow-hidden flex flex-col">
@@ -452,9 +475,57 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
             </AnimatePresence>
           </div>
 
-          <div className="h-20 border-t border-border bg-card/50 backdrop-blur flex items-center justify-end px-8 z-10 shrink-0">
-            {/* Right side: Next/Prev */}
-            <div className="flex items-center space-x-3">
+          <div className="h-20 border-t border-border bg-card/50 backdrop-blur flex items-center justify-between px-8 z-10 shrink-0">
+            {/* Left side: Restart / Help / Assets */}
+            <div className="flex items-center space-x-2">
+              {/* Restart */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    className="group flex items-center justify-center w-9 h-9 rounded-full bg-zinc-100 hover:bg-red-50 text-zinc-500 hover:text-red-500 dark:bg-zinc-800 dark:hover:bg-red-950/40 dark:text-zinc-400 dark:hover:text-red-400 border border-transparent hover:border-red-200 dark:hover:border-red-800/50 transition-all active:scale-95"
+                    title="Restart Course"
+                  >
+                    <RotateCcw className="w-[15px] h-[15px] group-hover:-rotate-90 transition-transform duration-300" />
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-card border-white/10 text-foreground">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-heading">Restart Course?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
+                      This will permanently erase all your progress, project spine choices, and quiz results. You will be redirected to the Orientation module to start from scratch. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-transparent border-white/10 hover:bg-white/5 hover:text-foreground">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRestart} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Yes, Restart Course
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              {/* Help */}
+              <button
+                onClick={() => setIsHelpOpen(true)}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-zinc-100 hover:bg-primary/10 text-zinc-500 hover:text-primary dark:bg-zinc-800 dark:hover:bg-primary/10 dark:text-zinc-400 dark:hover:text-primary transition-all active:scale-95"
+                title="Guided Tour"
+              >
+                <HelpCircle className="w-[15px] h-[15px]" />
+              </button>
+
+              {/* Assets */}
+              <button
+                id="tour-assets"
+                onClick={() => setIsAssetsOpen(true)}
+                className="group flex items-center gap-1.5 pl-3 pr-4 py-2 rounded-full bg-zinc-100 hover:bg-primary/10 text-zinc-500 hover:text-primary dark:bg-zinc-800 dark:hover:bg-primary/10 dark:text-zinc-400 dark:hover:text-primary transition-all active:scale-95 text-sm font-semibold"
+              >
+                <Library className="w-[15px] h-[15px] group-hover:-rotate-6 transition-transform duration-200" />
+                <span>Assets</span>
+              </button>
+            </div>
+
+            {/* Right side: Mute / Prev / Play / Next */}
+            <div id="tour-nav" className="flex items-center space-x-3">
               {/* Mute / Unmute — only shown when the slide has audio */}
               {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
                 <button
@@ -544,6 +615,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           </div>
         </div>
       </div>
-    </CanvasNavContext.Provider>
+      </CanvasNavContext.Provider>
+      <AssetsModal isOpen={isAssetsOpen} onClose={() => setIsAssetsOpen(false)} />
+      <HelpTour isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+    </>
   );
 }
