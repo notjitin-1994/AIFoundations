@@ -12,6 +12,9 @@ export interface ProjectSpineAnswerData {
   tempChoice?: string | null;
   hallucinationNote?: string;
   agentsMd?: string;
+  mcps?: string;
+  tools?: string;
+  skills?: string;
 }
 
 interface ProgressState {

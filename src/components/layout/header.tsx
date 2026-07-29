@@ -28,6 +28,7 @@ export function Header() {
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -43,7 +44,15 @@ export function Header() {
   // Prevent hydration mismatch for zustand local storage values
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (user) {
+      createClient()
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
+    }
+  }, [user]);
 
   const totalModules = 7;
   
@@ -133,8 +142,12 @@ export function Header() {
         ) : (
           <div className="flex items-center space-x-3">
             <span className="text-sm font-medium text-foreground">{getDisplayName(user)}</span>
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30">
-              {getDisplayName(user).charAt(0)}
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                getDisplayName(user).charAt(0)
+              )}
             </div>
             <button
               onClick={handleLogout}

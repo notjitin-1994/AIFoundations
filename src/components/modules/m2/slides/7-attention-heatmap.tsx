@@ -27,7 +27,7 @@ export function AttentionHeatmapSlide({ onComplete }: { onComplete?: () => void 
     timeline.fromTo(pRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 1);
     
     tl.current = timeline;
-    return () => timeline.kill();
+    return () => { timeline.kill(); };
   }, []);
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import { Award } from "lucide-react";
 export function GraduationSlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, isFinished } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
-  const { selectedSpine, markModuleComplete, markLessonComplete } = useProgressStore();
+  const { projectSpine, markModuleComplete, markLessonComplete } = useProgressStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function GraduationSlide({ onComplete }: { onComplete?: () => void }) {
 
       <div className="grad-elem grad-subtitle text-center mb-12 z-10">
         <p className="text-xl text-white/70 font-light max-w-lg mx-auto">
-          You have mastered the foundations and built your <span className="text-white font-bold">{selectedSpine ? selectedSpine.replace(/_/g, ' ') : "capstone"}</span>. The horizon is clear.
+          You have mastered the foundations and built your <span className="text-white font-bold">{projectSpine ? projectSpine.replace(/_/g, ' ') : "capstone"}</span>. The horizon is clear.
         </p>
       </div>
     </div>
