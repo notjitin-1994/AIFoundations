@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import ReactMarkdown from "react-markdown";
-import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { useProgressStore } from "@/store/progress";
 import { useNarrationStore } from "@/store/narration";
 import { sendXAPIStatement } from "@/actions/xapi";
@@ -156,6 +156,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const markCompleted = useCallback(() => {
@@ -216,6 +217,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     if (slide?.narrationText && !slide.hasCustomAudio) {
       const audio = new Audio(`/audio/${slide.id}.mp3`);
       audioRef.current = audio;
+      audio.muted = isMuted; // inherit current mute state across slide changes
       
       audio.onended = () => {
         narration.finish();
@@ -267,6 +269,13 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, [currentIndex, moduleId, slides]);
 
   // Handle play/pause state from the global store
+  useEffect(() => {
+    // Sync mute state to audio element whenever it changes
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
   useEffect(() => {
     if (audioRef.current) {
       if (narration.isPlaying && audioRef.current.paused) {
@@ -453,6 +462,20 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
+
+              {/* Mute / Unmute — only shown when the slide has audio */}
+              {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
+                <button
+                  onClick={() => setIsMuted(m => !m)}
+                  aria-label={isMuted ? "Unmute narration" : "Mute narration"}
+                  title={isMuted ? "Unmute" : "Mute"}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 transition-all active:scale-95"
+                >
+                  {isMuted
+                    ? <VolumeX className="w-4 h-4" />
+                    : <Volume2 className="w-4 h-4" />}
+                </button>
+              )}
 
               {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
                 <button
