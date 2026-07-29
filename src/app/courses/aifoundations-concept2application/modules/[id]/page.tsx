@@ -28,6 +28,19 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
   const [restoring, setRestoring] = useState(true);
 
+  // Must be at top level — Rules of Hooks. Used only when moduleId === "5".
+  const m5Slides = useMemo(() => {
+    if (projectSpine) {
+      return MODULE_5_SLIDES
+        .filter(s => s.id.includes(`m5-${projectSpine}-`))
+        .map((s, index) => ({
+          ...s,
+          lessonIndex: index === 0 ? 0 : index - 1
+        }));
+    }
+    return MODULE_5_SLIDES;
+  }, [projectSpine]);
+
   // Restore progress from database on mount (overrides localStorage)
   useEffect(() => {
     let cancelled = false;
@@ -134,21 +147,9 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   }
 
   if (moduleId === "5") {
-    const finalSlides = useMemo(() => {
-      if (projectSpine) {
-        return MODULE_5_SLIDES
-          .filter(s => s.id.includes(`m5-${projectSpine}-`))
-          .map((s, index) => ({
-            ...s,
-            lessonIndex: index === 0 ? 0 : index - 1 // Slide 1 & 2 share lesson 0, the rest get their own lesson
-          }));
-      }
-      return MODULE_5_SLIDES;
-    }, [projectSpine]);
-    
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
-        <CanvasViewer slides={finalSlides} onComplete={handleComplete} moduleId={moduleId} />
+        <CanvasViewer slides={m5Slides} onComplete={handleComplete} moduleId={moduleId} />
       </Suspense>
     );
   }
