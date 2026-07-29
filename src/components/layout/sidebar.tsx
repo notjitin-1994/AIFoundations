@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 const MODULES = [
   { 
-    id: "0", title: "0. Orientation", path: "/",
+    id: "0", title: "0. Orientation", path: "/courses/aifoundations-concept2application/modules/0",
     lessons: [
       "0.1 Welcome and Roadmap",
       "0.2 Myth-Busting",
@@ -18,7 +18,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "1", title: "1. The Intelligence Illusion", path: "/modules/1",
+    id: "1", title: "1. The Intelligence Illusion", path: "/courses/aifoundations-concept2application/modules/1",
     lessons: [
       "1.1 What AI Actually Is",
       "1.2 Machine Learning in Plain Language",
@@ -28,7 +28,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "2", title: "2. The Goldfish Problem", path: "/modules/2",
+    id: "2", title: "2. The Goldfish Problem", path: "/courses/aifoundations-concept2application/modules/2",
     lessons: [
       "2.1 The Goldfish Metaphor",
       "2.2 Tokens: The Currency of AI",
@@ -38,7 +38,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "3", title: "3. The Toolbelt", path: "/modules/3",
+    id: "3", title: "3. The Toolbelt", path: "/courses/aifoundations-concept2application/modules/3",
     lessons: [
       "3.1 From Chat to Action",
       "3.2 Function Calling Demystified",
@@ -48,7 +48,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "4", title: "4. The Engine Room", path: "/modules/4",
+    id: "4", title: "4. The Engine Room", path: "/courses/aifoundations-concept2application/modules/4",
     lessons: [
       "4.1 Harness vs. Model",
       "4.2 Autonomy, Tools, Memory",
@@ -58,43 +58,39 @@ const MODULES = [
     ]
   },
   { 
-    id: "5", title: "5. The Assembly Line", path: "/modules/5",
+    id: "5", title: "5. The Assembly Line", path: "/courses/aifoundations-concept2application/modules/5",
     lessons: [
-      "5.1 Content Sub-Lab",
-      "5.2 Coding Sub-Lab",
-      "5.3 Media Sub-Lab"
+      "5.1 The Project Assembly",
+      "5.2 Harness Validation",
+      "5.3 Toolset Integration",
+      "5.4 Context Architecture",
+      "5.5 Prompt Execution",
+      "5.6 Guardrails & Best Practices",
+      "5.7 Agentic Capabilities",
+      "5.8 Final Capstone Delivery"
     ]
   },
   { 
-    id: "6", title: "6. The Local Sandbox", path: "/modules/6",
+    id: "6", title: "6. The Horizon", path: "/courses/aifoundations-concept2application/modules/6",
     lessons: [
-      "6.1 Why Run AI Locally?",
-      "6.2 SLMs on Your Device",
-      "6.3 Tools for Running Local AI",
-      "6.4 When Cloud Beats Local"
-    ]
-  },
-  { 
-    id: "7", title: "7. The Horizon", path: "/modules/7",
-    lessons: [
-      "7.1 The Living Tool Landscape",
-      "7.2 Building Your AI Learning Habit",
-      "7.3 Capstone Presentations",
-      "7.4 Course Retrospect"
+      "6.1 LLMOps & The Reality of Production",
+      "6.2 The Living Tool Landscape",
+      "6.3 The Final Assessment",
+      "6.4 Course Retrospect & Next Steps"
     ]
   }
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { completedModules, activeLessonIndex } = useProgressStore();
+  const { completedModules, completedLessons, activeLessonIndex } = useProgressStore();
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
-  // Auto-expand the current module when navigating
+  // Auto-expand the current module when navigating and collapse others
   useEffect(() => {
-    const activeMod = MODULES.find(m => pathname === m.path);
+    const activeMod = MODULES.find(m => pathname === m.path || pathname === `${m.path}/`);
     if (activeMod) {
-      setExpandedModules(prev => ({ ...prev, [activeMod.id]: true }));
+      setExpandedModules({ [activeMod.id]: true });
     }
   }, [pathname]);
 
@@ -112,7 +108,9 @@ export function Sidebar() {
   return (
     <aside id="tour-sidebar" className="w-64 md:w-72 border-r border-border bg-sidebar text-sidebar-foreground h-screen flex flex-col hidden md:flex shrink-0">
       <div className="p-6 border-b border-border shrink-0">
-        <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-8 w-auto object-contain mb-1" />
+        <Link href="/" className="block hover:opacity-80 transition-opacity duration-200">
+          <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-8 w-auto object-contain mb-1" />
+        </Link>
         <p className="text-[11px] font-medium text-sidebar-foreground/60 tracking-wide uppercase mt-1">AI Foundations: Concept2Application</p>
       </div>
       <div className="flex-1 overflow-y-auto py-4">
@@ -120,7 +118,7 @@ export function Sidebar() {
           {MODULES.map((mod, index) => {
             const isCompleted = completedModules.includes(mod.id);
             const isUnlocked = isModuleUnlocked(index);
-            const isActive = pathname === mod.path;
+            const isActive = pathname === mod.path || pathname === `${mod.path}/`;
             const isExpanded = expandedModules[mod.id] || false;
             
             return (
@@ -172,17 +170,40 @@ export function Sidebar() {
                       <div className="pt-1 pb-2 pl-10 pr-2 space-y-1">
                         {mod.lessons.map((lesson, i) => {
                           const isCurrentLesson = isActive && activeLessonIndex === i;
+                          const isModCompleted = completedModules.includes(mod.id);
+                          const modCompletedLessons = completedLessons[mod.id] || [];
+                          const isLessonCompleted = isModCompleted || modCompletedLessons.includes(i);
+                          const isLessonUnlocked = isModCompleted || i === 0 || modCompletedLessons.includes(i - 1);
+                          
+                          if (!isLessonUnlocked) {
+                            return (
+                              <div 
+                                key={i}
+                                className="flex items-center space-x-2 text-xs px-2 py-1.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed truncate"
+                              >
+                                <Lock className="shrink-0 h-3 w-3" />
+                                <span className="truncate">{lesson}</span>
+                              </div>
+                            );
+                          }
+                          
                           return (
-                            <div 
+                            <Link 
                               key={i} 
-                              className={`text-xs px-2 py-1.5 rounded-md transition-colors truncate cursor-pointer ${
+                              href={`${mod.path}?lesson=${i}`}
+                              className={`flex items-center space-x-2 text-xs px-2 py-1.5 rounded-md transition-colors truncate cursor-pointer ${
                                 isCurrentLesson 
                                   ? "text-sidebar-primary bg-sidebar-accent font-semibold" 
-                                  : "text-sidebar-foreground/60 hover:text-sidebar-primary hover:bg-sidebar-accent"
+                                  : "text-sidebar-foreground/70 hover:text-sidebar-primary hover:bg-sidebar-accent"
                               }`}
                             >
-                              {lesson}
-                            </div>
+                              {isLessonCompleted ? (
+                                <CheckCircle2 className={`shrink-0 h-3 w-3 ${isCurrentLesson ? "text-sidebar-primary" : "text-sidebar-primary/80"}`} />
+                              ) : (
+                                <Circle className={`shrink-0 h-3 w-3 ${isCurrentLesson ? "text-sidebar-primary" : "text-sidebar-foreground/50"}`} />
+                              )}
+                              <span className="truncate">{lesson}</span>
+                            </Link>
                           );
                         })}
                       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 
 export interface KnowledgeCheckQuestion {
@@ -245,13 +245,13 @@ export function KnowledgeCheck({
                     </h3>
                     <button
                       onClick={handleContinue}
-                      className={`rounded-full px-6 py-2 font-semibold text-sm transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                      className={`rounded-full ${isCorrect ? 'h-10 w-10 flex items-center justify-center' : 'px-6 py-2'} font-semibold text-sm transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                         isCorrect
                           ? "bg-emerald-500 hover:bg-emerald-600 text-emerald-950"
                           : "bg-destructive hover:bg-destructive/85 text-destructive-foreground"
                       }`}
                     >
-                      {isCorrect ? "Continue" : "Retry"}
+                      {isCorrect ? <ArrowRight className="w-5 h-5" /> : "Retry"}
                     </button>
                   </div>
 

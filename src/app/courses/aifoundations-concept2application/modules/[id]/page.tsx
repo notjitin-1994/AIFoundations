@@ -1,0 +1,185 @@
+"use client";
+
+import { use, Suspense, useMemo, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LessonViewer } from "@/components/lesson/lesson-viewer";
+import { useProgressStore } from "@/store/progress";
+import { sendXAPIStatement } from "@/actions/xapi";
+import { fetchModuleProgress } from "@/actions/sync-progress";
+
+import { MODULE_1_SLIDES } from "@/components/modules/m1";
+import { MODULE_2_SLIDES } from "@/components/modules/m2";
+import { MODULE_3_SLIDES } from "@/components/modules/m3";
+import { MODULE_4_SLIDES } from "@/components/modules/m4";
+import { MODULE_5_SLIDES } from "@/components/modules/m5";
+import { MODULE_6_SLIDES } from "@/components/modules/m6";
+import { CanvasViewer } from "@/components/lesson/canvas-viewer";
+
+// Mock lesson content for now
+const LESSONS: Record<string, any> = {
+  // Module 2 is now built out natively
+};
+
+export default function ModulePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const moduleId = resolvedParams.id;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
+  const [restoring, setRestoring] = useState(true);
+
+  // Restore progress from database on mount (overrides localStorage)
+  useEffect(() => {
+    let cancelled = false;
+    fetchModuleProgress().then((progress) => {
+      if (cancelled) return;
+      if (!progress) { setRestoring(false); return; }
+
+      const modProgress = progress.find((p: any) => p.module_id === moduleId);
+      if (modProgress) {
+        // Restore lesson and slide progress from DB
+        if (modProgress.active_lesson_index != null) {
+          setActiveLessonIndex(modProgress.active_lesson_index);
+        }
+        if (modProgress.active_slide_index != null) {
+          setActiveSlideProgress(modProgress.active_slide_index, 100, moduleId);
+        }
+        // If already completed, mark in store
+        if (modProgress.completed && !useProgressStore.getState().completedModules.includes(moduleId)) {
+          markModuleComplete(moduleId);
+        }
+
+        // Redirect to the saved lesson if no lesson param in URL
+        const lessonParam = searchParams?.get("lesson");
+        if (!lessonParam && modProgress.active_lesson_index != null && modProgress.active_lesson_index > 0) {
+          router.replace(
+            `/courses/aifoundations-concept2application/modules/${moduleId}?lesson=${modProgress.active_lesson_index}`
+          );
+        }
+      }
+      setRestoring(false);
+    }).catch(() => setRestoring(false));
+
+    return () => { cancelled = true; };
+  }, [moduleId]);
+
+  if (restoring) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+      </div>
+    );
+  }
+
+  const handleComplete = async () => {
+    markModuleComplete(moduleId);
+    
+    // Fire xAPI Statement
+    await sendXAPIStatement(
+      "http://adlnet.gov/expapi/verbs/completed",
+      "completed_module",
+      `http://smartslate.com/activities/modules/${moduleId}`,
+      `Module ${moduleId}`,
+      `Learner completed module ${moduleId}`
+    );
+
+    const nextModuleNum = parseInt(moduleId, 10) + 1;
+    if (nextModuleNum <= 7) {
+      router.push(`/courses/aifoundations-concept2application/modules/${nextModuleNum}`);
+    }
+  };
+
+  if (moduleId === "1") {
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer 
+          slides={MODULE_1_SLIDES} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
+      </Suspense>
+    );
+  }
+
+  if (moduleId === "2") {
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer 
+          slides={MODULE_2_SLIDES} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
+      </Suspense>
+    );
+  }
+
+  if (moduleId === "3") {
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer 
+          slides={MODULE_3_SLIDES} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
+      </Suspense>
+    );
+  }
+
+  if (moduleId === "4") {
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer slides={MODULE_4_SLIDES} onComplete={handleComplete} moduleId={moduleId} />
+      </Suspense>
+    );
+  }
+
+  if (moduleId === "5") {
+    const finalSlides = useMemo(() => {
+      if (projectSpine) {
+        return MODULE_5_SLIDES
+          .filter(s => s.id.includes(`m5-${projectSpine}-`))
+          .map((s, index) => ({
+            ...s,
+            lessonIndex: index === 0 ? 0 : index - 1 // Slide 1 & 2 share lesson 0, the rest get their own lesson
+          }));
+      }
+      return MODULE_5_SLIDES;
+    }, [projectSpine]);
+    
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer slides={finalSlides} onComplete={handleComplete} moduleId={moduleId} />
+      </Suspense>
+    );
+  }
+
+  if (moduleId === "6") {
+    return (
+      <Suspense fallback={<div>Loading lesson...</div>}>
+        <CanvasViewer slides={MODULE_6_SLIDES} onComplete={handleComplete} moduleId={moduleId} />
+      </Suspense>
+    );
+  }
+
+  // Fallback for unbuilt modules
+  const lesson = LESSONS[moduleId];
+
+  if (!lesson) {
+    return (
+      <div className="max-w-4xl mx-auto p-8 md:p-12">
+        <h1 className="text-3xl text-primary font-bold">Module {moduleId}</h1>
+        <p className="text-muted-foreground mt-4">Content for this module has not been authored yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <LessonViewer 
+      title={lesson.title} 
+      markdownContent={lesson.content} 
+      videoUrl={lesson.videoUrl} 
+      onVideoComplete={handleComplete} 
+      moduleId={moduleId}
+    />
+  );
+}

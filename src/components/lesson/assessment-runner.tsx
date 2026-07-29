@@ -37,7 +37,7 @@ const MODULES = [
   { id: "7", name: "The Horizon" },
 ];
 
-type AssessmentKind = "baseline" | "final";
+type AssessmentKind = "baseline" | "module" | "final";
 
 interface AssessmentRunnerProps {
   kind: AssessmentKind;
@@ -47,6 +47,8 @@ interface AssessmentRunnerProps {
   totalQuestions?: number;
   /** restrict to these modules (default: all 8) */
   moduleIds?: string[];
+  /** filter by these specific tags */
+  tags?: string[];
   /** title shown at top */
   title: string;
   description: string;
@@ -67,7 +69,7 @@ const TYPE_LABELS: Record<string, { label: string; icon: React.ElementType }> = 
 };
 
 export function AssessmentRunner({
-  kind, perModule = 1, totalQuestions, moduleIds, title, description, onComplete,
+  kind, perModule = 1, totalQuestions, moduleIds, tags, title, description, onComplete,
 }: AssessmentRunnerProps) {
   const learnerName = "Learner";
   const learnerKey = "learner-1";
@@ -82,9 +84,31 @@ export function AssessmentRunner({
   const canvasNav = useContext(CanvasNavContext);
   const thisModuleId = moduleIds?.[0] ?? kind;
 
+  const questionsPool = useMemo(() => {
+    const config: AssessmentConfig = {
+      perModule,
+      totalQuestions,
+      moduleIds,
+      tags,
+      shuffleOptions: true,
+    };
+    return generateAssessment(config);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perModule, totalQuestions, moduleIds?.join(','), tags?.join(','), kind]);
+
   useEffect(() => {
-    if (!started || finished) {
+    if (finished) {
       canvasNav?.setNavOverride(null);
+      return;
+    }
+
+    if (!started) {
+      canvasNav?.setNavOverride({
+        disablePrev: false,
+        nextLabel: kind === "baseline" ? "Start Calibration" : kind === "final" ? "Start Final Exam" : "Start Assessment",
+        nextDisabled: questionsPool.length === 0,
+        onNext: start,
+      });
       return;
     }
 
@@ -106,17 +130,14 @@ export function AssessmentRunner({
         onNext: submitAnswer,
       });
     }
-  }, [started, finished, currentIdx, submitted, answers, questions]);
+
+    return () => {
+      canvasNav?.setNavOverride(null);
+    };
+  }, [started, finished, currentIdx, submitted, answers, questions, kind, questionsPool]);
 
   function start() {
-    const config: AssessmentConfig = {
-      perModule,
-      totalQuestions,
-      moduleIds,
-      shuffleOptions: true,
-    };
-    const qs = generateAssessment(config);
-    setQuestions(qs);
+    setQuestions(questionsPool);
     setAnswers({});
     setGraded({});
     setSubmitted({});
@@ -129,7 +150,7 @@ export function AssessmentRunner({
       "attempted",
       `https://aifoundations.xapi/assessment/${kind}`,
       `${kind === "baseline" ? "Baseline" : "Final"} Knowledge Assessment`,
-      `Learner attempted ${kind} assessment with ${qs.length} questions`,
+      `Learner attempted ${kind} assessment with ${questionsPool.length} questions`,
       { moduleId: thisModuleId, slideId: "assessment" }
     );
   }
@@ -220,55 +241,51 @@ export function AssessmentRunner({
 
   // ---------- INTRO SCREEN ----------
   if (!started) {
+    const isBaseline = kind === "baseline";
+    const headerTitle = isBaseline ? "Establishing Your Baseline" : kind === "final" ? "Final Assessment" : "Knowledge Check";
+    const bodyText = isBaseline 
+      ? "This isn't a test—it's a calibration. We are establishing your starting coordinates. By taking your baseline temperature now, we can accurately measure your growth and mastery by the end of this journey. Do not stress if the concepts feel unfamiliar; they won't for long."
+      : kind === "final" 
+        ? "This is the culmination of your journey. It is time to prove your mastery and claim your certificate. Take your time, rely on the mental models you've built, and show us what you know."
+        : "Let's pause and verify your understanding before moving forward. Retention is built through active recall.";
+
     return (
-      <Card className="h-full w-full flex flex-col relative overflow-hidden border-0 shadow-none bg-transparent">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Trophy className="h-5 w-5 text-primary" />
-            {title}
-          </CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-bold tabular-nums text-primary">{BANK_STATS.total}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Question bank</div>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-bold tabular-nums text-primary">{totalQuestions ?? (perModule * (moduleIds?.length ?? 8))}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Questions this round</div>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-bold tabular-nums text-primary">4</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Question types</div>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-              <div className="text-2xl font-bold tabular-nums text-primary">8</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Modules covered</div>
-            </div>
+      <div className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden bg-transparent">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-2xl w-full text-center flex flex-col items-center p-8 space-y-10"
+        >
+          {/* A glowing, minimalist animated icon ring */}
+          <div className="relative flex items-center justify-center w-24 h-24 rounded-full border border-[#a7dadb]/30 bg-[#a7dadb]/10 shadow-[0_0_60px_rgba(167,218,219,0.15)]">
+            <Trophy className="h-10 w-10 text-[#a7dadb]" strokeWidth={1.5} />
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 rounded-full border border-[#a7dadb] opacity-30" 
+              style={{ borderTopColor: "transparent", borderRightColor: "transparent" }}
+            />
+            <motion.div 
+              animate={{ rotate: -360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-2 rounded-full border border-[#a7dadb] opacity-20" 
+              style={{ borderBottomColor: "transparent", borderLeftColor: "transparent" }}
+            />
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 p-3">
-            <div className="text-xs font-semibold mb-2 flex items-center gap-1.5">
-              <ListChecks className="h-3.5 w-3.5 text-primary" /> Question types in this assessment
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(TYPE_LABELS).map(([k, v]) => (
-                <Badge key={k} variant="outline" className="text-[10px] gap-1">
-                  <v.icon className="h-3 w-3" /> {v.label}
-                </Badge>
-              ))}
-            </div>
+
+          <div className="space-y-6 z-10 relative">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+              {headerTitle}
+            </h2>
+            <p className="text-lg md:text-xl text-white/60 leading-relaxed max-w-xl mx-auto font-light">
+              {bodyText}
+            </p>
           </div>
-          <div className="rounded-md bg-cta/5 border border-cta/20 p-3 text-xs text-muted-foreground">
-            <AlertCircle className="h-3.5 w-3.5 text-cta inline mr-1.5" />
-            Questions are randomized from the living question bank — no two assessments are identical. Your score is recorded via xAPI and shown on the dashboard.
-          </div>
-          <Button className="btn-cta w-full" onClick={start}>
-            <ArrowRight className="h-4 w-4 mr-2" /> Start {kind === "baseline" ? "baseline" : "final"} assessment
-          </Button>
-        </CardContent>
-      </Card>
+
+
+        </motion.div>
+      </div>
     );
   }
 
@@ -357,34 +374,49 @@ export function AssessmentRunner({
   const progress = ((currentIdx + 1) / questions.length) * 100;
 
   return (
-    <Card className="h-full w-full flex flex-col relative overflow-hidden border-0 shadow-none bg-transparent">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] gap-1"><TypeIcon className="h-3 w-3" />{typeInfo.label}</Badge>
-            <Badge variant="secondary" className="text-[10px]">M{current.question.moduleId}</Badge>
-            <Badge variant="outline" className="text-[10px] capitalize">{current.question.difficulty}</Badge>
+    <div className="w-full h-full relative overflow-hidden flex flex-col">
+      <div className="w-full h-full flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto flex-1">
+        <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
+          <div>
+            <h2 className="text-sm md:text-base font-bold text-muted-foreground tracking-widest uppercase">{title || "Knowledge Check"}</h2>
+            {description && (
+              <p className="text-[11px] md:text-xs text-muted-foreground/70 mt-1 max-w-md text-balance">{description}</p>
+            )}
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums" suppressHydrationWarning>
-            {currentIdx + 1} / {questions.length}
-          </span>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="text-primary font-medium bg-primary/10 px-3 py-1 rounded-full border border-primary/20 text-xs tabular-nums">
+              Question {currentIdx + 1} of {questions.length}
+            </div>
+          </div>
         </div>
-        <Progress value={progress} className="h-1" />
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4">
-        <p className="text-base font-medium leading-relaxed">{current.question.prompt}</p>
+        <Progress value={progress} className="h-1 mb-6 shrink-0" />
 
-        {/* render by type */}
-        {(current.question.type === "multiple-choice" || current.question.type === "multiple-select") && (
-          <QuestionOptions
-            question={current.question}
-            options={current.renderedOptions ?? []}
-            isMulti={current.question.type === "multiple-select"}
-            selected={answers[currentIdx] as (string | string[])}
-            onSelect={(val) => !isSubmitted && setAnswers((a) => ({ ...a, [currentIdx]: val }))}
-            isSubmitted={isSubmitted}
-          />
-        )}
+        <div className="flex-1 flex flex-col min-h-0 relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIdx}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 leading-tight shrink-0 text-foreground text-balance">
+                {current.question.prompt}
+              </h3>
+
+              <div className="w-full flex-1 overflow-y-auto min-h-0 relative">
+                {/* render by type */}
+                {(current.question.type === "multiple-choice" || current.question.type === "multiple-select") && (
+                  <QuestionOptions
+                    question={current.question}
+                    options={current.renderedOptions ?? []}
+                    isMulti={current.question.type === "multiple-select"}
+                    selected={answers[currentIdx] as (string | string[])}
+                    onSelect={(val) => !isSubmitted && setAnswers((a) => ({ ...a, [currentIdx]: val }))}
+                    isSubmitted={isSubmitted}
+                  />
+                )}
 
         {current.question.type === "fill-blank" && (
           <FillBlankInput
@@ -405,6 +437,10 @@ export function AssessmentRunner({
             isSubmitted={isSubmitted}
           />
         )}
+
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
         {/* Animated Feedback Overlay */}
         <AnimatePresence>
@@ -503,8 +539,9 @@ export function AssessmentRunner({
             </motion.div>
           )}
         </AnimatePresence>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+    </div>
   );
 }
 
@@ -548,67 +585,116 @@ function QuestionOptions({
 
   if (isMulti) {
     return (
-      <div className="space-y-2">
-        {options.map((o) => {
+      <div className="space-y-2.5 w-full">
+        {options.map((o, i) => {
           const isSelected = selectedArr.includes(o.id);
-          const isCorrect = correctIds.includes(o.id);
-          const isWrongPick = isSelected && !isCorrect;
+          const isCorrectOption = isSubmitted && correctIds.includes(o.id);
+          const isWrongPick = isSubmitted && isSelected && !isCorrectOption;
           return (
-            <Label
+            <button
               key={o.id}
+              type="button"
+              disabled={isSubmitted}
               onClick={(e) => {
                 e.preventDefault();
                 if (!isSubmitted) toggle(o.id);
               }}
-              className={cn(
-                "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors text-sm select-none",
-                !isSubmitted && "hover:bg-accent",
-                isSelected && !isSubmitted && "border-primary bg-primary/5",
-                isSubmitted && isCorrect && "border-primary/40 bg-primary/5",
-                isSubmitted && isWrongPick && "border-destructive/40 bg-destructive/5",
-                isSubmitted && "cursor-default"
-              )}
+              aria-pressed={isSelected}
+              className={`w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all duration-200 active:scale-[0.99] flex items-center gap-3 md:gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card select-none ${
+                isCorrectOption
+                  ? "border-emerald-500 bg-emerald-500/10"
+                  : isWrongPick
+                  ? "border-destructive bg-destructive/10"
+                  : isSelected
+                  ? "border-primary bg-primary/5 shadow-[0_0_15px_rgba(167,218,219,0.15)]"
+                  : "border-border/50 hover:border-primary/50 hover:bg-card bg-card/40"
+              }`}
             >
-              <Checkbox checked={isSelected} className="mt-0.5 pointer-events-none" />
-              <span className="flex-1">{o.text}</span>
-              {isSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-primary" />}
-              {isSubmitted && isWrongPick && <XCircle className="h-4 w-4 text-destructive" />}
-            </Label>
+              <div
+                className={`w-6 h-6 md:w-8 md:h-8 flex-shrink-0 rounded-md flex items-center justify-center border-2 transition-colors shrink-0 text-sm md:text-base ${
+                  isCorrectOption
+                    ? "border-emerald-500 bg-emerald-500 text-emerald-950"
+                    : isWrongPick
+                    ? "border-destructive bg-destructive text-destructive-foreground"
+                    : isSelected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-muted-foreground/30 text-muted-foreground"
+                }`}
+              >
+                {String.fromCharCode(65 + i)}
+              </div>
+              <span
+                className={`text-sm md:text-base flex-1 ${
+                  isCorrectOption
+                    ? "text-emerald-400"
+                    : isWrongPick
+                    ? "text-destructive"
+                    : isSelected
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {o.text}
+              </span>
+            </button>
           );
         })}
       </div>
     );
   }
   return (
-    <RadioGroup
-      value={typeof selected === "string" ? selected : ""}
-      onValueChange={(v) => onSelect(v)}
-      className="space-y-2"
-    >
-      {options.map((o) => {
+    <div className="space-y-2.5 w-full">
+      {options.map((o, i) => {
         const isSelected = selectedArr.includes(o.id);
-        const isCorrect = correctIds.includes(o.id);
-        const isWrongPick = isSelected && !isCorrect;
+        const isCorrectOption = isSubmitted && correctIds.includes(o.id);
+        const isWrongPick = isSubmitted && isSelected && !isCorrectOption;
         return (
-          <Label
+          <button
             key={o.id}
-            className={cn(
-              "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors text-sm",
-              !isSubmitted && "hover:bg-accent",
-              isSelected && !isSubmitted && "border-primary bg-primary/5",
-              isSubmitted && isCorrect && "border-primary/40 bg-primary/5",
-              isSubmitted && isWrongPick && "border-destructive/40 bg-destructive/5",
-              isSubmitted && "cursor-default"
-            )}
+            type="button"
+            disabled={isSubmitted}
+            onClick={() => !isSubmitted && onSelect(o.id)}
+            aria-pressed={isSelected}
+            className={`w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all duration-200 active:scale-[0.99] flex items-center gap-3 md:gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card select-none ${
+              isCorrectOption
+                ? "border-emerald-500 bg-emerald-500/10"
+                : isWrongPick
+                ? "border-destructive bg-destructive/10"
+                : isSelected
+                ? "border-primary bg-primary/5 shadow-[0_0_15px_rgba(167,218,219,0.15)]"
+                : "border-border/50 hover:border-primary/50 hover:bg-card bg-card/40"
+            }`}
           >
-            <RadioGroupItem value={o.id} className="mt-0.5" disabled={isSubmitted} />
-            <span className="flex-1">{o.text}</span>
-            {isSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-primary" />}
-            {isSubmitted && isWrongPick && <XCircle className="h-4 w-4 text-destructive" />}
-          </Label>
+            <div
+              className={`w-6 h-6 md:w-8 md:h-8 flex-shrink-0 rounded-full flex items-center justify-center border-2 transition-colors shrink-0 text-sm md:text-base ${
+                isCorrectOption
+                  ? "border-emerald-500 bg-emerald-500 text-emerald-950"
+                  : isWrongPick
+                  ? "border-destructive bg-destructive text-destructive-foreground"
+                  : isSelected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-muted-foreground/30 text-muted-foreground"
+              }`}
+            >
+              {String.fromCharCode(65 + i)}
+            </div>
+            <span
+              className={`text-sm md:text-base flex-1 ${
+                isCorrectOption
+                  ? "text-emerald-400"
+                  : isWrongPick
+                  ? "text-destructive"
+                  : isSelected
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {o.text}
+            </span>
+          </button>
         );
       })}
-    </RadioGroup>
+    </div>
   );
 }
 
@@ -675,7 +761,7 @@ function MatchPairsInput({
               )}
             >
               <option value="">— select —</option>
-              {shuffledRight.map((r) => (
+              {Array.from(new Set(shuffledRight)).map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>

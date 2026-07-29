@@ -12,7 +12,7 @@
 // The bank is consumed by:
 //   - Baseline assessment (Module 0) — pre-course knowledge dipstick
 //   - Per-lesson knowledge checks (inline)
-//   - Final assessment (after Module 7) — post-course scoring
+//   - Final assessment (after Module 6) — post-course scoring
 //
 // Questions are randomized per learner and per attempt so no two assessments
 // are identical. More questions can be added at any time — the bank is the
@@ -395,6 +395,7 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-002", moduleId: "2", type: "multiple-choice", difficulty: "foundational",
+    tags: ["tokens"],
     prompt: "A 1,000-word English document will most likely consume approximately:",
     options: [
       { id: "a", text: "1,000 tokens (1:1 with words).", correct: false },
@@ -429,10 +430,10 @@ export const QUESTION_BANK: Question[] = [
       { left: "Gemini 1.5 Pro", right: "2,000,000 tokens" }],
     explanation: "Context windows span 4 orders of magnitude: GPT-3.5 (4K) → GPT-4o (128K) → Claude 3.5 (200K) → Gemini 1.5 Pro (2M). Current frontier models advertise up to 10M.",
     source: "IBM Think (Oct 2024); Elvex (2025–2026)",
-    tags: ["context-window", "models"],
-  },
+    },
   {
     id: "2-mcq-003", moduleId: "2", type: "multiple-choice", difficulty: "advanced",
+    tags: ["lost-in-middle"],
     prompt: "You need to ask an AI about a specific clause buried in the middle of a 100-page contract. Based on the \"Lost in the Middle\" finding, what should you do?",
     options: [
       { id: "a", text: "Paste the whole contract; the AI will find it.", correct: false },
@@ -445,6 +446,7 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-004", moduleId: "2", type: "multiple-choice", difficulty: "intermediate",
+    tags: ["context-window-cost"],
     prompt: "How does compute cost scale with input sequence length in transformer models?",
     options: [
       { id: "a", text: "Linearly (double tokens = double cost).", correct: false },
@@ -457,6 +459,7 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-005", moduleId: "2", type: "multiple-choice", difficulty: "foundational",
+    tags: ["rag"],
     prompt: "In Retrieval-Augmented Generation (RAG), which component produces the final answer the user sees?",
     options: [
       { id: "a", text: "The retriever.", correct: false },
@@ -485,8 +488,7 @@ export const QUESTION_BANK: Question[] = [
     acceptedAnswers: ["embedding"],
     placeholder: "one word",
     explanation: "An embedding is a numerical vector representation of text capturing semantic meaning. Texts with similar meanings have vectors close together in space.",
-    tags: ["rag", "embeddings"],
-  },
+    },
   {
     id: "2-mcq-006", moduleId: "2", type: "multiple-choice", difficulty: "advanced",
     prompt: "Why is RAG often preferred over fine-tuning a model on company data?",
@@ -583,6 +585,17 @@ export const QUESTION_BANK: Question[] = [
     explanation: "Tools extend LLMs with web search, file access, API calls, code execution, image generation, email integration, and more. Consciousness is not a tool capability.",
     tags: ["tools", "capabilities"],
   },
+  {
+    id: "3-mcq-003", moduleId: "3", type: "multiple-choice", difficulty: "foundational",
+    prompt: "When an LLM uses a tool to search the web, why is this valuable?",
+    options: [
+      { id: "a", text: "It allows the LLM to access information that is more recent than its training data cutoff.", correct: true },
+      { id: "b", text: "It prevents the LLM from hallucinating entirely.", correct: false },
+      { id: "c", text: "It makes the LLM run faster.", correct: false },
+      { id: "d", text: "It automatically verifies the truthfulness of any website it visits.", correct: false }],
+    explanation: "Web search allows the LLM to pull in live facts and information that occurred after its training data cutoff, reducing hallucinations caused by outdated data (though not eliminating hallucinations entirely).",
+    tags: ["tools", "capabilities"],
+  },
 
   // --- Module 4: The Engine Room (harnesses, agents) ---
   {
@@ -626,6 +639,17 @@ export const QUESTION_BANK: Question[] = [
     explanation: "Human-in-the-loop (HITL) checkpoints are a critical guardrail: a human reviews and approves an agent's action before execution, especially for high-stakes decisions.",
     tags: ["agents", "guardrails"],
   },
+  {
+    id: "4-mcq-003", moduleId: "4", type: "multiple-choice", difficulty: "foundational",
+    prompt: "What is a 'cascade failure' in the context of an AI agent?",
+    options: [
+      { id: "a", text: "When an agent fails to call a tool because the API is down.", correct: false },
+      { id: "b", text: "When an early error in a multi-step process propagates and causes all subsequent steps to fail.", correct: true },
+      { id: "c", text: "When the agent runs out of tokens in its context window.", correct: false },
+      { id: "d", text: "When the model's weights degrade over time.", correct: false }],
+    explanation: "A cascade failure occurs when one error early in the chain propagates through the entire workflow, compounding the mistake at each step.",
+    tags: ["agents", "failure-modes"],
+  },
 
   // --- Module 5: The Assembly Line (workflows) ---
   {
@@ -659,46 +683,10 @@ export const QUESTION_BANK: Question[] = [
     tags: ["workflows", "tools"],
   },
 
-  // --- Module 6: The Local Sandbox (on-device AI) ---
+
+  // --- Module 6: The Horizon (staying current, capstone) ---
   {
     id: "6-mcq-001", moduleId: "6", type: "multiple-choice", difficulty: "foundational",
-    prompt: "Which is NOT a primary motivation for running AI locally on your own device?",
-    options: [
-      { id: "a", text: "Privacy — sensitive data never leaves the device.", correct: false },
-      { id: "b", text: "Cost — no per-query API fees.", correct: false },
-      { id: "c", text: "Offline access — AI availability without internet.", correct: false },
-      { id: "d", text: "Infinite model size — local models have no size limits.", correct: true }],
-    explanation: "The three motivations are privacy, cost, and offline access. Local models are constrained by device hardware — they have strict size limits, which is why SLMs and quantization matter.",
-    tags: ["local-ai", "motivations"],
-  },
-  {
-    id: "6-mcq-002", moduleId: "6", type: "multiple-choice", difficulty: "intermediate",
-    prompt: "Ollama and RamaLama are tools for:",
-    options: [
-      { id: "a", text: "Training large language models from scratch.", correct: false },
-      { id: "b", text: "Running AI models locally on consumer hardware.", correct: true },
-      { id: "c", text: "Cloud-based GPU rental.", correct: false },
-      { id: "d", text: "Building websites.", correct: false }],
-    explanation: "Ollama and RamaLama are popular tools for running AI models locally. Module 6 covers them at an awareness level — learners are not expected to install them.",
-    tags: ["local-ai", "tools"],
-  },
-  {
-    id: "6-msel-001", moduleId: "6", type: "multiple-select", difficulty: "advanced",
-    prompt: "When deciding between local and cloud AI, which factors should you consider? Select all that apply.",
-    selectAllThatApply: true,
-    options: [
-      { id: "a", text: "Data sensitivity", correct: true },
-      { id: "b", text: "Model capability requirements", correct: true },
-      { id: "c", text: "Latency", correct: true },
-      { id: "c2", text: "Cost", correct: true },
-      { id: "d", text: "The model's favorite color", correct: false }],
-    explanation: "The local-vs-cloud decision considers data sensitivity, required capability, latency, and cost. Cloud offers more powerful models; local offers privacy and offline access.",
-    tags: ["local-ai", "decision-framework"],
-  },
-
-  // --- Module 7: The Horizon (staying current, capstone) ---
-  {
-    id: "7-mcq-001", moduleId: "7", type: "multiple-choice", difficulty: "foundational",
     prompt: "What is the recommended refresh cadence for the Tool Landscape resource (the curated, versioned list of AI tools)?",
     options: [
       { id: "a", text: "Daily.", correct: false },
@@ -709,8 +697,8 @@ export const QUESTION_BANK: Question[] = [
     tags: ["refresh", "tool-landscape"],
   },
   {
-    id: "7-mcq-002", moduleId: "7", type: "multiple-choice", difficulty: "intermediate",
-    prompt: "The Module 7 capstone is evaluated against a four-dimension rubric. Which dimension carries the highest weight?",
+    id: "6-mcq-002", moduleId: "6", type: "multiple-choice", difficulty: "intermediate",
+    prompt: "The Module 6 capstone is evaluated against a four-dimension rubric. Which dimension carries the highest weight?",
     options: [
       { id: "a", text: "Technical Functionality (30%).", correct: true },
       { id: "b", text: "Workflow Complexity (25%).", correct: false },
@@ -720,7 +708,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["capstone", "rubric"],
   },
   {
-    id: "7-match-001", moduleId: "7", type: "match-pairs", difficulty: "intermediate",
+    id: "6-match-001", moduleId: "6", type: "match-pairs", difficulty: "intermediate",
     prompt: "Match each capstone rubric dimension to its weight.",
     pairs: [
       { left: "Technical Functionality", right: "30%" },
@@ -731,7 +719,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["capstone", "rubric"],
   },
   {
-    id: "7-fill-001", moduleId: "7", type: "fill-blank", difficulty: "foundational",
+    id: "6-fill-001", moduleId: "6", type: "fill-blank", difficulty: "foundational",
     prompt: "The course separates durable conceptual content from perishable tool-specific content using versioned ______ Notes one-pagers in Module 5.",
     acceptedAnswers: ["Field", "field"],
     placeholder: "one word",
@@ -739,7 +727,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["versioning", "field-notes"],
   },
   {
-    id: "7-mcq-003", moduleId: "7", type: "multiple-choice", difficulty: "advanced",
+    id: "6-mcq-003", moduleId: "6", type: "multiple-choice", difficulty: "advanced",
     prompt: "Why does the course separate durable conceptual content from perishable tool-specific content?",
     options: [
       { id: "a", text: "To reduce the total number of lessons.", correct: false },
@@ -909,55 +897,12 @@ export const QUESTION_BANK: Question[] = [
     tags: ["workflows", "design"],
   },
 
-  // ========================================================================
-  // MODULE 6 — Additional questions (local AI)
-  // ========================================================================
-  {
-    id: "6-mcq-003", moduleId: "6", type: "multiple-choice", difficulty: "intermediate",
-    prompt: "What is the key tradeoff when compressing an SLM to run locally?",
-    options: [
-      { id: "a", text: "Smaller models are always better.", correct: false },
-      { id: "b", text: "Smaller + more compressed = faster and cheaper, but less capable. Match the model to the task.", correct: true },
-      { id: "c", text: "Compression has no effect on quality.", correct: false },
-      { id: "d", text: "Local models are always as capable as cloud models.", correct: false },
-    ],
-    explanation: "The tradeoff: smaller + more compressed = faster/cheaper but less capable. Simple tasks (summarize, classify) can use small local models; complex reasoning usually needs the cloud.",
-    tags: ["slm", "tradeoffs"],
-  },
-  {
-    id: "6-fill-001", moduleId: "6", type: "fill-blank", difficulty: "intermediate",
-    prompt: "Reducing the precision of numbers storing parameters (e.g., 16-bit → 4-bit) to shrink memory footprint is called ______.",
-    acceptedAnswers: ["quantization"],
-    placeholder: "one word",
-    explanation: "Quantization reduces parameter precision (16-bit → 4-bit), shrinking memory ~4x with minimal quality loss. A key technique for running models on consumer hardware.",
-    tags: ["slm", "quantization"],
-  },
-  {
-    id: "6-fill-002", moduleId: "6", type: "fill-blank", difficulty: "advanced",
-    prompt: "Training a small 'student' model using knowledge from a larger 'teacher' model is called knowledge ______.",
-    acceptedAnswers: ["distillation"],
-    placeholder: "one word",
-    explanation: "Knowledge Distillation: the student learns the teacher's behavior without the teacher's size. Combined with quantization, it enables capable models on phones and laptops.",
-    tags: ["slm", "distillation"],
-  },
-  {
-    id: "6-mcq-004", moduleId: "6", type: "multiple-choice", difficulty: "advanced",
-    prompt: "Which use case is BEST suited for local AI?",
-    options: [
-      { id: "a", text: "Complex multi-step reasoning requiring a frontier model.", correct: false },
-      { id: "b", text: "Summarizing confidential legal documents offline on a lawyer's laptop.", correct: true },
-      { id: "c", text: "Real-time translation needing the highest quality.", correct: false },
-      { id: "d", text: "A one-off analysis with no privacy concerns.", correct: false },
-    ],
-    explanation: "Local AI is best for privacy-sensitive, relatively simple tasks (summarizing confidential docs) where data must not leave the device. Complex reasoning needs the cloud.",
-    tags: ["local-ai", "decision"],
-  },
 
   // ========================================================================
   // MODULE 7 — Additional questions (staying current, capstone)
   // ========================================================================
   {
-    id: "7-mcq-004", moduleId: "7", type: "multiple-choice", difficulty: "foundational",
+    id: "6-mcq-004", moduleId: "6", type: "multiple-choice", difficulty: "foundational",
     prompt: "What is the recommended refresh cadence for the Tool Landscape resource?",
     options: [
       { id: "a", text: "Daily", correct: false },
@@ -969,7 +914,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["tool-landscape", "refresh"],
   },
   {
-    id: "7-match-002", moduleId: "7", type: "match-pairs", difficulty: "intermediate",
+    id: "6-match-002", moduleId: "6", type: "match-pairs", difficulty: "intermediate",
     prompt: "Match each capstone rubric dimension to its weight.",
     pairs: [
       { left: "Technical Functionality", right: "30%" },
@@ -981,7 +926,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["capstone", "rubric"],
   },
   {
-    id: "7-msel-001", moduleId: "7", type: "multiple-select", difficulty: "intermediate",
+    id: "6-msel-001", moduleId: "6", type: "multiple-select", difficulty: "intermediate",
     prompt: "Which of these are sustainable habits for staying current in AI? Select all that apply.",
     selectAllThatApply: true,
     options: [
@@ -995,7 +940,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["staying-current", "habits"],
   },
   {
-    id: "7-fill-002", moduleId: "7", type: "fill-blank", difficulty: "advanced",
+    id: "6-fill-002", moduleId: "6", type: "fill-blank", difficulty: "advanced",
     prompt: "The course separates durable conceptual content from perishable tool-specific content using versioned ______ Notes one-pagers in Module 5.",
     acceptedAnswers: ["Field", "field"],
     placeholder: "one word",
@@ -1003,7 +948,7 @@ export const QUESTION_BANK: Question[] = [
     tags: ["versioning", "field-notes"],
   },
   {
-    id: "7-mcq-005", moduleId: "7", type: "multiple-choice", difficulty: "advanced",
+    id: "6-mcq-005", moduleId: "6", type: "multiple-choice", difficulty: "advanced",
     prompt: "Why does Critical Evaluation weigh as much as Workflow Complexity in the capstone rubric (25% each)?",
     options: [
       { id: "a", text: "Because the rubric designer made an error.", correct: false },
@@ -1013,6 +958,59 @@ export const QUESTION_BANK: Question[] = [
     ],
     explanation: "Research in AI-enabled rubric design emphasizes assessing not just technical output but the learner's ability to critically evaluate it. As tools get more capable, judgment becomes the scarce skill.",
     tags: ["capstone", "rubric", "critical-evaluation"],
+  },
+  // --- MODULE 6 QUESTIONS ---
+  {
+    id: "m6-1",
+    type: "multiple-choice",
+    question: "What is the primary privacy advantage of running a Small Language Model (SLM) locally?",
+    options: [
+      { id: "a", text: "The model uses end-to-end encryption to communicate with the cloud.", correct: false },
+      { id: "b", text: "Sensitive data never leaves your device's physical memory.", correct: true },
+      { id: "c", text: "The cloud provider signs a stricter NDA.", correct: false },
+      { id: "d", text: "Local models automatically redact PII before sending data.", correct: false }
+    ],
+    explanation: "Local execution means the inference happens entirely on your own hardware, guaranteeing absolute privacy as no network requests are made.",
+    tags: ["module-6", "privacy"]
+  },
+  {
+    id: "m6-2",
+    type: "multiple-choice",
+    question: "Which technique involves shrinking an LLM by training it to mimic the outputs of a larger, more complex model?",
+    options: [
+      { id: "a", text: "Quantization", correct: false },
+      { id: "b", text: "Knowledge Distillation", correct: true },
+      { id: "c", text: "Retrieval Augmented Generation", correct: false },
+      { id: "d", text: "Fine-tuning", correct: false }
+    ],
+    explanation: "Knowledge distillation is the process where a smaller 'student' model is trained to replicate the behavior and outputs of a larger 'teacher' model.",
+    tags: ["module-6", "distillation"]
+  },
+  {
+    id: "m6-3",
+    type: "multiple-choice",
+    question: "How does Quantization make AI models run faster on consumer hardware?",
+    options: [
+      { id: "a", text: "By removing layers from the neural network.", correct: false },
+      { id: "b", text: "By reducing the precision of the model's weights (e.g. from 32-bit to 4-bit integers).", correct: true },
+      { id: "c", text: "By sending the heavy computation to a local server.", correct: false },
+      { id: "d", text: "By caching previous answers to avoid recalculation.", correct: false }
+    ],
+    explanation: "Quantization shrinks the memory footprint by storing the neural network's weights in lower precision formats, allowing it to fit into VRAM and run significantly faster.",
+    tags: ["module-6", "quantization"]
+  },
+  {
+    id: "m6-4",
+    type: "multiple-select",
+    question: "Which of the following are primary motivations for deploying an AI agent locally rather than using a cloud API? (Select all that apply)",
+    options: [
+      { id: "a", text: "Eliminating per-token API costs", correct: true },
+      { id: "b", text: "Achieving higher reasoning capabilities than GPT-4", correct: false },
+      { id: "c", text: "Guaranteeing offline availability", correct: true },
+      { id: "d", text: "Ensuring sensitive proprietary data remains on-premise", correct: true }
+    ],
+    explanation: "Local AI eliminates recurring API costs, works without an internet connection, and ensures absolute data privacy. However, SLMs currently cannot match the sheer reasoning capabilities of massive cloud models like GPT-4.",
+    tags: ["module-6", "deployment"]
   },
   ...EXTENDED_BANK_1
 ];
@@ -1050,6 +1048,8 @@ export interface AssessmentConfig {
   perModule: number;
   /** Optional: restrict to specific modules. */
   moduleIds?: string[];
+  /** Optional: restrict to specific tags (e.g. ['tokens', 'context-window']). */
+  tags?: string[];
   /** Shuffle option order within each question (for MCQ/multi-select). */
   shuffleOptions: boolean;
   /** If set, pick exactly this many questions from the pooled modules instead of using perModule. */
@@ -1075,12 +1075,19 @@ export function generateAssessment(config: AssessmentConfig): AssessmentQuestion
   if (config.totalQuestions) {
     const pool: Question[] = [];
     for (const mid of moduleIds) {
-      pool.push(...questionsForModule(mid));
+      let qList = questionsForModule(mid);
+      if (config.tags && config.tags.length > 0) {
+        qList = qList.filter(q => q.tags?.some(tag => config.tags!.includes(tag)));
+      }
+      pool.push(...qList);
     }
     picked.push(...shuffle(pool).slice(0, config.totalQuestions));
   } else {
     for (const mid of moduleIds) {
-      const pool = questionsForModule(mid);
+      let pool = questionsForModule(mid);
+      if (config.tags && config.tags.length > 0) {
+        pool = pool.filter(q => q.tags?.some(tag => config.tags!.includes(tag)));
+      }
       picked.push(...shuffle(pool).slice(0, Math.min(config.perModule, pool.length)));
     }
   }

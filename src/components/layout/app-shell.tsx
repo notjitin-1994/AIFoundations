@@ -19,12 +19,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  const isCertificateRoute = pathname.includes("/certificate");
+  const isMarketingRoute = pathname === "/" || pathname === "/courses/aifoundations-concept2application";
+  const hideSidebar = isCertificateRoute || isMarketingRoute;
+
   // Lesson/module pages: full layout with sidebar + header
   return (
     <>
-      <Sidebar />
+      {!hideSidebar && <Sidebar />}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
+        {!isMarketingRoute && <Header />}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </>

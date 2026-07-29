@@ -4,15 +4,26 @@ import { useUser, getDisplayName } from "@/hooks/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { useProgressStore } from "@/store/progress";
 import { useEffect, useState } from "react";
-import { Library, HelpCircle } from "lucide-react";
+import { Library, HelpCircle, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AssetsModal } from "./assets-modal";
 import { HelpTour } from "./help-tour";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function Header() {
   const router = useRouter();
   const { user, isLoading } = useUser();
-  const { completedModules, activeSlideIndex, totalSlidesInModule } = useProgressStore();
+  const { completedModules, activeSlideIndex, totalSlidesInModule, activeModuleId, resetProgress } = useProgressStore();
   const [mounted, setMounted] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -34,15 +45,24 @@ export function Header() {
     setMounted(true);
   }, []);
 
-  const totalModules = 8;
+  const totalModules = 7;
   
   // Base progress from fully completed modules
   const baseProgress = (completedModules.length / totalModules) * 100;
   
-  // Granular progress from current module's active slide
-  const currentModuleProgress = ((activeSlideIndex + 1) / Math.max(1, totalSlidesInModule)) * (100 / totalModules);
+  // Granular progress from current module's active slide ONLY if it's not already completed
+  const isCurrentModuleCompleted = mounted && completedModules.includes(activeModuleId);
+  const currentModuleProgress = isCurrentModuleCompleted 
+    ? 0 
+    : (activeSlideIndex / Math.max(1, totalSlidesInModule)) * (100 / totalModules);
   
   const progressPercent = mounted ? Math.round(Math.min(100, baseProgress + currentModuleProgress)) : 0;
+
+  const handleRestart = () => {
+    resetProgress();
+    router.push("/courses/aifoundations-concept2application/modules/0");
+    router.refresh();
+  };
 
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
@@ -61,6 +81,32 @@ export function Header() {
         </span>
       </div>
       <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Restart Button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="group flex items-center justify-center w-9 h-9 rounded-full bg-background/50 hover:bg-destructive/10 border border-border/50 hover:border-destructive/40 text-muted-foreground hover:text-destructive transition-all duration-300 ease-out shadow-sm hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] active:scale-95 backdrop-blur-md"
+              title="Restart Course"
+            >
+              <RotateCcw className="w-[18px] h-[18px] group-hover:-rotate-90 transition-transform duration-300 ease-out" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-card border-white/10 text-foreground">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-heading">Restart Course?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                This will permanently erase all your progress, project spine choices, and quiz results. You will be redirected to the Orientation module to start from scratch. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-transparent border-white/10 hover:bg-white/5 hover:text-foreground">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRestart} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Yes, Restart Course
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Help Button */}
         <button
           onClick={() => setIsHelpOpen(true)}

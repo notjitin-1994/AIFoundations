@@ -71,7 +71,7 @@ This document presents the comprehensive course design for "AI Foundations: Conc
 
 The eight-module architecture spans the full cognitive spectrum from Remember and Understand at the early modules, through Apply and Analyze in the middle sections, to Create and Evaluate in the capstone phase. Each module is named with an evocative metaphor—"The Intelligence Illusion," "The Goldfish Problem," "The Toolbelt," "The Engine Room," "The Assembly Line"—chosen to aid recall and reduce intimidation for learners unfamiliar with technical jargon. These names serve as cognitive anchors, grounding abstract concepts in familiar imagery.
 
-The running project spine is the curriculum's most distinctive structural feature. At Module 0, each learner selects one of five project templates—a Research Companion, Content Engine, Inbox/Calendar Helper, Creative Studio, or Local-First Assistant—and then progressively enhances that same artifact across subsequent modules. This spiral device ensures that every new concept is immediately applied to a context the learner has already invested in, reinforcing retention and demonstrating the cumulative power of layered AI capabilities.
+The running project spine is the curriculum's most distinctive structural feature. At Module 0, each learner selects one of twelve project templates grouped into four pillars (Intelligent Web Interfaces, AI-Integrated Apps, Content Pipelines, and Writing Engines)—and then progressively enhances that same artifact across subsequent modules. This spiral device ensures that every new concept is immediately applied to a context the learner has already invested in, reinforcing retention and demonstrating the cumulative power of layered AI capabilities.
 
 Delivery is planned via a custom web application hosted directly on the provider's website. This modern headless architecture leverages xAPI (Experience API) statements to capture granular interaction data—lab completions, tool invocations, workflow constructions—far beyond what traditional LMS tracking permits. This technical documentation serves as the authoritative blueprint for all subsequent authoring, development, and evaluation activities.
 
@@ -147,17 +147,29 @@ The production process for this course follows the ADDIE instructional design mo
 
 ### 3.3 Running Project Spine
 
-At Module 0, each learner selects one of five project templates:
+At Module 0, each learner selects from twelve world-class project templates grouped into four technological pillars. These cater to diverse professional and personal use cases, ensuring the course is highly relevant to modern workflows:
 
-| # | Template Name | Description | Built? |
-|---|---------------|-------------|--------|
-| 1 | The Research Companion | Answers questions using current information combined with the learner's own notes | ✅ Shipped (`research_companion`) |
-| 2 | The Content Engine | An ideation-to-draft-to-critique loop for written content production | ✅ Shipped (`content_engine`) |
-| 3 | The Inbox/Calendar Helper | Triages incoming messages and drafts responses on the learner's behalf | ⏳ Reserved for v1.1 |
-| 4 | The Creative Studio | Maintains consistent character and style across generated images and media | ✅ Shipped (`creative_studio`) |
-| 5 | The Local-First Assistant | A Research Companion variant designed to optionally run offline | ⏳ Reserved for v1.1 |
+**Pillar 1: Intelligent Web Interfaces**
+1. **Dynamic BI Dashboard** (`bi_dashboard`)
+2. **Conversational Onboarding** (`dynamic_onboarding`)
+3. **Human-in-the-Loop Control Center** (`hitl_control_center`)
 
-Per §8.1, the launch scope ships three templates — Research Companion, Content Engine, and Creative Studio — which align to the three Module 5 sub-labs (content, coding, media). The two reserved templates will be developed based on initial learner demand.
+**Pillar 2: AI-Integrated Apps**
+4. **OS-Level Workflow Assistant** (`os_assistant`)
+5. **Edge-AI Health Coach** (`edge_health_coach`)
+6. **Enterprise Knowledge Navigator** (`internal_rag_agent`)
+
+**Pillar 3: Content Development Pipeline**
+7. **Digital Twin ABM Orchestrator** (`synthetic_podcast_generator`)
+8. **Longform-to-Viral Clip Engine** (`viral_clip_engine`)
+9. **Zero-Touch Localization Engine** (`global_localization`)
+
+**Pillar 4: The Writing Engine**
+10. **Omnichannel Content Repurposer** (`multichannel_repurposing`)
+11. **Academic Research Synthesizer** (`academic_literature_reviewer`)
+12. **Creative World-Building Co-Pilot** (`fiction_world_copilot`)
+
+These 12 projects replace the original 5 planned templates, massively expanding the scope of the course. Each module's lab exercises and lessons must tie into the specific requirements of the learner's selected project.
 
 The selection is captured via an xAPI statement (verb: "selected_template"), enabling the LMS to provide template-specific examples and context throughout the course. As learners progress through Modules 1 through 5, each module's lab exercises require them to apply the new concept to their chosen project template. In Module 1, they write effective prompts for their project. In Module 2, they manage context limitations specific to their project's use case. In Module 3, they add tool-calling capabilities. In Module 4, they explore agent-based orchestration for their project. In Module 5, they build a complete automated workflow. This spiral curriculum mechanic ensures that every new concept is immediately contextualized within a project the learner already understands and cares about, dramatically improving both engagement and retention.
 
@@ -204,9 +216,9 @@ Module 0 is fully shipped as a `CanvasViewer` slide deck of 9 slides in `src/app
 | 6 | `diagnostic-attention` | `DiagnosticAttentionSlide` | 0.3 Self-Assessment Diagnostic | Attention-getter before the assessment, frames the diagnostic as a baseline, not graded |
 | 7 | `diagnostic-assessment` | `AssessmentRunner kind="baseline"` | 0.3 | 10-question pulled from `src/lib/question-bank.ts`; animated correct/incorrect feedback overlays; per-module score breakdown; xAPI "attempted" + "answered" + "completed" statements |
 | 8 | `welcome-tie` | `WelcomeTieSlide` | 0.4 Project Template Selection | "Learning by Doing" framing — introduces the running project spine concept; GSAP-synced three-paragraph reveal |
-| 9 | `project-selector` | `ProjectSpineSelector` | 0.4 | Three project spines selectable as glass cards (`research_companion`, `content_engine`, `creative_studio`); selection fires `selected_template` xAPI statement, marks Module 0 complete, and routes to `/modules/1` |
+| 9 | `project-selector` | `ProjectSpineSelector` | 0.4 | Hierarchical selector presenting 4 pillars and 12 distinct projects; selection fires `selected_template` xAPI statement, marks Module 0 complete, and routes to `/modules/1` |
 
-**Project spines shipped (3 of 5 planned per §8.1):** Research Companion, Content Engine, Creative Studio. The Inbox/Calendar Helper and Local-First Assistant remain reserved for v1.1.
+**Project spines shipped (12 of 12 planned):** All twelve projects across the 4 pillars (Web Interfaces, Integrated Apps, Content Pipelines, Writing Engines) are active and selectable in the UI.
 
 **Cross-cutting behaviors built:** progress tracking via `useProgressStore` (Zustand, persisted); narration playback via `useNarrationStore` (Zustand, transient); per-slide xAPI statements via `sendXAPIStatement` server action; navigation override context (`CanvasNavContext`) — lets any slide hijack the deck's "Next" button (e.g. Assessments rename it to "Submit Answer", the Project Selector renames it to "Submit & Continue").
 
@@ -342,25 +354,28 @@ Function calling (LLM identifies function + parameters in JSON, does not execute
 **Learning Objectives**
 
 - Distinguish between AI harnesses and the underlying models they orchestrate
-- Explain the core components of agent architecture (autonomy, tools, memory)
+- Define the "System Prompt" and explain its role as the foundational behavioral guardrail
+- Explain the core components of agent architecture (autonomy, tools, memory, system prompt)
 - Identify when agents add value over single-prompt interactions
 - Evaluate agent reliability, failure modes, and the importance of guardrails
 
 **Lesson Breakdown**
 
-*Lesson 4.1: Harness vs. Model: The Critical Distinction* — This lesson uses a real-world example to illustrate the harness concept: a video generation platform like HeyGen, which creates hyper-realistic AI avatars, may power its voice component using a separate voice model like ElevenLabs rather than building everything from scratch. The harness is the orchestration layer that coordinates these components. The HeyGen vs. Synthesia comparison and ElevenLabs documentation provide concrete examples.
+*Lesson 4.1: Harness vs. Model: The Critical Distinction* — This lesson uses a real-world example to illustrate the harness concept. The harness is the software application wrapper that orchestrates the underlying model APIs. It handles the user interface, manages the database, and injects the "System Prompt" before the user ever sees the chat window.
 
-*Lesson 4.2: What Makes an Agent: Autonomy, Tools, Memory* — Drawing on Anthropic's research on effective harnesses for long-running agents, this lesson breaks down the three defining characteristics of AI agents: they operate autonomously (making decisions without step-by-step human guidance), they call tools (accessing external systems), and they maintain memory (carrying context across interactions). Each characteristic is illustrated with examples relevant to the learner's running project.
+*Lesson 4.2: The System Prompt (The Ultimate Guardrail)* — Building on the prompt anatomy from Module 1 and the context window constraints from Module 2, this lesson reveals the "System Prompt." This is the hidden, persistent set of rules that lives at the top of the context window. It turns a raw, unpredictable LLM into a highly specific, safe Agent by enforcing its persona, defining its goal, and limiting its actions. For the project tie-in, learners practice writing a System Prompt for their chosen running project (e.g., locking the *Dynamic BI Dashboard* to only output SQL, or giving the *Omnichannel Content Repurposer* its specific brand voice).
 
-*Lesson 4.3: The Agent Spectrum* — Not all agents are the same. This lesson introduces a spectrum from simple tool-calling agents (one LLM call that may optionally call a tool) through multi-step agents (iterative loops) to complex multi-agent systems (multiple specialized agents collaborating). Frameworks like CrewAI are mentioned as representative of the multi-agent end of the spectrum, following the conceptual framework outlined in their documentation.
+*Lesson 4.3: What Makes an Agent: Autonomy, Tools, Memory* — Drawing on Anthropic's research on effective harnesses for long-running agents, this lesson breaks down the three defining characteristics of AI agents: they operate autonomously (making decisions based on their System Prompt), they call tools (accessing external systems as learned in Module 3), and they maintain memory (carrying context). Each characteristic is illustrated with examples relevant to the learner's running project.
 
-*Lesson 4.4: When Agents Break* — An honest look at agent failure modes: cascade failures where one error propagates through the entire chain, loops where agents get stuck repeating the same action, hallucination amplification where each step compounds earlier inaccuracies, and cost explosion where unbounded agent loops rack up unexpected API charges. Learners are taught systematic strategies for identifying and mitigating each failure mode.
+*Lesson 4.4: The Agent Spectrum* — Not all agents are the same. This lesson introduces a spectrum from simple tool-calling agents to complex multi-agent systems using frameworks like CrewAI.
 
-*Lesson 4.5: Guardrails and Safety* — The importance of limiting agent autonomy through permission systems, human-in-the-loop review checkpoints, and explicit constraints on tool access and decision authority. Learners map potential guardrails for their running project.
+*Lesson 4.5: When Agents Break* — An honest look at agent failure modes: cascade failures where one error propagates through the entire chain, loops where agents get stuck repeating the same action, hallucination amplification, and cost explosion. 
+
+*Lesson 4.6: Guardrails and Safety* — The importance of limiting agent autonomy through strict System Prompt design, permission systems, human-in-the-loop (HITL) checkpoints, and explicit constraints on tool access and decision authority.
 
 **Key Concepts**
 
-Harness, orchestration layer, autonomy, tool access, memory, simple agents, multi-step agents, multi-agent systems, CrewAI, cascade failure, loops, cost explosion, guardrails, human-in-the-loop. *Estimated duration: 2.0 hours.*
+Harness, orchestration layer, System Prompt, autonomy, tool access, memory, multi-agent systems, cascade failure, loops, cost explosion, guardrails, human-in-the-loop. *Estimated duration: 2.0 hours.*
 
 ---
 

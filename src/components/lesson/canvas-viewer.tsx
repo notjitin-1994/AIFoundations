@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2 } from "lucide-react";
@@ -8,6 +9,9 @@ import { useProgressStore } from "@/store/progress";
 import { useNarrationStore } from "@/store/narration";
 import { sendXAPIStatement } from "@/actions/xapi";
 import { createContext, useContext } from "react";
+import { COURSE_MODULES } from "@/lib/course-data";
+import { M5_TEMPLATE_DATA } from "@/lib/m5-template-data";
+import { syncModuleProgress } from "@/actions/sync-progress";
 
 export interface CanvasNavOverride {
   disablePrev?: boolean;
@@ -48,19 +52,111 @@ interface CanvasViewerProps {
   moduleId?: string;
 }
 
+function ModuleCoverCard({ moduleId }: { moduleId: string }) {
+  const moduleData = COURSE_MODULES.find(m => m.id === moduleId);
+  const { projectSpine } = useProgressStore();
+  if (!moduleData) return null;
+
+  const modNum = parseInt(moduleData.id, 10) || 0;
+  const isEven = modNum % 2 === 0;
+
+  return (
+    <div className="w-full h-full flex flex-col justify-center items-center text-white overflow-hidden relative bg-zinc-950">
+      {/* Background Video or Image */}
+      {moduleData.videoUrl ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-luminosity"
+          src={moduleData.videoUrl}
+        />
+      ) : moduleData.imageUrl ? (
+        <img
+          src={moduleData.imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-luminosity"
+        />
+      ) : null}
+      
+      {/* Subtle overlay gradient to ensure text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
+      <div className="absolute inset-0 bg-primary/5 mix-blend-overlay" />
+      
+      {/* Glassmorphism Content Box */}
+      <div className="relative z-10 w-[92%] md:w-[75%] p-8 md:p-10 mt-4 rounded-2xl bg-zinc-900/40 backdrop-blur-md border border-white/10 shadow-2xl flex flex-col text-left transform transition-all hover:bg-zinc-900/50 mr-auto ml-4 md:ml-12 lg:ml-20">
+        
+        <div className="flex items-center gap-3 mb-6">
+          <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-widest shadow-[0_0_10px_#a7dadb30]">
+            Module {moduleData.id}
+          </div>
+          <div className="h-px bg-white/20 flex-1" />
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-primary drop-shadow-sm">
+          {moduleData.title.replace(/^\d+\.\s*/, '')}
+        </h1>
+        
+        <p className="text-lg text-zinc-300 max-w-3xl mb-8 leading-relaxed font-light">
+          {moduleData.overview}
+        </p>
+        
+        <div className="w-full text-left bg-black/40 rounded-xl p-6 border border-white/5 backdrop-blur-sm shadow-inner">
+          <h3 className="text-xs font-semibold text-primary/80 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Curriculum Path
+          </h3>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+            {moduleData.lessons.map((lesson, idx) => {
+              let displayLesson = lesson;
+              if (moduleId === "5" && projectSpine && displayLesson.includes("[Selected Project]")) {
+                const spineData = M5_TEMPLATE_DATA.find(t => t.id === projectSpine);
+                if (spineData) displayLesson = displayLesson.replace("[Selected Project]", spineData.title);
+              }
+              
+              return (
+                <li key={idx} className="flex items-center text-zinc-300 text-sm">
+                  <span className="w-1.5 h-1.5 bg-primary/60 rounded-full mr-3 shrink-0" />
+                  <span className="truncate">{displayLesson.replace(/^\d+\.\d+\s*/, '')}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: CanvasViewerProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const lessonParam = searchParams ? searchParams.get("lesson") : null;
+
+  const initialIndex = useMemo(() => {
+    if (lessonParam !== null) {
+      const targetLessonIndex = parseInt(lessonParam, 10);
+      if (!isNaN(targetLessonIndex)) {
+        const index = slides.findIndex(s => s.lessonIndex === targetLessonIndex);
+        if (index !== -1) return index;
+      }
+    }
+    return 0;
+  }, [lessonParam, slides]);
+
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(1);
   const [completedSlides, setCompletedSlides] = useState<Record<number, boolean>>({});
   const [navOverride, setNavOverride] = useState<CanvasNavOverride | null>(null);
   
   // Use state for interaction so we can trigger the "Begin Course" UI update
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(initialIndex > 0);
   
   const reduce = useReducedMotion();
-  const { setActiveLessonIndex, setActiveSlideProgress } = useProgressStore();
+  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const markCompleted = useCallback(() => {
     setCompletedSlides((prev) => {
@@ -70,18 +166,51 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, [currentIndex]);
 
   useEffect(() => {
+    const currentLesson = slides[currentIndex]?.lessonIndex;
+    const targetLessonIndex = lessonParam !== null ? parseInt(lessonParam, 10) : null;
+    
+    if (targetLessonIndex !== null && !isNaN(targetLessonIndex)) {
+      if (currentLesson !== targetLessonIndex) {
+        setCurrentIndex(initialIndex);
+        setHasInteracted(true);
+      }
+    } else if (lessonParam === null && currentIndex !== 0) {
+      // If there is no lessonParam, but we're not at 0, don't reset unless we actually started with no param
+      // Actually, standard behavior is just do nothing if they remove the param manually
+    }
+  }, [lessonParam, initialIndex]);
+
+  useEffect(() => {
     const slide = slides[currentIndex];
     if (slide && slide.lessonIndex !== undefined) {
       setActiveLessonIndex(slide.lessonIndex);
+      // Sync URL silently
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("lesson", slide.lessonIndex.toString());
+        window.history.replaceState({}, "", url.toString());
+      }
     }
 
     // Broadcast granular slide progress
     setActiveSlideProgress(currentIndex, slides.length, moduleId);
 
+    // Persist slide progress to database (debounced via timeout)
+    if (moduleId !== "unknown" && slide?.lessonIndex !== undefined) {
+      const timer = setTimeout(() => {
+        syncModuleProgress(moduleId, {
+          activeSlideIndex: currentIndex,
+          activeLessonIndex: slide.lessonIndex,
+        });
+      }, 500);
+      scheduledSyncRef.current = timer;
+    }
+
     // Cleanup previous audio if any
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.src = "";
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
 
     if (slide?.narrationText && !slide.hasCustomAudio) {
@@ -157,14 +286,44 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
         audioRef.current.pause();
         audioRef.current = null;
       }
+      if (scheduledSyncRef.current) {
+        clearTimeout(scheduledSyncRef.current);
+      }
     };
   }, []);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
+      const currentLesson = slides[currentIndex]?.lessonIndex;
+      const nextLesson = slides[currentIndex + 1]?.lessonIndex;
+      
+      if (currentLesson !== undefined && nextLesson !== undefined && currentLesson !== nextLesson) {
+        if (moduleId !== "unknown") {
+          markLessonComplete(moduleId, currentLesson);
+          syncModuleProgress(moduleId, {
+            activeLessonIndex: nextLesson,
+            activeSlideIndex: currentIndex + 1,
+          });
+        }
+      } else if (currentLesson !== undefined && moduleId !== "unknown") {
+        syncModuleProgress(moduleId, {
+          activeLessonIndex: currentLesson,
+          activeSlideIndex: currentIndex + 1,
+        });
+      }
+      
       setDirection(1);
       setCurrentIndex((prev) => prev + 1);
     } else if (onComplete) {
+      const currentLesson = slides[currentIndex]?.lessonIndex;
+      if (currentLesson !== undefined && moduleId !== "unknown") {
+        markLessonComplete(moduleId, currentLesson);
+        syncModuleProgress(moduleId, {
+          completed: true,
+          activeLessonIndex: currentLesson,
+          activeSlideIndex: currentIndex,
+        });
+      }
       onComplete();
     }
   };
@@ -208,12 +367,26 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     }
   };
 
-  const nextLabel = navOverride?.nextLabel || (currentIndex === slides.length - 1 ? "Complete Module" : "Continue");
-  // Temporarily disabled for course development speed
-  const isNavDisabled = false; // (slides[currentIndex].requireCompletion && !completedSlides[currentIndex]) || !narration.isFinished;
-  const nextDisabled = navOverride?.nextDisabled !== undefined 
-    ? navOverride.nextDisabled 
-    : isNavDisabled;
+  const currentLessonIndex = slides[currentIndex]?.lessonIndex;
+  const isModuleCompleted = moduleId !== "unknown" && completedModules.includes(moduleId);
+  const isLessonCompleted = moduleId !== "unknown" && currentLessonIndex !== undefined && (completedLessons[moduleId] || []).includes(currentLessonIndex);
+  const isAlreadyCompleted = isModuleCompleted || isLessonCompleted;
+
+  const isAssessment = slides[currentIndex]?.id.toLowerCase().includes("assessment") || slides[currentIndex]?.id.toLowerCase().includes("quiz");
+
+  const rawNextLabel = navOverride?.nextLabel || (currentIndex === slides.length - 1 ? "Complete Module" : "");
+  const displayNextLabel = rawNextLabel.toLowerCase() === "continue" ? "" : rawNextLabel;
+
+  const isNavDisabled = slides[currentIndex]?.requireCompletion && !completedSlides[currentIndex] && !isAlreadyCompleted;
+  
+  let nextDisabled = navOverride?.nextDisabled !== undefined ? navOverride.nextDisabled : isNavDisabled;
+
+  // If the user has already passed this lesson/module, unlock interactive checkpoints (except assessments, which get a skip button)
+  // BUT if a slide explicitly demands disabled state via navOverride, respect it.
+  if (isAlreadyCompleted && !isAssessment && navOverride?.nextDisabled === undefined) {
+    nextDisabled = false;
+  }
+
   const prevDisabled = navOverride?.disablePrev !== undefined ? navOverride.disablePrev : currentIndex === 0;
   const NextIcon = navOverride?.nextIcon || (currentIndex === slides.length - 1 ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />);
 
@@ -247,11 +420,26 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                     </div>
                   ) : (
                     typeof slides[currentIndex].component === "function"
-                      ? (slides[currentIndex].component as Function)(markCompleted)
+                      ? (slides[currentIndex].component as (markCompleted: () => void) => React.ReactNode)(markCompleted)
                       : slides[currentIndex].component
                   )}
                 </div>
               </motion.div>
+            </AnimatePresence>
+
+            {/* OVERLAY COVER CARD */}
+            <AnimatePresence>
+              {!hasInteracted && currentIndex === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, filter: "blur(10px)", scale: 1.05 }}
+                  transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute inset-0 z-30 flex items-center justify-center bg-zinc-950"
+                >
+                  <ModuleCoverCard moduleId={moduleId} />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
 
@@ -309,14 +497,24 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                 </button>
               )}
 
+              {isAlreadyCompleted && isAssessment && (
+                <button
+                  onClick={handleNext}
+                  className="flex items-center justify-center h-10 px-4 rounded-full bg-zinc-800 text-zinc-300 font-medium hover:bg-zinc-700 hover:text-white transition-all active:scale-95"
+                >
+                  <span>Skip Knowledge Check</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </button>
+              )}
+
               <button
                 onClick={finalHandleNext}
                 disabled={nextDisabled}
                 className={`flex items-center justify-center h-10 ${
-                  navOverride?.nextLabel ? "px-5 space-x-2" : "w-10"
+                  displayNextLabel ? "px-5 space-x-2" : "w-10"
                 } rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95`}
               >
-                {navOverride?.nextLabel && <span>{navOverride.nextLabel}</span>}
+                {displayNextLabel && <span>{displayNextLabel}</span>}
                 {NextIcon}
               </button>
             </div>

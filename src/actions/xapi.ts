@@ -7,7 +7,7 @@ export async function sendXAPIStatement(
   objectId: string,
   objectName: string,
   objectDescription?: string,
-  context?: { moduleId?: string; slideId?: string; lessonIndex?: number; result?: { score?: number; success?: boolean; completion?: boolean } }
+  context?: { moduleId?: string; slideId?: string; lessonIndex?: number; result?: { score?: number; success?: boolean; completion?: boolean; response?: string } }
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,6 +37,7 @@ export async function sendXAPIStatement(
     result_score: context?.result?.score ?? null,
     result_success: context?.result?.success ?? null,
     result_completion: context?.result?.completion ?? null,
+    result_response: context?.result?.response ?? null,
     context_module_id: context?.moduleId ?? null,
     context_slide_id: context?.slideId ?? null,
     context_lesson_index: context?.lessonIndex ?? null,

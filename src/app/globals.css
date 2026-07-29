@@ -150,3 +150,88 @@ input:-webkit-autofill:focus {
   caret-color: var(--foreground);
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* ============================================================
+   HERO SECTION — Motion keyframes & utilities
+   Tokens: see STYLE.md §6 (Motion). All easings per emil-design-eng.
+   ============================================================ */
+
+/* Slow aurora drift — 25s linear loop, GPU-composited transform only */
+@keyframes aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(2%, -1%, 0) scale(1.05); }
+  66%      { transform: translate3d(-1%, 2%, 0) scale(0.98); }
+}
+
+/* Eyebrow live-dot pulse — soft ring expansion, signals "new" */
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 218, 219, 0.55); } /* traces to --primary */
+  50%      { box-shadow: 0 0 0 7px rgba(167, 218, 219, 0); }
+}
+
+/* Neural network SVG — node breathe + edge shimmer */
+@keyframes node-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.18); }
+}
+
+@keyframes edge-shimmer {
+  0%, 100% { stroke-opacity: 0.18; }
+  50%      { stroke-opacity: 0.45; }
+}
+
+/* Marquee infinite scroll — duplicated track translated -50% */
+@keyframes marquee {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Skeleton shimmer sweep — slow left-to-right gradient makes skeleton feel alive */
+@keyframes skeleton-shimmer {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(300%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  will-change: transform;
+}
+
+/* Pause-on-hover — !important overrides inline animation-play-state */
+.marquee-pause:hover .marquee-track,
+.marquee-pause:focus-within .marquee-track {
+  animation-play-state: paused !important;
+}
+
+/* Word-mask utility for SplitText-style headline reveals */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: inherit;
+}
+
+.word-inner {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   REDUCED MOTION — collapse every motion primitive to instant
+   Per emil-design-eng: opacity-only fade allowed; no transform.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .aurora-drift-layer,
+  .skeleton-shimmer-layer,
+  .neural-node,
+  .neural-edge {
+    animation: none !important;
+    transform: none !important;
+  }
+  .word-inner {
+    /* Inline the final state — no transform, full opacity */
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
