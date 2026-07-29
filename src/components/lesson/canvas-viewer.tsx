@@ -455,14 +455,6 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           <div className="h-20 border-t border-border bg-card/50 backdrop-blur flex items-center justify-end px-8 z-10 shrink-0">
             {/* Right side: Next/Prev */}
             <div className="flex items-center space-x-3">
-              <button
-                onClick={finalHandlePrev}
-                disabled={prevDisabled}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-
               {/* Mute / Unmute — only shown when the slide has audio */}
               {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
                 <button
@@ -476,6 +468,14 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                     : <Volume2 className="w-4 h-4" />}
                 </button>
               )}
+
+              <button
+                onClick={finalHandlePrev}
+                disabled={prevDisabled}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
 
               {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
                 <button
