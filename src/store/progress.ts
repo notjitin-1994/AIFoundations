@@ -269,7 +269,7 @@ export const useProgressStore = create<ProgressState>()(
         })),
 
       resetProgress: () =>
-        set(() => ({
+        set((state) => ({
           completedModules: [],
           completedLessons: {},
           projectSpine: null,
@@ -281,13 +281,13 @@ export const useProgressStore = create<ProgressState>()(
           activeModuleId: '0',
           gamification: {
             xp: 0,
-            badges: [],
+            badges: state.gamification.badges.includes('certified') ? ['certified'] : [],
             toolsMastered: [],
             totalTimeSpentSeconds: 0,
             currentStreak: 0,
           },
           lastUpdatedAt: new Date().toISOString(),
-          isEnrolled: false
+          isEnrolled: state.isEnrolled
         })),
       setEnrolled: (status) =>
         set(() => ({

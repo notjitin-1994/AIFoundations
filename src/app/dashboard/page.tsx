@@ -169,7 +169,7 @@ export default function CourseDashboardPage() {
                 <RotateCcw className="w-4 h-4" />
                 Restart Course
               </button>
-              {completedCount === totalModules && (
+              {(completedCount === totalModules || gamification.badges.includes('certified')) && (
                 <button onClick={() => router.push('/certificate')} className="px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/30 font-bold text-sm hover:border-primary/60 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] transition-all flex items-center gap-2">
                   <Trophy className="w-4 h-4 fill-primary/20" />
                   View Certificate
@@ -491,12 +491,24 @@ export default function CourseDashboardPage() {
               </div>
 
               {/* Certificate Teaser */}
-              <div className="mt-12 p-6 rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 text-center relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
-                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <Trophy className="w-10 h-10 text-primary mx-auto mb-3 relative z-10 drop-shadow-[0_0_15px_rgba(167,218,219,0.5)]" />
-                <h4 className="font-heading text-lg font-bold text-white mb-2 relative z-10">Verified Certificate</h4>
-                <p className="text-sm text-zinc-400 relative z-10 max-w-sm mx-auto">Unlock your cryptographically verified credential upon completing the final capstone assessment.</p>
-              </div>
+              {gamification.badges.includes('certified') ? (
+                <div 
+                  onClick={() => router.push('/certificate')}
+                  className="mt-12 p-6 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 text-center relative overflow-hidden group hover:border-primary/50 cursor-pointer transition-all duration-500 shadow-[0_0_30px_rgba(167,218,219,0.1)]"
+                >
+                  <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Trophy className="w-10 h-10 text-primary mx-auto mb-3 relative z-10 drop-shadow-[0_0_15px_rgba(167,218,219,0.5)]" />
+                  <h4 className="font-heading text-lg font-bold text-white mb-2 relative z-10">View Certificate</h4>
+                  <p className="text-sm text-zinc-400 relative z-10 max-w-sm mx-auto">Your verified credential is ready and permanently unlocked.</p>
+                </div>
+              ) : (
+                <div className="mt-12 p-6 rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 text-center relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Trophy className="w-10 h-10 text-primary mx-auto mb-3 relative z-10 drop-shadow-[0_0_15px_rgba(167,218,219,0.5)]" />
+                  <h4 className="font-heading text-lg font-bold text-white mb-2 relative z-10">Verified Certificate</h4>
+                  <p className="text-sm text-zinc-400 relative z-10 max-w-sm mx-auto">Unlock your cryptographically verified credential upon completing the final capstone assessment.</p>
+                </div>
+              )}
 
             </div>
           </div>
