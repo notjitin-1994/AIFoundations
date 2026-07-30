@@ -1,61 +1,69 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-export interface ModuleScore {
-  moduleId: string;
-  moduleName: string;
-  score: number;
-  total: number;
-}
+import crypto from "crypto";
+// import { createClient } from "@/lib/supabase/server";
 
 export interface CertificateRecord {
-  id: string;
+  id: string; // The cryptographic hash
   userId: string;
-  studentName: string;
   baselineScore: number;
   finalScore: number;
-  moduleScores: ModuleScore[];
+  moduleScores: { moduleId: string; moduleName: string; score: number }[];
   isVerified: boolean;
   issuedAt: string;
   projectSpine: string;
 }
 
-/**
- * Mock function to simulate fetching a certificate from the database (e.g. Supabase).
- */
-export async function getCertificateData(userId: string): Promise<CertificateRecord | null> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-
-  // Return a mock certificate populated with plausible data
-  return {
-    id: `cert-${Math.random().toString(36).substring(7)}`,
-    userId,
-    studentName: "Guest Learner", // Will be replaced by real auth data
-    baselineScore: 45,
-    finalScore: 92,
-    moduleScores: [
-      { moduleId: "1", moduleName: "AI Fundamentals", score: 100, total: 100 },
-      { moduleId: "2", moduleName: "The LLM Brain", score: 90, total: 100 },
-      { moduleId: "3", moduleName: "The Toolbelt", score: 85, total: 100 },
-      { moduleId: "4", moduleName: "The Assembly Line", score: 95, total: 100 },
-      { moduleId: "6", moduleName: "The Horizon", score: 100, total: 100 },
-    ],
-    // The certificate is Unverified until a human or LLM-judge approves the capstone in DB
-    isVerified: false, 
-    issuedAt: new Date().toISOString(),
-    projectSpine: "AI Application", // To be updated by real user data
-  };
+export async function requestVerification(certId: string) {
+  // In a real application, this would mark the certificate for instructor review
+  // or trigger an LLM-based verification of the final capstone project.
+  console.log(`Verification requested for ${certId}`);
+  
+  // Simulated delay for realism
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return { success: true };
 }
 
 /**
- * Mock function to request a capstone review/verification.
+ * Generates a verifiable cryptographic hash based on the certificate data.
  */
-export async function requestVerification(certId: string) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // In reality, this would mark a flag in Supabase to queue the project for review
-  console.log(`Requested verification for certificate ${certId}`);
-  revalidatePath('/certificate');
-  return { success: true, message: "Verification requested successfully." };
+export async function generateCertificateHash(
+  userId: string,
+  baselineScore: number,
+  finalScore: number,
+  projectSpine: string
+) {
+  // We use a salt (in a real app this should be a private environment variable)
+  const salt = process.env.CERT_SECRET_SALT || "concept2app-secret-salt-2026";
+  
+  // Combine all the critical data points that must not be forged
+  const dataString = `${userId}:${baselineScore}:${finalScore}:${projectSpine}:${salt}`;
+  
+  // Generate a SHA-256 hash
+  const hash = crypto.createHash("sha256").update(dataString).digest("hex");
+  
+  // Return a readable short string (first 16 chars)
+  return `cert-${hash.substring(0, 16)}`;
+}
+
+/**
+ * This function handles fetching or creating a certificate for a user.
+ * It simulates storing the verified record in Supabase.
+ */
+export async function getOrCreateCertificate(certData: Omit<CertificateRecord, "id" | "issuedAt">) {
+  const hashId = await generateCertificateHash(
+    certData.userId, 
+    certData.baselineScore, 
+    certData.finalScore, 
+    certData.projectSpine
+  );
+
+  const newRecord: CertificateRecord = {
+    ...certData,
+    id: hashId,
+    issuedAt: new Date().toISOString(),
+  };
+
+  return newRecord;
 }

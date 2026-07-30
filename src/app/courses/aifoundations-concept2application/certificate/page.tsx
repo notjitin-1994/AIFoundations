@@ -2,25 +2,20 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
-import { requestVerification, CertificateRecord } from "@/actions/certificate";
+import { requestVerification, getOrCreateCertificate, CertificateRecord } from "@/actions/certificate";
 import { useProgressStore } from "@/store/progress";
 import { Loader2, ShieldCheck, ShieldAlert, Share2, Download, ExternalLink, Trophy, Target, History, Sparkles, User, Briefcase, Activity, CheckCircle2, Award, Hexagon, Fingerprint, Lock } from "lucide-react";
 import { gsap } from "gsap";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabase/client";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
-// We keep a lightweight local interface for the component's internal state
-interface RealtimeCertData {
-  id: string;
+// We keep a lightweight local interface for the component's internal state, extending the server record
+interface RealtimeCertData extends CertificateRecord {
   studentName: string;
   avatarUrl?: string;
-  baselineScore: number;
-  finalScore: number;
-  moduleScores: { moduleId: string; moduleName: string; score: number }[];
-  isVerified: boolean;
-  issuedAt: string;
-  projectSpine: string;
 }
 
 export default function CertificatePage() {
@@ -29,94 +24,103 @@ export default function CertificatePage() {
   const [certData, setCertData] = useState<RealtimeCertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   
   const certRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authLoading) return;
-
-    // Calculate real-time data from local state
-    const spineDisplay = projectSpine 
-      ? projectSpine.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-      : "AI Application Foundation";
-
-    // Extract module scores
-    const moduleScores = Object.entries(assessments)
-      .filter(([id]) => id.startsWith('m') && !id.includes('baseline') && !id.includes('final'))
-      .map(([id, state]) => {
-        let score = 0;
-        let total = 0;
-        if (state.graded) {
-          total = Object.keys(state.graded).length;
-          score = Object.values(state.graded).filter((g: any) => g.correct).length;
-        }
-        return {
-          moduleId: id,
-          moduleName: `Module ${id.replace('m', '')}`,
-          score: total > 0 ? Math.round((score / total) * 100) : 0,
-        };
-      })
-      .sort((a, b) => a.moduleId.localeCompare(b.moduleId));
-
-    // Determine Baseline and Final
-    let baselineScore = 0;
-    if (assessments['baseline']?.graded) {
-      const g = assessments['baseline'].graded;
-      const total = Object.keys(g).length;
-      baselineScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
-    } else {
-      // Mock if hasn't taken it
-      baselineScore = 45;
+    if (!user) {
+      setLoading(false);
+      return;
     }
 
-    let finalScore = 0;
-    if (assessments['final']?.graded) {
-      const g = assessments['final'].graded;
-      const total = Object.keys(g).length;
-      finalScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
-    } else if (moduleScores.length > 0) {
-      // Average of modules if no final
-      finalScore = Math.round(moduleScores.reduce((acc, curr) => acc + curr.score, 0) / moduleScores.length);
-    } else {
-      finalScore = 92; // Mock fallback
-    }
+    async function generateCert() {
+      // Calculate real-time data from local state
+      const spineDisplay = projectSpine 
+        ? projectSpine.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        : "AI Application Foundation";
 
-    // Build the data object
-    const realData: RealtimeCertData = {
-      id: user ? `cert-${user.id.substring(0, 8)}` : `cert-${Math.random().toString(36).substring(7)}`,
-      studentName: getDisplayName(user),
-      avatarUrl: user?.user_metadata?.avatar_url,
-      baselineScore,
-      finalScore,
-      moduleScores: moduleScores.length > 0 ? moduleScores : [
-        { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
-        { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
-        { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
-        { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
-        { moduleId: "6", moduleName: "The Horizon", score: 100 },
-      ],
-      isVerified: false, // Default pending review
-      issuedAt: new Date().toISOString(),
-      projectSpine: spineDisplay,
-    };
-
-    setCertData(realData);
-    setLoading(false);
-
-    if (user) {
-      createClient()
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          const finalAvatar = data?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-          if (finalAvatar) {
-            setCertData(prev => prev ? { ...prev, avatarUrl: finalAvatar } : null);
+      // Extract module scores
+      const moduleScores = Object.entries(assessments)
+        .filter(([id]) => id.startsWith('m') && !id.includes('baseline') && !id.includes('final'))
+        .map(([id, state]) => {
+          let score = 0;
+          let total = 0;
+          if (state.graded) {
+            total = Object.keys(state.graded).length;
+            score = Object.values(state.graded).filter((g: any) => g.correct).length;
           }
-        });
+          return {
+            moduleId: id,
+            moduleName: `Module ${id.replace('m', '')}`,
+            score: total > 0 ? Math.round((score / total) * 100) : 0,
+          };
+        })
+        .sort((a, b) => a.moduleId.localeCompare(b.moduleId));
+
+      // Determine Baseline and Final
+      let baselineScore = 0;
+      if (assessments['baseline']?.graded) {
+        const g = assessments['baseline'].graded;
+        const total = Object.keys(g).length;
+        baselineScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
+      } else {
+        baselineScore = 45;
+      }
+
+      let finalScore = 0;
+      if (assessments['final']?.graded) {
+        const g = assessments['final'].graded;
+        const total = Object.keys(g).length;
+        finalScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
+      } else if (moduleScores.length > 0) {
+        finalScore = Math.round(moduleScores.reduce((acc, curr) => acc + curr.score, 0) / moduleScores.length);
+      } else {
+        finalScore = 92;
+      }
+      
+      const userId = user?.id || "guest";
+
+      // Fetch cryptographic record
+      const certRecord = await getOrCreateCertificate({
+        userId,
+        baselineScore,
+        finalScore,
+        moduleScores: moduleScores.length > 0 ? moduleScores : [
+          { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
+          { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
+          { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
+          { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
+          { moduleId: "6", moduleName: "The Horizon", score: 100 },
+        ],
+        isVerified: false,
+        projectSpine: spineDisplay
+      });
+
+      const studentName = getDisplayName(user);
+      
+      let avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+      
+      if (!avatarUrl && user) {
+        const { data } = await createClient()
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .single();
+        if (data?.avatar_url) avatarUrl = data.avatar_url;
+      }
+
+      setCertData({
+        ...certRecord,
+        studentName,
+        avatarUrl
+      });
+      setLoading(false);
     }
+
+    generateCert();
   }, [user, authLoading, projectSpine, assessments]);
 
   useEffect(() => {
@@ -137,8 +141,33 @@ export default function CertificatePage() {
     alert("Capstone verification requested. We will review your project and update your credential status.");
   };
 
-  const handleDownload = () => {
-    window.print();
+  const handleDownload = async () => {
+    if (!certRef.current) return;
+    setDownloading(true);
+    
+    try {
+      // Hide any UI elements inside the cert if needed, but our cert is self-contained.
+      const canvas = await html2canvas(certRef.current, {
+        scale: 2, // High resolution
+        useCORS: true,
+        backgroundColor: "#0a0a0f", // Match cert background
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height]
+      });
+      
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`Concept2App-Certificate-${certData?.studentName.replace(/\s+/g, '-')}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("There was an issue generating your PDF. You can also try using your browser's Print function.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading || authLoading) {
@@ -283,8 +312,9 @@ export default function CertificatePage() {
           </div>
 
           <div className="fade-in-stagger flex gap-3 w-full md:w-auto mt-6 md:mt-0">
-            <button onClick={handleDownload} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900/50 hover:bg-zinc-800 border border-white/10 text-white rounded-xl font-bold transition-all shadow-sm">
-              <Download className="w-4 h-4" /> Save PDF
+            <button disabled={downloading} onClick={handleDownload} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900/50 hover:bg-zinc-800 border border-white/10 text-white rounded-xl font-bold transition-all shadow-sm disabled:opacity-50">
+              {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {downloading ? "Saving PDF..." : "Save PDF"}
             </button>
             <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)] active:scale-95">
               <Share2 className="w-4 h-4" /> Share
@@ -421,21 +451,27 @@ export default function CertificatePage() {
                 </div>
 
                 {/* Verified Seal */}
-                <div className="relative flex items-center justify-center shrink-0 w-32 h-32 mr-4">
+                <div className="relative flex items-center justify-center shrink-0 w-32 h-32 mr-4 group">
                   <div className={`absolute inset-0 rounded-full border-2 border-dashed ${certData.isVerified ? 'border-emerald-500/50 animate-[spin_20s_linear_infinite]' : 'border-amber-400/50'}`} />
                   <div className={`absolute inset-2 rounded-full border ${certData.isVerified ? 'border-emerald-500/20' : 'border-amber-400/20'}`} />
-                  <div className={`w-24 h-24 rounded-full flex flex-col items-center justify-center bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5 ${certData.isVerified ? 'text-emerald-500' : 'text-amber-400'}`}>
-                    {certData.isVerified ? (
-                      <>
-                        <ShieldCheck className="w-8 h-8 mb-1 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500">Verified</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldAlert className="w-8 h-8 mb-1 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400">Pending</span>
-                      </>
-                    )}
+                  <div className={`relative w-24 h-24 rounded-full flex flex-col items-center justify-center bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden ${certData.isVerified ? 'text-emerald-500' : 'text-amber-400'}`}>
+                    
+                    {/* Holographic foil sweep */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-0 pointer-events-none" />
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      {certData.isVerified ? (
+                        <>
+                          <ShieldCheck className="w-8 h-8 mb-1 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500">Verified</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldAlert className="w-8 h-8 mb-1 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
+                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400">Pending</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -40,7 +40,7 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   const [mounted, setMounted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [coords, setCoords] = useState<{ top?: number; left?: number; bottom?: number; right?: number } | null>(null);
+  const [coords, setCoords] = useState<{ top?: number; left?: number; bottom?: number; right?: number; placement?: string; tailLeft?: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
