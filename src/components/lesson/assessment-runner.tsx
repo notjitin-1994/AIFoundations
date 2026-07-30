@@ -104,7 +104,7 @@ export function AssessmentRunner({
   }, [thisModuleId]);
 
   const questionsPool = useMemo(() => {
-    if (savedState?.questions) return savedState.questions; // Use saved questions if resuming
+    if (savedState?.questions) return savedState.questions as AssessmentQuestion[]; // Use saved questions if resuming
     const config: AssessmentConfig = {
       perModule,
       totalQuestions,
@@ -173,7 +173,7 @@ export function AssessmentRunner({
   }, [started, finished, hasPassed, currentIdx, submitted, answers, questions, kind, questionsPool]);
 
   function start() {
-    setQuestions(questionsPool);
+    setQuestions(questionsPool as AssessmentQuestion[]);
     setAnswers({});
     setGraded({});
     setSubmitted({});

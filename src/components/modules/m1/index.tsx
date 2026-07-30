@@ -421,11 +421,6 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
       audioRef.current.pause();
     }
   }, [isPlaying]);
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
 
 
   const handleNodeClick = (idx: number) => {
@@ -587,11 +582,6 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
 
 
   const cardVariant: any = {
@@ -878,11 +868,6 @@ function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) 
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(()=>{});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
 
 
   // Emil Design Eng: Spring config for natural physics
@@ -2849,11 +2834,6 @@ function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
 
 
   return (
@@ -2928,11 +2908,6 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
 
 
   return (

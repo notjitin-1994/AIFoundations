@@ -31,6 +31,7 @@ export interface CanvasNavOverride {
   nextLabel?: string;
   nextIcon?: React.ReactNode;
   onNext?: (handleNext: () => void) => void;
+  onPrev?: (handlePrev: () => void) => void;
   nextDisabled?: boolean;
 }
 
@@ -412,7 +413,11 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const finalHandlePrev = () => {
     if (!hasInteracted) setHasInteracted(true);
     if (navOverride?.disablePrev) return;
-    handlePrev();
+    if (navOverride?.onPrev) {
+      navOverride.onPrev(handlePrev);
+    } else {
+      handlePrev();
+    }
   };
 
   const currentLessonIndex = slides[currentIndex]?.lessonIndex;

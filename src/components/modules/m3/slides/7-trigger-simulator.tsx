@@ -58,12 +58,6 @@ export function TriggerSimulatorSlide({ onComplete }: { onComplete?: () => void 
     }
   }, [isPlaying]);
 
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
-
 
   useEffect(() => {
     setNavOverride({

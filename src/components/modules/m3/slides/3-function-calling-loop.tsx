@@ -59,12 +59,6 @@ export function FunctionCallingLoopSlide({ onComplete }: { onComplete?: () => vo
     }
   }, [isPlaying]);
 
-  useEffect(() => {
-    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
-      tl.current.time(seekTime);
-    }
-  }, [seekTime]);
-
 
   useEffect(() => {
     if (isFinished && onComplete) {
