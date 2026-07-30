@@ -6,12 +6,20 @@ import { useEffect, useState } from "react";
 import { gsap } from "gsap";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { useProgressStore } from "@/store/progress";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const isEnrolled = useProgressStore((state) => state.isEnrolled);
+
+  useEffect(() => {
+    if (isEnrolled) {
+      router.push("/dashboard");
+    }
+  }, [isEnrolled, router]);
 
   useEffect(() => {
     gsap.fromTo(
@@ -38,6 +46,7 @@ export default function CourseMarketingPage() {
       image: "https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png",
       handler: function (response: any) {
         // Payment successful, push to dashboard
+        useProgressStore.getState().setEnrolled(true);
         router.push("/dashboard");
       },
       prefill: {

@@ -50,6 +50,8 @@ interface ProgressState {
   // Gamification
   gamification: GamificationState;
 
+  isEnrolled: boolean;
+
   setProjectSpine: (spine: ProjectSpine) => void;
   saveProjectSpineAnswer: (moduleId: string, answerData: ProjectSpineAnswerData) => void;
   saveAssessmentState: (moduleId: string, state: AssessmentState) => void;
@@ -68,6 +70,7 @@ interface ProgressState {
   // Hydrates local state from DB if DB is newer
   syncFromDB: (dbData: Partial<ProgressState>) => void;
   resetProgress: () => void;
+  setEnrolled: (status: boolean) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -91,6 +94,7 @@ export const useProgressStore = create<ProgressState>()(
         lastLoginDate: null,
         currentStreak: 0,
       },
+      isEnrolled: false,
 
       setProjectSpine: (spine) => set({ projectSpine: spine, lastUpdatedAt: new Date().toISOString() }),
       
@@ -273,6 +277,12 @@ export const useProgressStore = create<ProgressState>()(
           activeSlideIndex: 0,
           totalSlidesInModule: 1,
           activeModuleId: '0',
+          lastUpdatedAt: new Date().toISOString(),
+          isEnrolled: false
+        })),
+      setEnrolled: (status) =>
+        set(() => ({
+          isEnrolled: status,
           lastUpdatedAt: new Date().toISOString()
         })),
     }),
@@ -286,6 +296,7 @@ export const useProgressStore = create<ProgressState>()(
         assessments: state.assessments,
         lastUpdatedAt: state.lastUpdatedAt,
         gamification: state.gamification,
+        isEnrolled: state.isEnrolled,
       }),
     }
   )

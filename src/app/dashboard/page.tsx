@@ -34,6 +34,11 @@ export default function CourseDashboardPage() {
   useEffect(() => {
     // Record login for streak tracking
     progress.recordLogin();
+    
+    // Make sure they are marked as enrolled
+    if (!useProgressStore.getState().isEnrolled) {
+      progress.setEnrolled(true);
+    }
 
     // Auto-seed for specific testing account or if entirely empty
     if (useProgressStore.getState().completedModules.length === 0 || (user?.email === "not.jitin@gmail.com" && useProgressStore.getState().gamification.xp < 500)) {
