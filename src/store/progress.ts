@@ -306,7 +306,14 @@ export const useProgressStore = create<ProgressState>()(
           activeSlideIndex: 0,
           totalSlidesInModule: 1,
           activeModuleId: '0',
-          gamification: state.gamification, // PRESERVE gamification across restarts
+          gamification: {
+            xp: 0,
+            badges: [],
+            toolsMastered: [],
+            totalTimeSpentSeconds: 0,
+            lastLoginDate: null,
+            currentStreak: 0,
+          },
           lastUpdatedAt: new Date().toISOString(),
           isEnrolled: state.isEnrolled
         })),

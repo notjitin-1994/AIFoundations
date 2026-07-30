@@ -11,7 +11,8 @@ import { sendXAPIStatement } from "@/actions/xapi";
 import { createContext, useContext } from "react";
 import { COURSE_MODULES } from "@/lib/course-data";
 import { M5_TEMPLATE_DATA } from "@/lib/m5-template-data";
-import { syncModuleProgress } from "@/actions/sync-progress";
+import { syncModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
+import { useNotesStore } from "@/store/notes";
 import { AssetsModal } from "@/components/layout/assets-modal";
 import { HelpTour } from "@/components/layout/help-tour";
 import {
@@ -178,7 +179,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
+    await wipeDatabaseProgress();
+    useNotesStore.getState().clearAllNotes();
     resetProgress();
     router.push("/modules/0");
     router.refresh();

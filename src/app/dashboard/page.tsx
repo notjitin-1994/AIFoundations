@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
+import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
 import { wipeDatabaseProgress } from "@/actions/sync-progress";
 
@@ -105,6 +106,7 @@ export default function CourseDashboardPage() {
   const handleRestart = async () => {
     setIsRestarting(true);
     await wipeDatabaseProgress();
+    useNotesStore.getState().clearAllNotes();
     progress.resetProgress();
     router.push("/modules/0");
   };

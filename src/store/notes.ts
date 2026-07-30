@@ -14,6 +14,7 @@ interface NotesState {
   notes: Note[];
   saveNote: (moduleId: string, lessonIndex: number, slideIndex: number, content: string) => void;
   getNote: (moduleId: string, lessonIndex: number, slideIndex: number) => Note | undefined;
+  clearAllNotes: () => void;
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -37,6 +38,9 @@ export const useNotesStore = create<NotesState>()(
       },
       getNote: (moduleId, lessonIndex, slideIndex) => {
         return get().notes.find(n => n.moduleId === moduleId && n.lessonIndex === lessonIndex && n.slideIndex === slideIndex);
+      },
+      clearAllNotes: () => {
+        set({ notes: [] });
       }
     }),
     {
