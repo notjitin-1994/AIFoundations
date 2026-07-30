@@ -31,8 +31,10 @@ export default function CourseDashboardPage() {
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Record login for streak tracking
     progress.recordLogin();
     
@@ -65,19 +67,19 @@ export default function CourseDashboardPage() {
   }, []);
 
   const totalModules = COURSE_MODULES.length;
-  const completedCount = progress.completedModules.length;
+  const completedCount = mounted ? progress.completedModules.length : 0;
   
   // Base progress from fully completed modules
-  const baseProgress = (completedCount / totalModules) * 100;
+  const baseProgress = mounted ? (completedCount / totalModules) * 100 : 0;
 
   // Granular progress from current module's active slide ONLY if it's not already completed
-  const isCurrentModuleCompleted = progress.completedModules.includes(progress.activeModuleId || "0");
+  const isCurrentModuleCompleted = mounted && progress.completedModules.includes(progress.activeModuleId || "0");
   const currentModuleProgress = isCurrentModuleCompleted
     ? 0
-    : ((progress.activeSlideIndex || 0) / Math.max(1, progress.totalSlidesInModule || 1)) * (100 / totalModules);
+    : (mounted ? ((progress.activeSlideIndex || 0) / Math.max(1, progress.totalSlidesInModule || 1)) * (100 / totalModules) : 0);
 
-  const progressPercent = Math.round(Math.min(100, baseProgress + currentModuleProgress));
-  const hoursInvested = (gamification.totalTimeSpentSeconds / 3600).toFixed(1);
+  const progressPercent = mounted ? Math.round(Math.min(100, baseProgress + currentModuleProgress)) : 0;
+  const hoursInvested = mounted ? (gamification.totalTimeSpentSeconds / 3600).toFixed(1) : "0.0";
   
   // Behavioral Badges Logic
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,7 +109,7 @@ export default function CourseDashboardPage() {
     router.push(`/modules/${nextModuleId}`);
   };
 
-  const hasStarted = completedCount > 0 || (progress.activeModuleId !== "0" && progress.activeModuleId !== null) || progress.activeSlideIndex > 0;
+  const hasStarted = mounted && (completedCount > 0 || (progress.activeModuleId !== "0" && progress.activeModuleId !== null) || progress.activeSlideIndex > 0);
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
