@@ -18,8 +18,9 @@ export default function CourseMarketingPage() {
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
 
   useEffect(() => {
-    // Auto-enroll the test account
-    if (user?.email === "not.jitin@gmail.com" && !isEnrolled) {
+    // Auto-enroll the test accounts
+    const isTestAccount = user?.email === "not.jitin@gmail.com" || user?.email === "jitin@glitchzerolabs.com";
+    if (isTestAccount && !isEnrolled) {
       useProgressStore.getState().setEnrolled(true);
       router.push("/dashboard");
       return;
