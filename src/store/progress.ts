@@ -105,6 +105,10 @@ export const useProgressStore = create<ProgressState>()(
             ...state.projectSpineAnswers,
             [moduleId]: answerData
           },
+          gamification: {
+            ...state.gamification,
+            xp: state.gamification.xp + 30 // 30 XP for submitting deliverables
+          },
           lastUpdatedAt: new Date().toISOString()
         })),
         
@@ -150,23 +154,34 @@ export const useProgressStore = create<ProgressState>()(
           const newBadges = [...state.gamification.badges];
           let xpEarned = 100; // 100 XP for completing a module
           
-          if (moduleId === "0" && !newBadges.includes("first-steps")) newBadges.push("first-steps");
-          if (moduleId === "2" && !newBadges.includes("prompt-eng")) newBadges.push("prompt-eng");
+          if (moduleId === "0" && !newBadges.includes("first-steps")) {
+            newBadges.push("first-steps");
+            xpEarned += 50;
+          }
+          if (moduleId === "2" && !newBadges.includes("prompt-eng")) {
+            newBadges.push("prompt-eng");
+            xpEarned += 50;
+          }
           if (moduleId === "3" && !newBadges.includes("tool-builder")) {
             newBadges.push("tool-builder");
-            if (!newTools.includes("RAG")) newTools.push("RAG");
-            if (!newTools.includes("Vector DB")) newTools.push("Vector DB");
+            xpEarned += 50;
+            if (!newTools.includes("RAG")) { newTools.push("RAG"); xpEarned += 20; }
+            if (!newTools.includes("Vector DB")) { newTools.push("Vector DB"); xpEarned += 20; }
           }
           if (moduleId === "4" && !newBadges.includes("agent-master")) {
             newBadges.push("agent-master");
-            if (!newTools.includes("Agents")) newTools.push("Agents");
-            if (!newTools.includes("LangChain")) newTools.push("LangChain");
+            xpEarned += 50;
+            if (!newTools.includes("Agents")) { newTools.push("Agents"); xpEarned += 20; }
+            if (!newTools.includes("LangChain")) { newTools.push("LangChain"); xpEarned += 20; }
           }
           if (moduleId === "5") {
-            if (!newTools.includes("FastAPI")) newTools.push("FastAPI");
-            if (!newTools.includes("Deployment")) newTools.push("Deployment");
+            if (!newTools.includes("FastAPI")) { newTools.push("FastAPI"); xpEarned += 20; }
+            if (!newTools.includes("Deployment")) { newTools.push("Deployment"); xpEarned += 20; }
           }
-          if (moduleId === "6" && !newBadges.includes("certified")) newBadges.push("certified");
+          if (moduleId === "6" && !newBadges.includes("certified")) {
+            newBadges.push("certified");
+            xpEarned += 200; // Massive XP for certification
+          }
 
           return {
             completedModules: [...state.completedModules, moduleId],
@@ -188,6 +203,10 @@ export const useProgressStore = create<ProgressState>()(
             completedLessons: {
               ...state.completedLessons,
               [moduleId]: [...modLessons, lessonIndex]
+            },
+            gamification: {
+              ...state.gamification,
+              xp: state.gamification.xp + 20 // 20 XP for completing a lesson
             },
             lastUpdatedAt: new Date().toISOString()
           };
@@ -213,7 +232,11 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => {
           if (state.gamification.badges.includes(badgeId)) return state;
           return {
-            gamification: { ...state.gamification, badges: [...state.gamification.badges, badgeId] },
+            gamification: { 
+              ...state.gamification, 
+              badges: [...state.gamification.badges, badgeId],
+              xp: state.gamification.xp + 50 // 50 XP for earning a badge
+            },
             lastUpdatedAt: new Date().toISOString()
           };
         }),
@@ -222,7 +245,11 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => {
           if (state.gamification.toolsMastered.includes(toolId)) return state;
           return {
-            gamification: { ...state.gamification, toolsMastered: [...state.gamification.toolsMastered, toolId] },
+            gamification: { 
+              ...state.gamification, 
+              toolsMastered: [...state.gamification.toolsMastered, toolId],
+              xp: state.gamification.xp + 20 // 20 XP for mastering a tool
+            },
             lastUpdatedAt: new Date().toISOString()
           };
         }),
@@ -279,13 +306,7 @@ export const useProgressStore = create<ProgressState>()(
           activeSlideIndex: 0,
           totalSlidesInModule: 1,
           activeModuleId: '0',
-          gamification: {
-            xp: 0,
-            badges: state.gamification.badges.includes('certified') ? ['certified'] : [],
-            toolsMastered: [],
-            totalTimeSpentSeconds: 0,
-            currentStreak: 0,
-          },
+          gamification: state.gamification, // PRESERVE gamification across restarts
           lastUpdatedAt: new Date().toISOString(),
           isEnrolled: state.isEnrolled
         })),
