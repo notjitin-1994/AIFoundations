@@ -66,7 +66,17 @@ export default function CourseDashboardPage() {
 
   const totalModules = COURSE_MODULES.length;
   const completedCount = progress.completedModules.length;
-  const progressPercent = Math.round((completedCount / totalModules) * 100);
+  
+  // Base progress from fully completed modules
+  const baseProgress = (completedCount / totalModules) * 100;
+
+  // Granular progress from current module's active slide ONLY if it's not already completed
+  const isCurrentModuleCompleted = progress.completedModules.includes(progress.activeModuleId || "0");
+  const currentModuleProgress = isCurrentModuleCompleted
+    ? 0
+    : ((progress.activeSlideIndex || 0) / Math.max(1, progress.totalSlidesInModule || 1)) * (100 / totalModules);
+
+  const progressPercent = Math.round(Math.min(100, baseProgress + currentModuleProgress));
   const hoursInvested = (gamification.totalTimeSpentSeconds / 3600).toFixed(1);
   
   // Behavioral Badges Logic
@@ -97,6 +107,8 @@ export default function CourseDashboardPage() {
     router.push(`/modules/${nextModuleId}`);
   };
 
+  const hasStarted = completedCount > 0 || (progress.activeModuleId !== "0" && progress.activeModuleId !== null) || progress.activeSlideIndex > 0;
+
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
       <MarketingNavbar />
@@ -111,7 +123,7 @@ export default function CourseDashboardPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 dashboard-fade">
               <div>
                 <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight mb-2">
-                  {completedCount === 0 && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
+                  {!hasStarted && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
                   <span className="text-primary">{getDisplayName(user) || "Engineer"}</span>
                 </h1>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
@@ -163,7 +175,7 @@ export default function CourseDashboardPage() {
             <div className="dashboard-fade flex flex-wrap items-center gap-4 pt-2">
               <button onClick={handleContinue} className="px-8 py-3 rounded-full bg-primary text-zinc-950 font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(167,218,219,0.3)]">
                 <Play className="w-4 h-4 fill-current" />
-                {completedCount === 0 ? "Start Course" : "Continue Course"}
+                {!hasStarted ? "Start Course" : "Continue Course"}
               </button>
               <button onClick={handleRestart} className="px-6 py-3 rounded-full bg-zinc-800 text-white font-medium text-sm hover:bg-zinc-700 transition-all flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" />
