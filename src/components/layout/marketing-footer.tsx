@@ -14,7 +14,7 @@ export function MarketingFooter() {
               <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-7 w-auto object-contain brightness-0 invert opacity-90" />
               <div className="h-5 w-px bg-white/20 mx-2"></div>
               <span className="font-heading font-bold tracking-widest text-foreground text-sm uppercase pt-0.5">Orbit</span>
-            </Link>
+            </a>
             <p className="text-muted-foreground font-sans text-sm max-w-sm leading-relaxed mb-8">
               Smartslate's premium learning environment. Master the future of software engineering through brutal, practical, and highly interactive courses.
             </p>
