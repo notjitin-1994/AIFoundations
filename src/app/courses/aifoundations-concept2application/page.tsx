@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { ArrowRight, Play, CheckCircle2, Clock, Award, Users, BookOpen } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { gsap } from "gsap";
+import Script from "next/script";
+import { useRouter } from "next/navigation";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 
 export default function CourseMarketingPage() {
+  const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => {
     gsap.fromTo(
       ".animate-fade",
@@ -16,8 +21,46 @@ export default function CourseMarketingPage() {
     );
   }, []);
 
+  const handlePayment = () => {
+    if (typeof window === "undefined" || !(window as any).Razorpay) {
+      console.error("Razorpay SDK not loaded");
+      return;
+    }
+    
+    setIsProcessing(true);
+
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_THqR3iuokmLPhQ", // fallback to literal key just in case
+      amount: "2999900", // 29999 INR in paise
+      currency: "INR",
+      name: "Smartslate",
+      description: "AI Foundations: Concept to Application",
+      image: "https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png",
+      handler: function (response: any) {
+        // Payment successful, push to dashboard
+        router.push("/courses/aifoundations-concept2application/dashboard");
+      },
+      prefill: {
+        name: "Learner",
+        email: "learner@example.com",
+      },
+      theme: {
+        color: "#18181b", // bg-zinc-900 to match theme
+      },
+      modal: {
+        ondismiss: function() {
+          setIsProcessing(false);
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <MarketingNavbar />
 
 
@@ -47,9 +90,13 @@ export default function CourseMarketingPage() {
             </p>
 
             <div className="animate-fade flex flex-col sm:flex-row items-center gap-4">
-              <Link href="/courses/aifoundations-concept2application/modules/0" className="w-full sm:w-auto px-8 py-4 bg-secondary text-white hover:bg-secondary/90 rounded-2xl font-bold transition-all shadow-xl shadow-secondary/20 flex items-center justify-center gap-2">
-                Enroll Now &mdash; $299 <ArrowRight className="w-5 h-5" />
-              </Link>
+              <button 
+                onClick={handlePayment} 
+                disabled={isProcessing}
+                className="w-full sm:w-auto px-8 py-4 bg-secondary text-white hover:bg-secondary/90 rounded-2xl font-bold transition-all shadow-xl shadow-secondary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isProcessing ? "Processing..." : "Enroll Now — INR 29,999"} <ArrowRight className="w-5 h-5" />
+              </button>
               <button className="w-full sm:w-auto px-8 py-4 bg-card/40 backdrop-blur-md hover:bg-card/60 text-foreground border border-white/10 rounded-2xl font-bold transition-all shadow-xl flex items-center justify-center gap-2">
                 <Play className="w-4 h-4 text-primary" /> Watch Trailer
               </button>
@@ -143,9 +190,13 @@ export default function CourseMarketingPage() {
         </div>
 
         <div className="mt-16 text-center">
-          <Link href="/courses/aifoundations-concept2application/modules/0" className="inline-flex items-center gap-2 px-10 py-5 bg-secondary hover:bg-secondary/90 text-white rounded-full font-bold transition-all shadow-xl shadow-secondary/20 text-lg">
-            Start Learning Now <ArrowRight className="w-5 h-5" />
-          </Link>
+          <button 
+            onClick={handlePayment}
+            disabled={isProcessing}
+            className="inline-flex items-center gap-2 px-10 py-5 bg-secondary hover:bg-secondary/90 text-white rounded-full font-bold transition-all shadow-xl shadow-secondary/20 text-lg disabled:opacity-50"
+          >
+            {isProcessing ? "Starting Checkout..." : "Start Learning Now — INR 29,999"} <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
       </section>
 

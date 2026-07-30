@@ -21,14 +21,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const isCertificateRoute = pathname.includes("/certificate");
   const isMarketingRoute = pathname === "/" || pathname === "/courses/aifoundations-concept2application";
-  const hideSidebar = isCertificateRoute || isMarketingRoute;
+  const isDashboardRoute = pathname.includes("/dashboard");
+  const hideSidebar = isCertificateRoute || isMarketingRoute || isDashboardRoute;
 
   // Lesson/module pages: full layout with sidebar + header
   return (
     <>
       {!hideSidebar && <Sidebar />}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {!isMarketingRoute && <Header />}
+        {!isMarketingRoute && !isCertificateRoute && !isDashboardRoute && <Header />}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </>

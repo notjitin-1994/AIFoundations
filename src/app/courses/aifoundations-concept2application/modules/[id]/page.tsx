@@ -1,11 +1,12 @@
 "use client";
 
-import { use, Suspense, useMemo, useEffect, useState } from "react";
+import { use, Suspense, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LessonViewer } from "@/components/lesson/lesson-viewer";
 import { useProgressStore } from "@/store/progress";
 import { sendXAPIStatement } from "@/actions/xapi";
 import { fetchModuleProgress } from "@/actions/sync-progress";
+import { useSyncEngine } from "@/hooks/use-sync-engine";
 
 import { MODULE_1_SLIDES } from "@/components/modules/m1";
 import { MODULE_2_SLIDES } from "@/components/modules/m2";
@@ -26,7 +27,8 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   const router = useRouter();
   const searchParams = useSearchParams();
   const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
-  const [restoring, setRestoring] = useState(true);
+
+  useSyncEngine(moduleId);
 
   // Must be at top level — Rules of Hooks. Used only when moduleId === "5".
   const m5Slides = useMemo(() => {
@@ -41,49 +43,6 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return MODULE_5_SLIDES;
   }, [projectSpine]);
 
-  // Restore progress from database on mount (overrides localStorage)
-  useEffect(() => {
-    let cancelled = false;
-    fetchModuleProgress().then((progress) => {
-      if (cancelled) return;
-      if (!progress) { setRestoring(false); return; }
-
-      const modProgress = progress.find((p: any) => p.module_id === moduleId);
-      if (modProgress) {
-        // Restore lesson and slide progress from DB
-        if (modProgress.active_lesson_index != null) {
-          setActiveLessonIndex(modProgress.active_lesson_index);
-        }
-        if (modProgress.active_slide_index != null) {
-          setActiveSlideProgress(modProgress.active_slide_index, 100, moduleId);
-        }
-        // If already completed, mark in store
-        if (modProgress.completed && !useProgressStore.getState().completedModules.includes(moduleId)) {
-          markModuleComplete(moduleId);
-        }
-
-        // Redirect to the saved lesson if no lesson param in URL
-        const lessonParam = searchParams?.get("lesson");
-        if (!lessonParam && modProgress.active_lesson_index != null && modProgress.active_lesson_index > 0) {
-          router.replace(
-            `/courses/aifoundations-concept2application/modules/${moduleId}?lesson=${modProgress.active_lesson_index}`
-          );
-        }
-      }
-      setRestoring(false);
-    }).catch(() => setRestoring(false));
-
-    return () => { cancelled = true; };
-  }, [moduleId]);
-
-  if (restoring) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-      </div>
-    );
-  }
-
   const handleComplete = async () => {
     markModuleComplete(moduleId);
     
@@ -97,8 +56,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     );
 
     const nextModuleNum = parseInt(moduleId, 10) + 1;
-    if (nextModuleNum <= 7) {
+    if (nextModuleNum <= 6) {
       router.push(`/courses/aifoundations-concept2application/modules/${nextModuleNum}`);
+    } else {
+      router.push(`/courses/aifoundations-concept2application/certificate`);
     }
   };
 

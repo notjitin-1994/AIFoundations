@@ -158,6 +158,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, [lessonParam, slides]);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [replayCount, setReplayCount] = useState(0);
   const [direction, setDirection] = useState(1);
   const [completedSlides, setCompletedSlides] = useState<Record<number, boolean>>({});
   const [navOverride, setNavOverride] = useState<CanvasNavOverride | null>(null);
@@ -174,6 +175,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleRestart = () => {
     resetProgress();
@@ -312,6 +314,14 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
 
   // Cleanup on unmount
   useEffect(() => {
+    // Start time tracker (adds 60 seconds of XP/Time every minute)
+    timeTrackerRef.current = setInterval(() => {
+      // Only track if document is visible
+      if (document.visibilityState === 'visible') {
+        useProgressStore.getState().updateTimeSpent(60);
+      }
+    }, 60000);
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -319,6 +329,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       }
       if (scheduledSyncRef.current) {
         clearTimeout(scheduledSyncRef.current);
+      }
+      if (timeTrackerRef.current) {
+        clearInterval(timeTrackerRef.current);
       }
     };
   }, []);
@@ -344,6 +357,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       }
       
       setDirection(1);
+      setReplayCount(0);
       setCurrentIndex((prev) => prev + 1);
     } else if (onComplete) {
       const currentLesson = slides[currentIndex]?.lessonIndex;
@@ -362,6 +376,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const handlePrev = () => {
     if (currentIndex > 0) {
       setDirection(-1);
+      setReplayCount(0);
       setCurrentIndex((prev) => prev - 1);
     }
   };
@@ -389,15 +404,6 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     handlePrev();
   };
 
-  const finalHandleNext = () => {
-    if (!hasInteracted) setHasInteracted(true);
-    if (navOverride?.onNext) {
-      navOverride.onNext(handleNext);
-    } else {
-      handleNext();
-    }
-  };
-
   const currentLessonIndex = slides[currentIndex]?.lessonIndex;
   const isModuleCompleted = moduleId !== "unknown" && completedModules.includes(moduleId);
   const isLessonCompleted = moduleId !== "unknown" && currentLessonIndex !== undefined && (completedLessons[moduleId] || []).includes(currentLessonIndex);
@@ -412,11 +418,27 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   
   let nextDisabled = navOverride?.nextDisabled !== undefined ? navOverride.nextDisabled : isNavDisabled;
 
-  // If the user has already passed this lesson/module, unlock interactive checkpoints (except assessments, which get a skip button)
-  // BUT if a slide explicitly demands disabled state via navOverride, respect it.
-  if (isAlreadyCompleted && !isAssessment && navOverride?.nextDisabled === undefined) {
+  // Force unlock the Next button if the learner has already completed this part of the module.
+  // Assessment slides are handled separately via a "Skip" button.
+  if (isAlreadyCompleted && !isAssessment) {
     nextDisabled = false;
   }
+
+  const finalHandleNext = () => {
+    if (!hasInteracted) setHasInteracted(true);
+    
+    // If the slide is locking us, but we bypassed it via isAlreadyCompleted, just force handleNext()
+    // without calling the slide's onNext, which might expect valid internal state that hasn't been set.
+    if (navOverride?.onNext && !nextDisabled && !navOverride?.nextDisabled) {
+      navOverride.onNext(handleNext);
+    } else if (navOverride?.onNext && navOverride?.nextDisabled && isAlreadyCompleted) {
+      handleNext();
+    } else if (navOverride?.onNext) {
+      navOverride.onNext(handleNext);
+    } else {
+      handleNext();
+    }
+  };
 
   const prevDisabled = navOverride?.disablePrev !== undefined ? navOverride.disablePrev : currentIndex === 0;
   const NextIcon = navOverride?.nextIcon || (currentIndex === slides.length - 1 ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />);
@@ -431,7 +453,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           <div className={`flex-1 relative overflow-hidden flex flex-col ${slides[currentIndex].fullWidth ? 'p-1 mt-1.5' : 'px-2 md:px-3 py-4 md:py-8'}`}>
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
-                key={currentIndex}
+                key={`${currentIndex}-${replayCount}`}
                 custom={direction}
                 variants={slideVariants}
                 initial="initial"
@@ -475,28 +497,52 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
             </AnimatePresence>
           </div>
 
-          <div className="h-20 border-t border-border bg-card/50 backdrop-blur flex items-center justify-between px-8 z-10 shrink-0">
-            {/* Left side: Restart / Help / Assets */}
+          <div className="h-20 border-t border-border bg-card/50 backdrop-blur-xl px-6 flex items-center justify-between shrink-0 relative">
+          {/* Seekbar */}
+          {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
+            <div 
+              className="absolute top-0 left-0 w-full h-1 bg-zinc-200 dark:bg-zinc-800 cursor-pointer group hover:h-2 transition-all"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+                if (audioRef.current && audioRef.current.duration) {
+                  audioRef.current.currentTime = (pct / 100) * audioRef.current.duration;
+                  narration.setProgress(pct);
+                }
+              }}
+            >
+              <div 
+                className="h-full bg-primary relative"
+                style={{ width: `${narration.progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-3 w-full max-w-[200px]">
+            {/* Left side actions */}
             <div className="flex items-center space-x-2">
               {/* Restart */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button
-                    className="group flex items-center justify-center w-9 h-9 rounded-full bg-zinc-100 hover:bg-red-50 text-zinc-500 hover:text-red-500 dark:bg-zinc-800 dark:hover:bg-red-950/40 dark:text-zinc-400 dark:hover:text-red-400 border border-transparent hover:border-red-200 dark:hover:border-red-800/50 transition-all active:scale-95"
+                  <button 
+                    className="flex items-center justify-center w-9 h-9 rounded-full bg-zinc-100 hover:bg-primary/10 text-zinc-500 hover:text-primary dark:bg-zinc-800 dark:hover:bg-primary/10 dark:text-zinc-400 dark:hover:text-primary transition-all active:scale-95"
                     title="Restart Course"
                   >
-                    <RotateCcw className="w-[15px] h-[15px] group-hover:-rotate-90 transition-transform duration-300" />
+                    <RotateCcw className="w-[15px] h-[15px]" />
                   </button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-card border-white/10 text-foreground">
+                <AlertDialogContent className="bg-card border-primary/20">
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="font-heading">Restart Course?</AlertDialogTitle>
+                    <AlertDialogTitle className="text-white">Restart full course?</AlertDialogTitle>
                     <AlertDialogDescription className="text-muted-foreground">
-                      This will permanently erase all your progress, project spine choices, and quiz results. You will be redirected to the Orientation module to start from scratch. This action cannot be undone.
+                      This will reset all your progress and knowledge check scores. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-transparent border-white/10 hover:bg-white/5 hover:text-foreground">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white border-0">Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleRestart} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                       Yes, Restart Course
                     </AlertDialogAction>
@@ -523,73 +569,83 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                 <span>Assets</span>
               </button>
             </div>
+          </div>
 
-            {/* Right side: Mute / Prev / Play / Next */}
-            <div id="tour-nav" className="flex items-center space-x-3">
-              {/* Mute / Unmute — only shown when the slide has audio */}
-              {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
-                <button
-                  onClick={() => setIsMuted(m => !m)}
-                  aria-label={isMuted ? "Unmute narration" : "Mute narration"}
-                  title={isMuted ? "Unmute" : "Mute"}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 transition-all active:scale-95"
-                >
-                  {isMuted
-                    ? <VolumeX className="w-4 h-4" />
-                    : <Volume2 className="w-4 h-4" />}
-                </button>
-              )}
-
+          {/* Right side: Mute / Prev / Play / Next */}
+          <div id="tour-nav" className="flex items-center space-x-3">
+            {/* Mute / Unmute — only shown when the slide has audio */}
+            {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
               <button
-                onClick={finalHandlePrev}
-                disabled={prevDisabled}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95"
+                onClick={() => setIsMuted(m => !m)}
+                aria-label={isMuted ? "Unmute narration" : "Mute narration"}
+                title={isMuted ? "Unmute" : "Mute"}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 transition-all active:scale-95"
               >
-                <ArrowLeft className="w-4 h-4" />
+                {isMuted
+                  ? <VolumeX className="w-4 h-4" />
+                  : <Volume2 className="w-4 h-4" />}
               </button>
+            )}
 
-              {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
-                <button
-                  id="tour-play"
-                  onClick={() => {
-                    if (!hasInteracted) setHasInteracted(true);
-                    
-                    if (narration.isPlaying) {
-                      narration.pause();
-                      if (audioRef.current) audioRef.current.pause();
-                    } else {
-                      if (currentIndex === 0 && !hasInteracted) {
-                         // First launch
-                         narration.play(slides[currentIndex].id, 5000);
-                      } else {
-                         narration.resume();
-                      }
-                      if (audioRef.current && !slides[currentIndex].hasCustomAudio) {
-                        audioRef.current.play().catch(e => console.warn("Play error:", e));
-                      }
+            <button
+              onClick={finalHandlePrev}
+              disabled={prevDisabled}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
+              <button
+                id="tour-play"
+                onClick={() => {
+                  if (!hasInteracted) setHasInteracted(true);
+                  
+                  if (narration.isFinished) {
+                    setReplayCount(c => c + 1);
+                    if (audioRef.current) {
+                      audioRef.current.currentTime = 0;
+                      audioRef.current.play().catch(e => console.warn("Replay error:", e));
                     }
-                  }}
-                  className={`flex items-center justify-center h-10 rounded-full transition-all active:scale-95 ${
-                    !hasInteracted && currentIndex === 0 
-                      ? "px-4 space-x-2 bg-primary text-primary-foreground hover:bg-primary/90" 
-                      : narration.isPlaying 
-                        ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
-                        : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
-                  }`}
-                  aria-label={narration.isPlaying ? "Pause Narration" : "Play Narration"}
-                >
-                  {narration.isPlaying ? (
-                    <Pause className="w-4 h-4 fill-current" />
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current" />
-                      {!hasInteracted && currentIndex === 0 && (
-                        <span className="font-bold text-sm pr-1">Begin Module</span>
-                      )}
-                    </>
-                  )}
-                </button>
-              )}
+                    narration.play(slides[currentIndex].id, audioRef.current?.duration ? audioRef.current.duration * 1000 : 0);
+                  } else if (narration.isPlaying) {
+                    narration.pause();
+                    if (audioRef.current) audioRef.current.pause();
+                  } else {
+                    if (currentIndex === 0 && !hasInteracted) {
+                       // First launch
+                       narration.play(slides[currentIndex].id, 5000);
+                    } else {
+                       narration.resume();
+                    }
+                    if (audioRef.current && !slides[currentIndex].hasCustomAudio) {
+                      audioRef.current.play().catch(e => console.warn("Play error:", e));
+                    }
+                  }
+                }}
+                className={`flex items-center justify-center h-10 rounded-full transition-all active:scale-95 ${
+                  !hasInteracted && currentIndex === 0 
+                    ? "px-4 space-x-2 bg-primary text-primary-foreground hover:bg-primary/90" 
+                    : narration.isPlaying 
+                      ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
+                      : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
+                aria-label={narration.isFinished ? "Replay Slide" : narration.isPlaying ? "Pause Narration" : "Play Narration"}
+              >
+                {narration.isFinished ? (
+                  <RotateCcw className="w-4 h-4 fill-current" />
+                ) : narration.isPlaying ? (
+                  <Pause className="w-4 h-4 fill-current" />
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    {!hasInteracted && currentIndex === 0 && (
+                      <span className="font-bold text-sm pr-1">Begin Module</span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
 
               {isAlreadyCompleted && isAssessment && (
                 <button

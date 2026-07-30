@@ -39,6 +39,7 @@ const TOUR_STEPS = [
 export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [coords, setCoords] = useState<{ top?: number; left?: number; bottom?: number; right?: number } | null>(null);
 
   useEffect(() => {
@@ -59,33 +60,53 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
       const el = document.getElementById(step.targetId);
       
       if (!el) {
+        setTargetRect(null);
         setCoords(null);
         return;
       }
 
       const rect = el.getBoundingClientRect();
-      const padding = 16; // distance from element to tooltip
+      setTargetRect(rect);
+      
+      const padding = 20; 
+      const tooltipWidth = 320; 
+      const halfWidth = tooltipWidth / 2;
 
       let newCoords: any = {};
 
       if (step.placement === "right") {
+        let leftPos = rect.right + padding;
+        if (leftPos + tooltipWidth > document.documentElement.clientWidth) {
+            // fallback to left side if no space on right
+            leftPos = rect.left - tooltipWidth - padding;
+        }
+        
         newCoords = {
-          top: rect.top + rect.height / 2, // Will translate -Y 50%
-          left: rect.right + padding,
+          top: rect.top + rect.height / 2, 
+          left: leftPos,
+          placement: "right"
         };
       } else if (step.placement === "top") {
+        let idealCenter = rect.left + rect.width / 2;
+        let idealLeft = idealCenter - halfWidth;
+        let clampedLeft = Math.max(padding, Math.min(document.documentElement.clientWidth - tooltipWidth - padding, idealLeft));
+        
         newCoords = {
           bottom: window.innerHeight - rect.top + padding,
-          left: rect.left + rect.width / 2, // Will translate -X 50%
+          left: clampedLeft,
+          tailLeft: idealCenter - clampedLeft,
+          placement: "top"
         };
       }
       
       setCoords(newCoords);
     };
 
+    // Need slight delay for DOM settling on resize
     updateCoords();
-    window.addEventListener("resize", updateCoords);
-    return () => window.removeEventListener("resize", updateCoords);
+    const handleResize = () => requestAnimationFrame(updateCoords);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [isOpen, currentStep]);
 
   if (!mounted) return null;
@@ -105,45 +126,84 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   };
 
   const currentStepData = TOUR_STEPS[currentStep];
+  const t = targetRect;
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto"
-            onClick={onClose}
-          />
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          {/* 4-Panel Dynamic Un-blurred Hole Masking */}
+          {t ? (
+            <>
+              {/* Top Panel */}
+              <motion.div
+                initial={false}
+                animate={{ top: 0, left: 0, right: 0, height: t.top }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute bg-background/80 backdrop-blur-md pointer-events-auto"
+                onClick={onClose}
+              />
+              {/* Bottom Panel */}
+              <motion.div
+                initial={false}
+                animate={{ top: t.bottom, left: 0, right: 0, bottom: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute bg-background/80 backdrop-blur-md pointer-events-auto"
+                onClick={onClose}
+              />
+              {/* Left Panel */}
+              <motion.div
+                initial={false}
+                animate={{ top: t.top, left: 0, width: t.left, height: t.height }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute bg-background/80 backdrop-blur-md pointer-events-auto"
+                onClick={onClose}
+              />
+              {/* Right Panel */}
+              <motion.div
+                initial={false}
+                animate={{ top: t.top, left: t.right, right: 0, height: t.height }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute bg-background/80 backdrop-blur-md pointer-events-auto"
+                onClick={onClose}
+              />
+            </>
+          ) : (
+            /* Fallback generic backdrop if target not found */
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/80 backdrop-blur-md pointer-events-auto"
+              onClick={onClose}
+            />
+          )}
 
-          <div className="absolute top-6 right-6 pointer-events-auto">
+          {/* Close Button */}
+          <div className="absolute top-6 right-6 pointer-events-auto z-50">
             <button
               onClick={onClose}
-              className="p-3 bg-card/50 backdrop-blur-xl border border-white/10 rounded-full hover:bg-white/10 hover:text-white transition-all shadow-2xl active:scale-95"
+              className="p-3 bg-card/50 backdrop-blur-xl border border-primary/20 rounded-full hover:bg-primary/10 hover:text-primary transition-all shadow-2xl active:scale-95 text-zinc-400"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Highlight Target Box */}
-          {coords && (
+          {/* Highlight Target Box Inner Border */}
+          {t && (
             <motion.div
               layoutId="highlight-box"
               initial={false}
               animate={{
-                top: document.getElementById(currentStepData.targetId)?.getBoundingClientRect().top ?? 0,
-                left: document.getElementById(currentStepData.targetId)?.getBoundingClientRect().left ?? 0,
-                width: document.getElementById(currentStepData.targetId)?.getBoundingClientRect().width ?? 0,
-                height: document.getElementById(currentStepData.targetId)?.getBoundingClientRect().height ?? 0,
+                top: t.top,
+                left: t.left,
+                width: t.width,
+                height: t.height,
               }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute pointer-events-none border-2 border-primary rounded-xl shadow-[0_0_30px_rgba(var(--primary),0.3)] z-10"
+              className="absolute pointer-events-none rounded-xl z-10 border-2 border-primary"
               style={{
-                boxShadow: "0 0 0 9999px rgba(0,0,0,0.4), 0 0 20px rgba(var(--primary),0.5)",
+                boxShadow: "0 0 20px var(--color-primary) inset, 0 0 20px var(--color-primary)",
               }}
             />
           )}
@@ -152,8 +212,8 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           {coords && (
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, scale: 0.9, y: currentStepData.placement === 'top' ? 20 : 0, x: currentStepData.placement === 'right' ? -20 : 0 }}
-              animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+              initial={{ opacity: 0, scale: 0.9, y: coords.placement === 'top' ? 20 : "-50%", x: coords.placement === 'right' ? -20 : 0 }}
+              animate={{ opacity: 1, scale: 1, y: coords.placement === 'right' ? "-50%" : 0, x: 0 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               transition={{ type: "spring", damping: 25, stiffness: 300, delay: 0.1 }}
               className="absolute w-80 pointer-events-auto z-20"
@@ -161,36 +221,38 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                 top: coords.top !== undefined ? coords.top : "auto",
                 bottom: coords.bottom !== undefined ? coords.bottom : "auto",
                 left: coords.left !== undefined ? coords.left : "auto",
-                transform: currentStepData.placement === "right"
-                  ? "translateY(-50%)"
-                  : "translateX(-50%)",
               }}
             >
               {/* Tooltip Tail */}
               <div
-                className={`absolute w-4 h-4 bg-card border-border rotate-45 pointer-events-none
+                className={`absolute w-4 h-4 bg-card border-border rotate-45 pointer-events-none z-[-1]
                   ${currentStepData.placement === 'right' ? 'border-b border-l -left-2 top-1/2 -translate-y-1/2' : ''}
-                  ${currentStepData.placement === 'top' ? 'border-b border-r -bottom-2 left-1/2 -translate-x-1/2' : ''}
+                  ${currentStepData.placement === 'top' ? 'border-b border-r -bottom-2' : ''}
                 `}
+                style={{
+                  ...(currentStepData.placement === 'top' && coords.tailLeft 
+                    ? { left: coords.tailLeft, marginLeft: '-8px' } 
+                    : {})
+                }}
               />
 
-              <div className="bg-card border border-border shadow-2xl rounded-2xl overflow-hidden relative">
-                {/* Header line accent */}
-                <div className="h-1 w-full bg-gradient-to-r from-primary to-indigo-500" />
+              <div className="bg-card border border-primary/20 shadow-2xl rounded-2xl overflow-hidden relative">
+                {/* Header line accent (all-teal brand) */}
+                <div className="h-1 w-full bg-primary" />
                 
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="font-bold text-foreground text-sm tracking-wider flex items-center gap-2">
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px]">
                         {currentStep + 1}
                       </span>
                       {currentStepData.title}
                     </h3>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {currentStep + 1} of {TOUR_STEPS.length}
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      {currentStep + 1} / {TOUR_STEPS.length}
                     </span>
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                     {currentStepData.content}
                   </p>
 
@@ -206,12 +268,12 @@ export function HelpTour({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
                     <button
                       onClick={handleNext}
-                      className="text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-1.5 transition-colors flex items-center gap-1 active:scale-95 shadow-sm hover:shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                      className="text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5 py-2 transition-colors flex items-center gap-1 active:scale-95 shadow-md"
                     >
                       {currentStep === TOUR_STEPS.length - 1 ? (
-                        <>Got it <Check className="w-3 h-3" /></>
+                        <>Got it <Check className="w-3 h-3 ml-1" /></>
                       ) : (
-                        <>Next <ChevronRight className="w-3 h-3" /></>
+                        <>Next <ChevronRight className="w-3 h-3 ml-1" /></>
                       )}
                     </button>
                   </div>

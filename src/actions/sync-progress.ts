@@ -13,6 +13,7 @@ export async function syncModuleProgress(
     completed?: boolean;
     activeLessonIndex?: number;
     activeSlideIndex?: number;
+    updated_at?: string;
   }
 ) {
   try {
@@ -23,7 +24,7 @@ export async function syncModuleProgress(
     const payload: Record<string, unknown> = {
       user_id: user.id,
       module_id: moduleId,
-      updated_at: new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
     };
 
     if (data.completed !== undefined) {

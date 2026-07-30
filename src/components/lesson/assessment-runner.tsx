@@ -71,20 +71,25 @@ const TYPE_LABELS: Record<string, { label: string; icon: React.ElementType }> = 
 export function AssessmentRunner({
   kind, perModule = 1, totalQuestions, moduleIds, tags, title, description, onComplete,
 }: AssessmentRunnerProps) {
-  const learnerName = "Learner";
-  const learnerKey = "learner-1";
-  const [started, setStarted] = useState(false);
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, unknown>>({});
-  const [graded, setGraded] = useState<Record<number, { correct: boolean; partial?: number; feedback?: string } | null>>({});
-  const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
-  const [startTime, setStartTime] = useState<number>(0);
-  const [finished, setFinished] = useState(false);
   const canvasNav = useContext(CanvasNavContext);
   const thisModuleId = moduleIds?.[0] ?? kind;
 
+  const { assessments, saveAssessmentState } = useProgressStore();
+  
+  const savedState = assessments[thisModuleId];
+  const hasPassed = savedState?.passed;
+
+  const [started, setStarted] = useState(!!savedState && !hasPassed);
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>(savedState?.questions || []);
+  const [currentIdx, setCurrentIdx] = useState(savedState?.currentIdx || 0);
+  const [answers, setAnswers] = useState<Record<number, unknown>>(savedState?.answers || {});
+  const [graded, setGraded] = useState<Record<number, { correct: boolean; partial?: number; feedback?: string } | null>>(savedState?.graded || {});
+  const [submitted, setSubmitted] = useState<Record<number, boolean>>(savedState?.submitted || {});
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [finished, setFinished] = useState(false);
+
   const questionsPool = useMemo(() => {
+    if (savedState?.questions) return savedState.questions; // Use saved questions if resuming
     const config: AssessmentConfig = {
       perModule,
       totalQuestions,
@@ -94,10 +99,24 @@ export function AssessmentRunner({
     };
     return generateAssessment(config);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perModule, totalQuestions, moduleIds?.join(','), tags?.join(','), kind]);
+  }, [perModule, totalQuestions, moduleIds?.join(','), tags?.join(','), kind, savedState?.questions]);
+
+  // Persist state when answering or moving
+  useEffect(() => {
+    if (started && !finished && questions.length > 0) {
+      saveAssessmentState(thisModuleId, {
+        questions,
+        currentIdx,
+        answers,
+        graded,
+        submitted,
+        passed: false
+      });
+    }
+  }, [started, finished, currentIdx, answers, graded, submitted, questions, thisModuleId, saveAssessmentState]);
 
   useEffect(() => {
-    if (finished) {
+    if (finished || hasPassed) {
       canvasNav?.setNavOverride(null);
       return;
     }
@@ -134,7 +153,7 @@ export function AssessmentRunner({
     return () => {
       canvasNav?.setNavOverride(null);
     };
-  }, [started, finished, currentIdx, submitted, answers, questions, kind, questionsPool]);
+  }, [started, finished, hasPassed, currentIdx, submitted, answers, questions, kind, questionsPool]);
 
   function start() {
     setQuestions(questionsPool);
@@ -228,6 +247,19 @@ export function AssessmentRunner({
     };
     onComplete(result);
     setFinished(true);
+    
+    // Save passed state
+    if (overall >= passingScore) {
+      saveAssessmentState(thisModuleId, { 
+        questions, 
+        currentIdx, 
+        answers, 
+        graded, 
+        submitted,
+        passed: true 
+      });
+    }
+
     sendXAPIStatement(
       "http://adlnet.gov/expapi/verbs/completed",
       "completed",
@@ -236,7 +268,51 @@ export function AssessmentRunner({
       `Learner completed assessment with score ${overall}%`,
       { moduleId: thisModuleId, slideId: "assessment", result: { score: overall, success: overall >= passingScore, completion: true } }
     );
-    alert(`${kind === "baseline" ? "Baseline" : "Final"} assessment complete! You scored ${overall}%.`);
+  }
+
+  // ---------- ALREADY PASSED SCREEN ----------
+  if (hasPassed && !finished) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-10 max-w-4xl mx-auto overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="bg-card/40 backdrop-blur-xl border border-primary/20 p-10 rounded-3xl shadow-2xl text-center max-w-2xl w-full"
+        >
+          <div className="mx-auto w-20 h-20 bg-primary/10 flex items-center justify-center rounded-full mb-6">
+            <Trophy className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight mb-4 text-white">Assessment Passed</h2>
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+            You have already demonstrated mastery of this module's concepts. 
+            You may skip this knowledge check or re-take it for review.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button 
+              size="lg" 
+              onClick={() => {
+                // Mock passing result to unlock the next slide
+                onComplete({ overall: 100, byModule: {}, questionsAnswered: 0, takenAt: new Date().toISOString(), durationMs: 0 });
+                setFinished(true);
+              }}
+              className="w-full sm:w-auto text-base h-12 px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-primary/25 transition-all"
+            >
+              Skip & Continue
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={() => saveAssessmentState(thisModuleId, { currentIdx: 0, answers: {}, passed: false })}
+              className="w-full sm:w-auto text-base h-12 px-8 rounded-full"
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              Re-take Assessment
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
   }
 
   // ---------- INTRO SCREEN ----------

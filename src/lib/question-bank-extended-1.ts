@@ -646,6 +646,7 @@ export const EXTENDED_BANK_1: Question[] = [
       { id: "c", text: "Employees cannot learn more than one tool.", correct: false },
       { id: "d", text: "All tools share the exact same underlying model.", correct: false }
     ],
+    explanation: "Locking into a single AI vendor is risky because the field evolves rapidly — specialized tools for writing, coding, and analysis each have unique strengths that a single vendor cannot cover.",
   },
   // ========================================================================
   // BATCH 2: Advanced Scenario-based Questions (World-Class ID Standards)

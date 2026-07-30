@@ -1,6 +1,42 @@
+"use client";
+
 import Link from "next/link";
+import { useUser, getDisplayName } from "@/hooks/use-user";
+import { Loader2, ArrowRight } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function MarketingNavbar() {
+  const { user, isLoading } = useUser();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      createClient()
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+           setAvatarUrl(data?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null);
+        });
+    }
+  }, [user]);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await createClient().auth.signOut();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+    router.push("/login");
+    router.refresh();
+  };
+
   return (
     <nav className="absolute top-6 left-6 right-6 z-50">
       <div
@@ -23,13 +59,30 @@ export function MarketingNavbar() {
           <Link href="/testimonials" className="hover:text-primary transition-colors">Testimonials</Link>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-sm font-bold bg-secondary text-white px-5 py-2.5 rounded-xl hover:bg-secondary/80 transition-all shadow-lg active:scale-[0.97]"
-            style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
-          >
-            Sign In
-          </Link>
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          ) : user ? (
+            <div className="flex items-center space-x-3 bg-white/5 pr-4 pl-1 py-1 rounded-full border border-white/10">
+              <Link href="/courses/aifoundations-concept2application/dashboard" className="flex items-center space-x-2 group">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20 group-hover:border-primary/50 transition-colors">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    getDisplayName(user).charAt(0)
+                  )}
+                </div>
+                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mr-2">{getDisplayName(user)}</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-bold bg-secondary text-white px-5 py-2.5 rounded-xl hover:bg-secondary/80 transition-all shadow-lg active:scale-[0.97]"
+              style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
     </nav>

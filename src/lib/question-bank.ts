@@ -24,7 +24,7 @@
 
 export type QuestionType = "multiple-choice" | "multiple-select" | "fill-blank" | "match-pairs";
 
-export type Difficulty = "foundational" | "intermediate" | "advanced";
+export type Difficulty = "foundational" | "intermediate" | "advanced" | "easy" | "medium" | "hard";
 
 export interface BaseQuestion {
   id: string;            // stable unique id, e.g. "0-mcq-001"
@@ -395,7 +395,6 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-002", moduleId: "2", type: "multiple-choice", difficulty: "foundational",
-    tags: ["tokens"],
     prompt: "A 1,000-word English document will most likely consume approximately:",
     options: [
       { id: "a", text: "1,000 tokens (1:1 with words).", correct: false },
@@ -433,7 +432,6 @@ export const QUESTION_BANK: Question[] = [
     },
   {
     id: "2-mcq-003", moduleId: "2", type: "multiple-choice", difficulty: "advanced",
-    tags: ["lost-in-middle"],
     prompt: "You need to ask an AI about a specific clause buried in the middle of a 100-page contract. Based on the \"Lost in the Middle\" finding, what should you do?",
     options: [
       { id: "a", text: "Paste the whole contract; the AI will find it.", correct: false },
@@ -446,7 +444,6 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-004", moduleId: "2", type: "multiple-choice", difficulty: "intermediate",
-    tags: ["context-window-cost"],
     prompt: "How does compute cost scale with input sequence length in transformer models?",
     options: [
       { id: "a", text: "Linearly (double tokens = double cost).", correct: false },
@@ -459,7 +456,6 @@ export const QUESTION_BANK: Question[] = [
   },
   {
     id: "2-mcq-005", moduleId: "2", type: "multiple-choice", difficulty: "foundational",
-    tags: ["rag"],
     prompt: "In Retrieval-Augmented Generation (RAG), which component produces the final answer the user sees?",
     options: [
       { id: "a", text: "The retriever.", correct: false },
@@ -961,9 +957,9 @@ export const QUESTION_BANK: Question[] = [
   },
   // --- MODULE 6 QUESTIONS ---
   {
-    id: "m6-1",
+    id: "m6-1", moduleId: "6", difficulty: "intermediate",
     type: "multiple-choice",
-    question: "What is the primary privacy advantage of running a Small Language Model (SLM) locally?",
+    prompt: "What is the primary privacy advantage of running a Small Language Model (SLM) locally?",
     options: [
       { id: "a", text: "The model uses end-to-end encryption to communicate with the cloud.", correct: false },
       { id: "b", text: "Sensitive data never leaves your device's physical memory.", correct: true },
@@ -974,9 +970,9 @@ export const QUESTION_BANK: Question[] = [
     tags: ["module-6", "privacy"]
   },
   {
-    id: "m6-2",
+    id: "m6-2", moduleId: "6", difficulty: "intermediate",
     type: "multiple-choice",
-    question: "Which technique involves shrinking an LLM by training it to mimic the outputs of a larger, more complex model?",
+    prompt: "Which technique involves shrinking an LLM by training it to mimic the outputs of a larger, more complex model?",
     options: [
       { id: "a", text: "Quantization", correct: false },
       { id: "b", text: "Knowledge Distillation", correct: true },
@@ -987,9 +983,9 @@ export const QUESTION_BANK: Question[] = [
     tags: ["module-6", "distillation"]
   },
   {
-    id: "m6-3",
+    id: "m6-3", moduleId: "6", difficulty: "intermediate",
     type: "multiple-choice",
-    question: "How does Quantization make AI models run faster on consumer hardware?",
+    prompt: "How does Quantization make AI models run faster on consumer hardware?",
     options: [
       { id: "a", text: "By removing layers from the neural network.", correct: false },
       { id: "b", text: "By reducing the precision of the model's weights (e.g. from 32-bit to 4-bit integers).", correct: true },
@@ -1000,9 +996,10 @@ export const QUESTION_BANK: Question[] = [
     tags: ["module-6", "quantization"]
   },
   {
-    id: "m6-4",
+    id: "m6-4", moduleId: "6", difficulty: "intermediate",
     type: "multiple-select",
-    question: "Which of the following are primary motivations for deploying an AI agent locally rather than using a cloud API? (Select all that apply)",
+    selectAllThatApply: true,
+    prompt: "Which of the following are primary motivations for deploying an AI agent locally rather than using a cloud API? (Select all that apply)",
     options: [
       { id: "a", text: "Eliminating per-token API costs", correct: true },
       { id: "b", text: "Achieving higher reasoning capabilities than GPT-4", correct: false },
