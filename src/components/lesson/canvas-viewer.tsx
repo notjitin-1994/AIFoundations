@@ -627,14 +627,19 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                 className={`flex items-center justify-center h-10 rounded-full transition-all active:scale-95 ${
                   !hasInteracted && currentIndex === 0 
                     ? "px-4 space-x-2 bg-primary text-primary-foreground hover:bg-primary/90" 
-                    : narration.isPlaying 
-                      ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
-                      : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
+                    : narration.isFinished
+                      ? "px-4 space-x-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                      : narration.isPlaying 
+                        ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
+                        : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
                 }`}
                 aria-label={narration.isFinished ? "Replay Slide" : narration.isPlaying ? "Pause Narration" : "Play Narration"}
               >
                 {narration.isFinished ? (
-                  <RotateCcw className="w-4 h-4 fill-current" />
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    <span className="font-medium text-sm pr-1 text-inherit">Replay</span>
+                  </>
                 ) : narration.isPlaying ? (
                   <Pause className="w-4 h-4 fill-current" />
                 ) : (
