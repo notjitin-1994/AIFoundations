@@ -259,78 +259,100 @@ export default function CourseDashboardPage() {
           </section>
 
           {/* Module Tracker */}
-          <section className="space-y-6">
-            <h2 className="text-2xl font-bold font-heading">Your Journey</h2>
-            <div className="space-y-4">
-              {COURSE_MODULES.map((mod, idx) => {
-                const isComplete = progress.completedModules.includes(mod.id);
-                const isLocked = idx > 0 && !progress.completedModules.includes(COURSE_MODULES[idx - 1].id) && !isComplete;
-                const isActive = !isComplete && !isLocked;
-                const assessment = progress.assessments[mod.id];
+          <section className="space-y-10 dashboard-fade">
+            <div className="flex items-center gap-4">
+              <h2 className="text-3xl font-bold font-heading tracking-tight">Your Journey</h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+            </div>
+            
+            <div className="relative pl-2 md:pl-4">
+              {/* Continuous vertical timeline track */}
+              <div className="absolute left-[35px] md:left-[43px] top-6 bottom-12 w-px bg-white/5" />
+              
+              {/* Active timeline progress fill */}
+              <div 
+                className="absolute left-[35px] md:left-[43px] top-6 w-px bg-gradient-to-b from-primary to-primary shadow-[0_0_15px_rgba(167,218,219,0.5)] transition-all duration-1000 ease-out z-0"
+                style={{ height: mounted ? `${Math.max(0, (progress.activeModuleId ? parseInt(progress.activeModuleId) : 0) / (totalModules - 1) * 100)}%` : '0%' }}
+              />
 
-                return (
-                  <div 
-                    key={mod.id} 
-                    className={`module-card relative bg-zinc-900/40 backdrop-blur-md border rounded-2xl p-6 transition-all duration-300 ${
-                      isActive ? "border-primary/50 shadow-[0_0_30px_rgba(167,218,219,0.1)]" : "border-white/5"
-                    } ${isLocked ? "opacity-50 grayscale" : ""}`}
-                  >
-                    <div className="flex flex-col sm:flex-row gap-6">
-                      {/* Left: Indicator */}
-                      <div className="flex flex-col items-center gap-2 shrink-0">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-heading font-bold text-lg border ${
-                          isComplete ? "bg-primary/20 text-primary border-primary/30" :
-                          isActive ? "bg-zinc-800 text-white border-zinc-700" :
-                          "bg-zinc-950 text-zinc-600 border-zinc-800"
+              <div className="space-y-0">
+                {COURSE_MODULES.map((mod, idx) => {
+                  const isComplete = progress.completedModules.includes(mod.id);
+                  const isLocked = idx > 0 && !progress.completedModules.includes(COURSE_MODULES[idx - 1].id) && !isComplete;
+                  const isActive = mounted && !isComplete && !isLocked;
+                  const assessment = progress.assessments[mod.id];
+
+                  return (
+                    <div 
+                      key={mod.id} 
+                      className={`module-row relative flex gap-6 md:gap-10 py-8 transition-all duration-500 group ${
+                        isActive ? "opacity-100" : isLocked ? "opacity-30" : "opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      {/* Left: Timeline Node */}
+                      <div className="relative z-10 shrink-0 mt-1">
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center font-heading font-bold text-lg transition-all duration-700 ease-out border ${
+                          isComplete ? "bg-primary text-zinc-950 border-primary shadow-[0_0_25px_rgba(167,218,219,0.3)]" :
+                          isActive ? "bg-zinc-950 border-2 border-primary text-primary shadow-[0_0_20px_rgba(167,218,219,0.2)] scale-110" :
+                          "bg-zinc-950 border-white/10 text-zinc-600"
                         }`}>
                           {isComplete ? <CheckCircle2 className="w-6 h-6" /> : isLocked ? <Lock className="w-5 h-5" /> : mod.id}
                         </div>
-                        {idx !== COURSE_MODULES.length - 1 && (
-                          <div className={`w-px h-16 ${isComplete ? "bg-primary/30" : "bg-white/5"}`} />
+                        {/* Glow effect for active node */}
+                        {isActive && (
+                          <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl -z-10 animate-pulse" />
                         )}
                       </div>
 
-                      {/* Right: Content */}
-                      <div className="flex-1 pb-4">
-                        <div className="flex justify-between items-start mb-2">
+                      {/* Right: Module Content */}
+                      <div className={`flex-1 min-w-0 transition-all duration-500 ease-out ${isActive ? 'translate-x-2' : 'group-hover:translate-x-1'}`}>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                           <div>
-                            <p className="text-xs font-mono text-primary mb-1">MODULE {mod.id}</p>
-                            <h3 className="text-xl font-bold font-heading mb-2">{mod.title}</h3>
+                            <p className={`text-[10px] md:text-xs font-mono mb-2 tracking-[0.2em] uppercase transition-colors ${isActive ? 'text-primary' : 'text-zinc-500'}`}>
+                              MODULE {mod.id}
+                            </p>
+                            <h3 className={`text-2xl md:text-3xl font-bold font-heading text-pretty transition-colors ${isActive ? 'text-white' : 'text-zinc-300'}`}>
+                              {mod.title}
+                            </h3>
                           </div>
                           {!isLocked && (
-                            <Link href={`/modules/${mod.id}`} className="shrink-0">
-                              <button className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                                isActive ? "bg-primary text-zinc-950 hover:bg-teal-400" : "bg-white/10 text-white hover:bg-white/20"
+                            <Link href={`/modules/${mod.id}`} className="shrink-0 mt-2 sm:mt-0">
+                              <button className={`group/btn relative overflow-hidden px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                                isActive ? "bg-primary text-zinc-950 hover:bg-teal-400 hover:shadow-[0_0_20px_rgba(167,218,219,0.4)] hover:scale-105" : "bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
                               }`}>
-                                {isComplete ? "Review" : "Continue"}
+                                {isComplete ? (
+                                  <>Review <RotateCcw className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:-rotate-90" /></>
+                                ) : (
+                                  <>Continue <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" /></>
+                                )}
                               </button>
                             </Link>
                           )}
                         </div>
-                        <p className="text-zinc-400 text-sm mb-4 leading-relaxed max-w-xl">
+                        <p className={`text-sm md:text-base leading-relaxed max-w-2xl mb-6 transition-colors ${isActive ? 'text-zinc-300' : 'text-zinc-500'}`}>
                           {mod.overview}
                         </p>
 
-                        {/* Module Meta */}
-                        <div className="flex flex-wrap gap-3">
+                        {/* Module Meta Data / Tags */}
+                        <div className="flex flex-wrap gap-2.5">
                           {assessment && assessment.graded && (
-                            <div className="px-3 py-1 rounded-md bg-zinc-950 border border-white/5 text-xs text-zinc-300 flex items-center gap-2">
-                              <Star className="w-3 h-3 text-primary" />
-                              Assessment Score: {Math.round((Object.keys(assessment.graded).length / (assessment.questions?.length || 1)) * 100)}%
+                            <div className="px-3 py-1.5 rounded-md bg-zinc-900/80 border border-white/5 text-[11px] font-medium text-zinc-400 flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Star className={`w-3.5 h-3.5 ${(Object.keys(assessment.graded).length / (assessment.questions?.length || 1)) === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]' : 'text-primary'}`} />
+                              Score: {Math.round((Object.keys(assessment.graded).length / (assessment.questions?.length || 1)) * 100)}%
                             </div>
                           )}
                           {mod.id === "0" && progress.projectSpine && (
-                            <div className="px-3 py-1 rounded-md bg-zinc-950 border border-white/5 text-xs text-zinc-300 flex items-center gap-2">
-                              <Database className="w-3 h-3 text-primary" />
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md">
+                              <Database className="w-3.5 h-3.5" />
                               Spine: {progress.projectSpine}
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
 
