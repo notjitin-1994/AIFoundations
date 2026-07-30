@@ -412,10 +412,28 @@ export default function CertificatePage() {
                 <h2 className="text-lg md:text-xl text-zinc-400 font-light mb-2 tracking-wide relative z-10">This certifies that</h2>
                 
                 {/* Name lockup */}
-                <div className="mb-6 relative z-10">
+                <div className="mb-2 relative z-10">
                   <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                     {certData.studentName}
                   </h1>
+                </div>
+
+                {/* Dynamic Gamification Title */}
+                <div className="mb-6 relative z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="text-sm font-bold tracking-wider uppercase">
+                      {(() => {
+                        const { gamification } = useProgressStore.getState();
+                        const badges = gamification.badges.length;
+                        const xp = gamification.xp;
+                        if (xp >= 2000 && badges >= 5) return "Master AI Engineer";
+                        if (xp >= 1000 && badges >= 3) return "Advanced AI Architect";
+                        if (xp >= 500) return "AI Builder";
+                        return "AI Initiate";
+                      })()}
+                    </span>
+                  </div>
                 </div>
                 
                 <p className="text-zinc-300/80 max-w-2xl text-base md:text-lg lg:text-xl leading-relaxed font-light relative z-10">

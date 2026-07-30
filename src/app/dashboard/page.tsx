@@ -39,53 +39,6 @@ export default function CourseDashboardPage() {
     if (!useProgressStore.getState().isEnrolled) {
       progress.setEnrolled(true);
     }
-
-    // Auto-seed for specific testing account
-    if (user?.email === "not.jitin@gmail.com") {
-      const currentState = useProgressStore.getState();
-      const needsFullSeed = currentState.gamification.xp < 500;
-      
-      const currentSpine = currentState.projectSpine || "internal_rag_agent";
-      
-      let mockAnswers = {
-        "1": { rolePrompt: `# System Prompt\n\nYou are an expert AI orchestrator specializing in the ${currentSpine.replace(/_/g, ' ')} domain. Your goal is to analyze data and provide structured insights.\n\n*(Mock artifact auto-populated for testing)*` },
-        "2": { contextPrompt: `# Context Engineering\n\nPlease reference the following knowledge base articles to formulate your answer for the ${currentSpine.replace(/_/g, ' ')} project:\n1. Architecture Guidelines\n2. API Spec v2\n\n*(Mock artifact auto-populated for testing)*` },
-        "3": { agentsMd: `# Agent Orchestration\n\n\`\`\`yaml\nagents:\n  - name: Primary Agent (${currentSpine.replace(/_/g, ' ')})\n    role: Executes core logic\n  - name: Evaluator\n    role: Validates output\n\`\`\`\n\n*(Mock artifact auto-populated for testing)*` }
-      };
-
-      if (needsFullSeed) {
-        const seededBadges = ["first-steps", "architect", "prompt-eng", "tool-builder", "agent-master", "certified"];
-        const seededTools = ["RAG", "Vector DB", "Agents", "LangChain", "FastAPI", "Deployment"];
-        
-        currentState.syncFromDB({
-          completedModules: ["0", "1", "2", "3", "4", "5", "6"],
-          gamification: {
-            xp: 2850,
-            badges: seededBadges,
-            toolsMastered: seededTools,
-            totalTimeSpentSeconds: 144000, // 40 hours
-            lastLoginDate: new Date().toISOString().split('T')[0],
-            currentStreak: 12,
-          },
-          assessments: {
-            "1": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-            "2": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-            "3": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-            "4": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-            "5": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-            "6": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          },
-          projectSpine: currentSpine as any,
-          projectSpineAnswers: mockAnswers, // Just directly use the mock answers so they are fully populated and updated
-          activeModuleId: "6",
-        });
-      } else {
-        // Force update the test data to reflect current spine if it has changed
-        currentState.syncFromDB({
-          projectSpineAnswers: mockAnswers // overwrite mock answers to reflect whatever project spine is currently selected
-        });
-      }
-    }
   }, [user]);
 
   useEffect(() => {
@@ -114,6 +67,14 @@ export default function CourseDashboardPage() {
   const completedCount = progress.completedModules.length;
   const progressPercent = Math.round((completedCount / totalModules) * 100);
   const hoursInvested = (gamification.totalTimeSpentSeconds / 3600).toFixed(1);
+
+  // Dynamic Learner Rank
+  const badgesCount = gamification.badges.length;
+  const xp = gamification.xp;
+  let learnerRank = "AI Initiate";
+  if (xp >= 2000 && badgesCount >= 5) learnerRank = "Master AI Engineer";
+  else if (xp >= 1000 && badgesCount >= 3) learnerRank = "Advanced AI Architect";
+  else if (xp >= 500) learnerRank = "AI Builder";
 
   const handleRestart = () => {
     progress.resetProgress();
@@ -163,10 +124,16 @@ export default function CourseDashboardPage() {
           {/* Welcome & Stats Hero */}
           <section className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 dashboard-fade">
-              <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight">
-                {completedCount === 0 && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
-                <span className="text-primary">{getDisplayName(user) || "Engineer"}</span>
-              </h1>
+              <div>
+                <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight mb-2">
+                  {completedCount === 0 && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
+                  <span className="text-primary">{getDisplayName(user) || "Engineer"}</span>
+                </h1>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm font-bold tracking-wider uppercase">{learnerRank}</span>
+                </div>
+              </div>
             </div>
             
             <div className="dashboard-fade grid grid-cols-2 md:grid-cols-4 gap-4">
