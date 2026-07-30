@@ -15,6 +15,8 @@ import { MODULE_4_SLIDES } from "@/components/modules/m4";
 import { MODULE_5_SLIDES } from "@/components/modules/m5";
 import { MODULE_6_SLIDES } from "@/components/modules/m6";
 import { CanvasViewer } from "@/components/lesson/canvas-viewer";
+import { useUser } from "@/hooks/use-user";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 // Mock lesson content for now
 const LESSONS: Record<string, any> = {
@@ -26,6 +28,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   const moduleId = resolvedParams.id;
   const router = useRouter();
   const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
+  const { user, isLoading: authLoading } = useUser();
 
   useSyncEngine(moduleId);
 
@@ -65,6 +68,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "1") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
+        <AuthModal isOpen={!authLoading && !user} />
         <CanvasViewer 
           slides={MODULE_1_SLIDES} 
           onComplete={handleComplete} 
@@ -77,6 +81,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "2") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
+        <AuthModal isOpen={!authLoading && !user} />
         <CanvasViewer 
           slides={MODULE_2_SLIDES} 
           onComplete={handleComplete} 
@@ -89,6 +94,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "3") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
+        <AuthModal isOpen={!authLoading && !user} />
         <CanvasViewer 
           slides={MODULE_3_SLIDES} 
           onComplete={handleComplete} 
@@ -101,7 +107,12 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "4") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
-        <CanvasViewer slides={MODULE_4_SLIDES} onComplete={handleComplete} moduleId={moduleId} />
+        <AuthModal isOpen={!authLoading && !user} />
+        <CanvasViewer 
+          slides={MODULE_4_SLIDES} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
       </Suspense>
     );
   }
@@ -109,7 +120,12 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "5") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
-        <CanvasViewer slides={m5Slides} onComplete={handleComplete} moduleId={moduleId} />
+        <AuthModal isOpen={!authLoading && !user} />
+        <CanvasViewer 
+          slides={m5Slides} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
       </Suspense>
     );
   }
@@ -117,7 +133,12 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   if (moduleId === "6") {
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
-        <CanvasViewer slides={MODULE_6_SLIDES} onComplete={handleComplete} moduleId={moduleId} />
+        <AuthModal isOpen={!authLoading && !user} />
+        <CanvasViewer 
+          slides={MODULE_6_SLIDES} 
+          onComplete={handleComplete} 
+          moduleId={moduleId}
+        />
       </Suspense>
     );
   }
@@ -127,9 +148,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (!lesson) {
     return (
-      <div className="max-w-4xl mx-auto p-8 md:p-12">
-        <h1 className="text-3xl text-primary font-bold">Module {moduleId}</h1>
-        <p className="text-muted-foreground mt-4">Content for this module has not been authored yet.</p>
+      <div className="p-8 text-center mt-20">
+        <AuthModal isOpen={!authLoading && !user} />
+        <h1 className="text-2xl font-bold mb-4">Module {moduleId}</h1>
+        <p className="text-muted-foreground">This module is not yet implemented.</p>
       </div>
     );
   }

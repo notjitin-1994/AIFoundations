@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { gsap } from "gsap";
 import { useNarrationStore } from "@/store/narration";
 import { Suspense } from "react";
+import { useUser } from "@/hooks/use-user";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
@@ -930,12 +932,15 @@ const MODULE_0_SLIDES: Slide[] = [
 ];
 
 export default function OrientationModule() {
+  const { user, isLoading: authLoading } = useUser();
+
   const handleModuleComplete = () => {
     // ProjectSpineSelector handles the redirect
   };
 
   return (
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background p-4 md:p-8 overflow-hidden">
+      <AuthModal isOpen={!authLoading && !user} />
       <Suspense fallback={<div className="text-muted-foreground animate-pulse">Loading module...</div>}>
         <CanvasViewer 
           slides={MODULE_0_SLIDES} 

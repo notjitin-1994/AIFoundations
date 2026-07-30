@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
+import { AuthModal } from "@/components/auth/auth-modal";
 import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
 import { wipeDatabaseProgress } from "@/actions/sync-progress";
@@ -24,7 +25,7 @@ if (typeof window !== 'undefined') {
 
 export default function CourseDashboardPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading: authLoading } = useUser();
   const progress = useProgressStore();
   const [selectedDeliverable, setSelectedDeliverable] = useState<{ title: string; content: string } | null>(null);
   const [badgePage, setBadgePage] = useState(0);
@@ -41,11 +42,6 @@ export default function CourseDashboardPage() {
     setMounted(true);
     // Record login for streak tracking
     progress.recordLogin();
-    
-    // Make sure they are marked as enrolled
-    if (!useProgressStore.getState().isEnrolled) {
-      progress.setEnrolled(true);
-    }
   }, [user]);
 
   useEffect(() => {

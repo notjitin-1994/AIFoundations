@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { requestVerification, getOrCreateCertificate, CertificateRecord } from "@/actions/certificate";
 import { useProgressStore } from "@/store/progress";
+import { AuthModal } from "@/components/auth/auth-modal";
 import { Loader2, ShieldCheck, ShieldAlert, Share2, Download, ExternalLink, Trophy, Target, History, Sparkles, User, Briefcase, Activity, CheckCircle2, Award, Hexagon, Fingerprint, Lock } from "lucide-react";
 import { gsap } from "gsap";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
@@ -18,6 +20,7 @@ interface RealtimeCertData extends CertificateRecord {
 
 export default function CertificatePage() {
   const { user, isLoading: authLoading } = useUser();
+  const router = useRouter();
   const { projectSpine, assessments, completedModules } = useProgressStore();
   const [certData, setCertData] = useState<RealtimeCertData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,6 +185,7 @@ export default function CertificatePage() {
   if (loading || authLoading) {
     return (
       <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-background">
+        <AuthModal isOpen={!authLoading && !user} />
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -190,6 +194,7 @@ export default function CertificatePage() {
   if (!certData) {
     return (
       <div className="flex flex-col h-[calc(100vh-64px)] items-center justify-center p-8 text-center bg-background">
+        <AuthModal isOpen={!authLoading && !user} />
         <h2 className="text-2xl font-bold text-white mb-2">No Credential Found</h2>
         <p className="text-zinc-400">Complete the course modules and the final assessment to earn your credential.</p>
       </div>
@@ -236,7 +241,7 @@ export default function CertificatePage() {
 
   return (
     <div ref={pageRef} className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-y-auto pb-24">
-      
+      <AuthModal isOpen={!authLoading && !user} />
       <MarketingNavbar />
 
       {/* 
