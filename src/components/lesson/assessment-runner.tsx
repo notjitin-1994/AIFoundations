@@ -88,6 +88,19 @@ export function AssessmentRunner({
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [finished, setFinished] = useState(false);
 
+  // Hydrate local state from store after mount to fix SSR hydration ignoring local storage
+  useEffect(() => {
+    const storeState = useProgressStore.getState().assessments[thisModuleId];
+    if (storeState && !storeState.passed && storeState.questions && storeState.questions.length > 0) {
+      setQuestions(storeState.questions);
+      setCurrentIdx(storeState.currentIdx || 0);
+      setAnswers(storeState.answers || {});
+      setGraded(storeState.graded || {});
+      setSubmitted(storeState.submitted || {});
+      setStarted(true);
+    }
+  }, [thisModuleId]);
+
   const questionsPool = useMemo(() => {
     if (savedState?.questions) return savedState.questions; // Use saved questions if resuming
     const config: AssessmentConfig = {
