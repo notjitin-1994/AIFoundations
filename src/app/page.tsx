@@ -7,19 +7,28 @@ import { gsap } from "gsap";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useProgressStore } from "@/store/progress";
+import { useUser } from "@/hooks/use-user";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
 
   useEffect(() => {
+    // Auto-enroll the test account
+    if (user?.email === "not.jitin@gmail.com" && !isEnrolled) {
+      useProgressStore.getState().setEnrolled(true);
+      router.push("/dashboard");
+      return;
+    }
+
     if (isEnrolled) {
       router.push("/dashboard");
     }
-  }, [isEnrolled, router]);
+  }, [isEnrolled, router, user]);
 
   useEffect(() => {
     gsap.fromTo(
