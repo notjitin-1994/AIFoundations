@@ -47,14 +47,31 @@ export function KnowledgeCheck({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
   const [initiallyCompleted] = useState(!!isCompleted || (savedState ? savedState.passed : false));
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Record<number, number>>(savedState?.incorrectAttempts || {});
 
   const total = questions.length;
   const q = useMemo(() => questions[currentQ], [questions, currentQ]);
 
   function handleSubmit() {
     if (selected === null) return;
-    setIsCorrect(selected === q.correctIndex);
+    const correct = selected === q.correctIndex;
+    setIsCorrect(correct);
     setStatus("feedback");
+    
+    if (!correct) {
+      setIncorrectAttempts((prev) => {
+        const updated = { ...prev, [currentQ]: (prev[currentQ] || 0) + 1 };
+        if (id) {
+          saveAssessmentState(id, {
+            passed: false,
+            currentIdx: currentQ,
+            answers: {},
+            incorrectAttempts: updated
+          });
+        }
+        return updated;
+      });
+    }
   }
 
   function handleContinue() {
@@ -87,6 +104,7 @@ export function KnowledgeCheck({
           passed: true,
           currentIdx: total - 1,
           answers: {},
+          incorrectAttempts,
         });
       }
       if (onComplete) onComplete();

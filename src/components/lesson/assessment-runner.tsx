@@ -85,6 +85,7 @@ export function AssessmentRunner({
   const [answers, setAnswers] = useState<Record<number, unknown>>(savedState?.answers || {});
   const [graded, setGraded] = useState<Record<number, { correct: boolean; partial?: number; feedback?: string } | null>>(savedState?.graded || {});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>(savedState?.submitted || {});
+  const [incorrectAttempts, setIncorrectAttempts] = useState<Record<number, number>>(savedState?.incorrectAttempts || {});
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [finished, setFinished] = useState(false);
 
@@ -97,6 +98,7 @@ export function AssessmentRunner({
       setAnswers(storeState.answers || {});
       setGraded(storeState.graded || {});
       setSubmitted(storeState.submitted || {});
+      setIncorrectAttempts(storeState.incorrectAttempts || {});
       setStarted(true);
     }
   }, [thisModuleId]);
@@ -123,10 +125,11 @@ export function AssessmentRunner({
         answers,
         graded,
         submitted,
+        incorrectAttempts,
         passed: false
       });
     }
-  }, [started, finished, currentIdx, answers, graded, submitted, questions, thisModuleId, saveAssessmentState]);
+  }, [started, finished, currentIdx, answers, graded, submitted, incorrectAttempts, questions, thisModuleId, saveAssessmentState]);
 
   useEffect(() => {
     if (finished || hasPassed) {
@@ -150,8 +153,9 @@ export function AssessmentRunner({
     if (isSubmitted) {
       canvasNav?.setNavOverride({
         disablePrev: true,
-        nextLabel: currentIdx < questions.length - 1 ? "Proceed" : "See Results",
-        onNext: next,
+        nextLabel: "Proceed", // We handle the button inside the popup now, but provide a fallback string
+        onNext: () => {}, // Disable default canvas next button, we want them to use the popup's button
+        nextDisabled: true, // Disable canvas next button while feedback is shown
       });
     } else {
       const hasAns = hasAnswer(answers[currentIdx], current?.question.type);
@@ -173,6 +177,7 @@ export function AssessmentRunner({
     setAnswers({});
     setGraded({});
     setSubmitted({});
+    setIncorrectAttempts({});
     setCurrentIdx(0);
     setStartTime(Date.now());
     setStarted(true);
@@ -196,6 +201,14 @@ export function AssessmentRunner({
     const score = Math.round((result.partial ?? (result.correct ? 1 : 0)) * 100);
     setGraded((g) => ({ ...g, [currentIdx]: result }));
     setSubmitted((s) => ({ ...s, [currentIdx]: true }));
+    
+    if (!result.correct) {
+      setIncorrectAttempts((prev) => ({
+        ...prev,
+        [currentIdx]: (prev[currentIdx] || 0) + 1
+      }));
+    }
+
     sendXAPIStatement(
       "http://adlnet.gov/expapi/verbs/answered",
       "answered",
@@ -269,6 +282,7 @@ export function AssessmentRunner({
         answers, 
         graded, 
         submitted,
+        incorrectAttempts,
         passed: true 
       });
     }
@@ -595,10 +609,27 @@ export function AssessmentRunner({
                         )}
                       </div>
                       <button
-                        onClick={next}
-                        className="p-2 -mr-2 -mt-2 rounded-full text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors active:scale-95"
+                        onClick={() => {
+                          if (grade.correct || kind === "baseline" || kind === "final") {
+                            next();
+                          } else {
+                            retry();
+                          }
+                        }}
+                        className={cn(
+                          "rounded-full font-semibold text-sm transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                          grade.correct
+                            ? "h-10 w-10 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-emerald-950"
+                            : kind === "baseline" || kind === "final"
+                            ? "h-10 w-10 flex items-center justify-center bg-muted hover:bg-muted/80 text-foreground"
+                            : "px-6 py-2 bg-muted hover:bg-muted/80 text-foreground"
+                        )}
                       >
-                        <X className="h-5 w-5" />
+                        {grade.correct || kind === "baseline" || kind === "final" ? (
+                          <ArrowRight className="w-5 h-5" />
+                        ) : (
+                          "Try Again"
+                        )}
                       </button>
                     </div>
 

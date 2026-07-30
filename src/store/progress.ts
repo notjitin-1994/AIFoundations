@@ -18,12 +18,13 @@ export interface ProjectSpineAnswerData {
 }
 
 export interface AssessmentState {
-  questions?: any[];
+  questions?: unknown[];
   currentIdx: number;
   answers: Record<number, unknown>;
-  graded?: Record<number, any>;
+  graded?: Record<number, unknown>;
   submitted?: Record<number, boolean>;
   passed: boolean;
+  incorrectAttempts?: Record<number, number>;
 }
 
 export interface GamificationState {
@@ -111,14 +112,15 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => {
           // If the assessment is newly passed, give XP
           let xpEarned = 0;
-          let newBadges = [...state.gamification.badges];
+          const newBadges = [...state.gamification.badges];
           
           const oldState = state.assessments[moduleId];
           if (!oldState?.passed && stateData.passed) {
             xpEarned = 50; // 50 XP for passing an assessment
             
             // Check if perfect score
-            const isPerfect = Object.values(stateData.graded || {}).every((v) => v === true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isPerfect = Object.values(stateData.graded || {}).every((v: any) => v?.correct === true);
             if (isPerfect && !newBadges.includes("perfect-score")) {
               newBadges.push("perfect-score");
               xpEarned += 50; // Bonus for perfect score
@@ -144,8 +146,8 @@ export const useProgressStore = create<ProgressState>()(
           if (state.completedModules.includes(moduleId)) return state;
           
           // Auto-award badges and tools based on module completion
-          let newTools = [...state.gamification.toolsMastered];
-          let newBadges = [...state.gamification.badges];
+          const newTools = [...state.gamification.toolsMastered];
+          const newBadges = [...state.gamification.badges];
           let xpEarned = 100; // 100 XP for completing a module
           
           if (moduleId === "0" && !newBadges.includes("first-steps")) newBadges.push("first-steps");
