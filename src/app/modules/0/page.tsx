@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { gsap } from "gsap";
 import { useNarrationStore } from "@/store/narration";
+import { Suspense } from "react";
 
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
@@ -931,11 +932,13 @@ export default function OrientationModule() {
 
   return (
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background p-4 md:p-8 overflow-hidden">
-      <CanvasViewer 
-        slides={MODULE_0_SLIDES} 
-        onComplete={handleModuleComplete}
-        moduleId="0"
-      />
+      <Suspense fallback={<div className="text-muted-foreground animate-pulse">Loading module...</div>}>
+        <CanvasViewer 
+          slides={MODULE_0_SLIDES} 
+          onComplete={handleModuleComplete}
+          moduleId="0"
+        />
+      </Suspense>
     </div>
   );
 }

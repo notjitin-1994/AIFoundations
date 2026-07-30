@@ -1,7 +1,7 @@
 "use client";
 
 import { use, Suspense, useMemo, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LessonViewer } from "@/components/lesson/lesson-viewer";
 import { useProgressStore } from "@/store/progress";
 import { sendXAPIStatement } from "@/actions/xapi";
@@ -25,7 +25,6 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   const resolvedParams = use(params);
   const moduleId = resolvedParams.id;
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
 
   useSyncEngine(moduleId);
