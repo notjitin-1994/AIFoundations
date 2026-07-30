@@ -108,7 +108,7 @@ export function Sidebar() {
   return (
     <aside id="tour-sidebar" className="w-64 md:w-72 border-r border-border bg-sidebar text-sidebar-foreground h-screen flex flex-col hidden md:flex shrink-0">
       <div className="p-6 border-b border-border shrink-0">
-        <Link href="/" className="block hover:opacity-80 transition-opacity duration-200">
+        <a href="https://orbit.smartslate.io" className="block hover:opacity-80 transition-opacity duration-200">
           <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-8 w-auto object-contain mb-1" />
         </Link>
         <p className="text-[11px] font-medium text-sidebar-foreground/60 tracking-wide uppercase mt-1">AI Foundations: Concept2Application</p>

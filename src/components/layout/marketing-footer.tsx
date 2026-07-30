@@ -10,7 +10,7 @@ export function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
+            <a href="https://orbit.smartslate.io" className="flex items-center gap-2 mb-6">
               <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-7 w-auto object-contain brightness-0 invert opacity-90" />
               <div className="h-5 w-px bg-white/20 mx-2"></div>
               <span className="font-heading font-bold tracking-widest text-foreground text-sm uppercase pt-0.5">Orbit</span>
@@ -28,7 +28,7 @@ export function MarketingFooter() {
           <div>
             <h4 className="font-heading font-bold text-foreground mb-6 uppercase tracking-wider text-sm">Platform</h4>
             <ul className="space-y-4 text-sm font-medium text-muted-foreground">
-              <li><Link href="/" className="hover:text-primary transition-colors">Course Catalog</Link></li>
+              <li><a href="https://orbit.smartslate.io/courses" className="hover:text-primary transition-colors">Course Catalog</a></li>
               <li><Link href="#" className="hover:text-primary transition-colors">Orbit Enterprise</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors">Interactive Sandboxes</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors">Certifications</Link></li>

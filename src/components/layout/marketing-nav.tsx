@@ -47,14 +47,14 @@ export function MarketingNavbar() {
         }}
       >
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
+          <a href="https://orbit.smartslate.io" className="flex items-center gap-2">
             <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-6 w-auto object-contain brightness-0 invert opacity-90" />
             <div className="h-4 w-px bg-white/20 mx-2 hidden sm:block"></div>
             <span className="hidden sm:inline font-heading font-bold tracking-widest text-foreground text-xs uppercase pt-0.5">Orbit</span>
           </Link>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link href="/" className="hover:text-primary transition-colors">Catalog</Link>
+          <a href="https://orbit.smartslate.io/courses" className="hover:text-primary transition-colors">Catalog</a>
           <Link href="/enterprise" className="hover:text-primary transition-colors">Enterprise</Link>
           <Link href="/testimonials" className="hover:text-primary transition-colors">Testimonials</Link>
         </div>

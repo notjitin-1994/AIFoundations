@@ -88,7 +88,7 @@ export default function CourseMarketingPage() {
         
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
           <div className="relative z-10">
-            <a href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm font-medium transition-colors mb-8 group">
+            <a href="https://orbit.smartslate.io/courses" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm font-medium transition-colors mb-8 group">
               <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" /> Back to Orbit Catalog
             </a>
             
