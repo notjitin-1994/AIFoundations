@@ -45,7 +45,7 @@ export default function CourseDashboardPage() {
       const currentState = useProgressStore.getState();
       const needsFullSeed = currentState.gamification.xp < 500;
       
-      const currentSpine = currentState.projectSpine || "research-companion";
+      const currentSpine = currentState.projectSpine || "internal_rag_agent";
       
       let mockAnswers = {
         "1": { rolePrompt: `# System Prompt\n\nYou are an expert AI orchestrator specializing in the ${currentSpine.replace(/_/g, ' ')} domain. Your goal is to analyze data and provide structured insights.\n\n*(Mock artifact auto-populated for testing)*` },
@@ -76,27 +76,14 @@ export default function CourseDashboardPage() {
             "6": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
           },
           projectSpine: currentSpine as any,
-          projectSpineAnswers: {
-            ...currentState.projectSpineAnswers,
-            "1": currentState.projectSpineAnswers["1"] || currentState.projectSpineAnswers["m1"] || mockAnswers["1"],
-            "2": currentState.projectSpineAnswers["2"] || currentState.projectSpineAnswers["m2"] || mockAnswers["2"],
-            "3": currentState.projectSpineAnswers["3"] || currentState.projectSpineAnswers["m3"] || mockAnswers["3"]
-          },
+          projectSpineAnswers: mockAnswers, // Just directly use the mock answers so they are fully populated and updated
           activeModuleId: "6",
         });
       } else {
-        // Ensure missing artifacts are populated for test account even if xp >= 500
-        const currentAnswers = currentState.projectSpineAnswers || {};
-        if (!currentAnswers["1"] || !currentAnswers["2"] || !currentAnswers["3"]) {
-          currentState.syncFromDB({
-            projectSpineAnswers: {
-              ...currentAnswers,
-              "1": currentAnswers["1"] || currentAnswers["m1"] || mockAnswers["1"],
-              "2": currentAnswers["2"] || currentAnswers["m2"] || mockAnswers["2"],
-              "3": currentAnswers["3"] || currentAnswers["m3"] || mockAnswers["3"]
-            }
-          });
-        }
+        // Force update the test data to reflect current spine if it has changed
+        currentState.syncFromDB({
+          projectSpineAnswers: mockAnswers // overwrite mock answers to reflect whatever project spine is currently selected
+        });
       }
     }
   }, [user]);
@@ -145,7 +132,7 @@ export default function CourseDashboardPage() {
     progress.markModuleComplete("0");
     progress.markModuleComplete("1");
     progress.markModuleComplete("2");
-    progress.setProjectSpine("research-companion");
+    progress.setProjectSpine("internal_rag_agent");
     progress.syncFromDB({
       gamification: {
         xp: 1250,
@@ -162,6 +149,7 @@ export default function CourseDashboardPage() {
       activeModuleId: "3",
     });
   };
+
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
