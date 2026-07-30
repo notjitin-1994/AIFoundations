@@ -67,6 +67,16 @@ export default function CourseDashboardPage() {
   const completedCount = progress.completedModules.length;
   const progressPercent = Math.round((completedCount / totalModules) * 100);
   const hoursInvested = (gamification.totalTimeSpentSeconds / 3600).toFixed(1);
+  
+  // Behavioral Badges Logic
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isPerfectionist = Object.values(progress.assessments).some(
+    (a: any) => a.graded && Object.keys(a.graded).length > 0 && 
+         Object.values(a.graded).every((g: any) => g?.correct) && 
+         (!a.incorrectAttempts || Object.values(a.incorrectAttempts).every(v => v === 0))
+  );
+  const isDeepDiver = gamification.totalTimeSpentSeconds >= 3600; // >= 1 hour
+  const isUnbrokenFocus = gamification.currentStreak >= 3;
 
   // Dynamic Learner Rank
   const badgesCount = gamification.badges.length;
@@ -85,32 +95,6 @@ export default function CourseDashboardPage() {
     const nextModuleId = progress.activeModuleId || "0";
     router.push(`/modules/${nextModuleId}`);
   };
-
-  const handleSeedTestData = () => {
-    // Seed fake data for testing
-    const seededBadges = ["first-steps", "architect", "prompt-eng"];
-    const seededTools = ["RAG", "Vector DB"];
-    progress.markModuleComplete("0");
-    progress.markModuleComplete("1");
-    progress.markModuleComplete("2");
-    progress.setProjectSpine("internal_rag_agent");
-    progress.syncFromDB({
-      gamification: {
-        xp: 1250,
-        badges: seededBadges,
-        toolsMastered: seededTools,
-        totalTimeSpentSeconds: 14400, // 4 hours
-        lastLoginDate: new Date().toISOString().split('T')[0],
-        currentStreak: 5,
-      },
-      assessments: {
-        "1": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true } },
-        "2": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true } }
-      },
-      activeModuleId: "3",
-    });
-  };
-
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
@@ -188,12 +172,6 @@ export default function CourseDashboardPage() {
                 <button onClick={() => router.push('/certificate')} className="px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/30 font-bold text-sm hover:border-primary/60 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] transition-all flex items-center gap-2">
                   <Trophy className="w-4 h-4 fill-primary/20" />
                   View Certificate
-                </button>
-              )}
-              {progressPercent === 0 && (
-                <button onClick={handleSeedTestData} className="px-6 py-3 rounded-full bg-zinc-800/50 text-zinc-400 font-medium text-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center gap-2" title="Populate dummy data for testing">
-                  <Beaker className="w-4 h-4" />
-                  Seed Test Data
                 </button>
               )}
             </div>
@@ -347,31 +325,63 @@ export default function CourseDashboardPage() {
             
             <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 space-y-8">
               
-              {/* Badges Grid */}
+              {/* Skill Constellation / Behavioral Badges */}
               <div>
-                <h3 className="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-widest">Badges</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Skill Constellation</h3>
+                  <span className="text-xs font-mono text-primary/60">{gamification.badges.length + (isPerfectionist?1:0) + (isDeepDiver?1:0) + (isUnbrokenFocus?1:0)} / 9 Unlocked</span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 md:gap-4">
                   {[
-                    { id: 'first-steps', name: 'First Steps', icon: Star, unlocked: gamification.badges.includes('first-steps') || progress.completedModules.includes('0') },
-                    { id: 'architect', name: 'Architect', icon: Brain, unlocked: gamification.badges.includes('architect') || !!progress.projectSpine },
-                    { id: 'prompt-eng', name: 'Prompt Eng', icon: Code, unlocked: progress.completedModules.includes('2') },
-                    { id: 'tool-builder', name: 'Tool Builder', icon: Target, unlocked: progress.completedModules.includes('3') },
-                    { id: 'agent-master', name: 'Agent Master', icon: Server, unlocked: progress.completedModules.includes('4') },
-                    { id: 'certified', name: 'Certified', icon: Trophy, unlocked: progress.completedModules.includes('6') },
-                  ].map(badge => (
-                    <div key={badge.id} className="group relative flex flex-col items-center">
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl ${
-                        badge.unlocked 
-                          ? "bg-gradient-to-br from-teal-500/20 to-primary/20 border border-primary/30 text-primary hover:scale-105 hover:-translate-y-1" 
-                          : "bg-zinc-950 border border-white/5 text-zinc-700 opacity-50 grayscale"
-                      }`}>
-                        <badge.icon className="w-8 h-8" />
+                    { id: 'first-steps', name: 'First Steps', icon: Star, unlocked: gamification.badges.includes('first-steps') || progress.completedModules.includes('0'), tier: 'bronze' },
+                    { id: 'architect', name: 'Architect', icon: Brain, unlocked: gamification.badges.includes('architect') || !!progress.projectSpine, tier: 'silver' },
+                    { id: 'prompt-eng', name: 'Prompt Eng', icon: Code, unlocked: progress.completedModules.includes('2'), tier: progress.assessments['2']?.graded ? 'gold' : 'bronze' },
+                    { id: 'tool-builder', name: 'Tool Builder', icon: Target, unlocked: progress.completedModules.includes('3'), tier: 'silver' },
+                    { id: 'agent-master', name: 'Agent Master', icon: Server, unlocked: progress.completedModules.includes('4'), tier: 'gold' },
+                    { id: 'certified', name: 'Certified', icon: Trophy, unlocked: progress.completedModules.includes('6'), tier: 'diamond' },
+                    // Behavioral Badges
+                    { id: 'perfectionist', name: 'Perfectionist', icon: CheckCircle2, unlocked: isPerfectionist, tier: 'obsidian', tooltip: 'Score 100% on a module assessment on the first attempt' },
+                    { id: 'deep-diver', name: 'Deep Diver', icon: Activity, unlocked: isDeepDiver, tier: 'gold', tooltip: 'Invest over 1 hour of active learning time' },
+                    { id: 'unbroken-focus', name: 'Unbroken Focus', icon: Flame, unlocked: isUnbrokenFocus, tier: 'diamond', tooltip: 'Maintain a 3+ day active learning streak' },
+                  ].map(badge => {
+                    const tierColors: Record<string, string> = {
+                      bronze: "from-orange-900/30 to-amber-700/10 border-orange-500/30 text-orange-400",
+                      silver: "from-zinc-400/20 to-zinc-600/10 border-zinc-400/40 text-zinc-300",
+                      gold: "from-yellow-400/20 to-amber-500/10 border-yellow-500/50 text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]",
+                      diamond: "from-teal-400/20 to-cyan-500/10 border-teal-400/60 text-teal-300 drop-shadow-[0_0_15px_rgba(45,212,191,0.5)]",
+                      obsidian: "from-purple-600/30 to-indigo-900/20 border-purple-500/50 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    };
+
+                    return (
+                      <div key={badge.id} className="group relative flex flex-col items-center">
+                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl overflow-hidden relative ${
+                          badge.unlocked 
+                            ? `bg-gradient-to-br border hover:scale-110 hover:-translate-y-2 z-10 ${tierColors[badge.tier || 'bronze']}` 
+                            : "bg-zinc-950 border border-white/5 text-zinc-800"
+                        }`}>
+                          {badge.unlocked && (
+                            <>
+                              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 translate-x-[-150%] translate-y-[150%] group-hover:translate-x-[150%] group-hover:translate-y-[-150%] transition-transform duration-1000 ease-in-out" />
+                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)] transition-opacity duration-300" />
+                            </>
+                          )}
+                          <badge.icon className={`w-8 h-8 md:w-10 md:h-10 relative z-10 ${!badge.unlocked ? 'opacity-20' : ''}`} strokeWidth={badge.unlocked ? 2 : 1.5} />
+                        </div>
+                        <p className={`text-[10px] md:text-xs font-bold mt-2 text-center tracking-wider transition-colors duration-300 ${badge.unlocked ? 'text-zinc-200' : 'text-zinc-600'}`}>
+                          {badge.name}
+                        </p>
+                        
+                        {/* Glassmorphism Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
+                          <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-lg p-2 text-[10px] text-zinc-300 text-center shadow-2xl relative">
+                            {badge.unlocked ? (badge.tooltip || `Unlocked ${badge.name}`) : (badge.tooltip || "Complete requirements to unlock")}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900/90" />
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[10px] font-bold mt-2 text-center text-zinc-400 tracking-wider">
-                        {badge.name}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -386,10 +396,48 @@ export default function CourseDashboardPage() {
                 
                 <div className="grid grid-cols-1 gap-3">
                   {[
-                    { title: "Prompt Engineering", icon: Code, reqMod: "1", content: progress.projectSpineAnswers["1"]?.rolePrompt || progress.projectSpineAnswers["0"]?.rolePrompt || progress.projectSpineAnswers["m1"]?.rolePrompt || "No prompt engineered yet." },
-                    { title: "Context Engineering", icon: Database, reqMod: "2", content: progress.projectSpineAnswers["2"]?.contextPrompt || progress.projectSpineAnswers["1"]?.contextPrompt || progress.projectSpineAnswers["m2"]?.contextPrompt || "No context assembled yet." },
-                    { title: "Harness Engineering", icon: Network, reqMod: "4", content: progress.projectSpineAnswers["3"]?.agentsMd || progress.projectSpineAnswers["m3"]?.agentsMd || progress.projectSpineAnswers["2"]?.taskPrompt || "No orchestration built yet." },
-                    { title: "Final Project", icon: Star, reqMod: "6", content: "Final Capstone codebase and deliverables." }
+                    { 
+                      title: "Prompt Engineering", 
+                      icon: Code, 
+                      reqMod: "1", 
+                      content: (() => {
+                        const ans = progress.projectSpineAnswers["1"] || progress.projectSpineAnswers["m1"];
+                        if (ans?.rolePrompt) {
+                          return `### Role\n${ans.rolePrompt}\n\n### Task\n${ans.taskPrompt || ""}\n\n### Context\n${ans.contextPrompt || ""}\n\n### Constraints\n${ans.constraintPrompt || ""}`;
+                        }
+                        return "No prompt engineered yet.";
+                      })()
+                    },
+                    { 
+                      title: "Toolbelt Blueprint", 
+                      icon: Wrench, 
+                      reqMod: "3", 
+                      content: (() => {
+                        const ans = progress.projectSpineAnswers["3"] || progress.projectSpineAnswers["m3"];
+                        if (ans?.tools || ans?.mcps || ans?.skills) {
+                          return `### MCP Servers\n${ans.mcps || "None"}\n\n### Tools\n${ans.tools || "None"}\n\n### Skills\n${ans.skills || "None"}`;
+                        }
+                        return "No tools mapped yet.";
+                      })()
+                    },
+                    { 
+                      title: "Harness Engineering", 
+                      icon: Network, 
+                      reqMod: "4", 
+                      content: (() => {
+                        const ans = progress.projectSpineAnswers["3"] || progress.projectSpineAnswers["m3"] || progress.projectSpineAnswers["4"] || progress.projectSpineAnswers["m4"];
+                        if (ans?.agentsMd) {
+                          return ans.agentsMd;
+                        }
+                        return "No orchestration built yet.";
+                      })()
+                    },
+                    { 
+                      title: "Final Project", 
+                      icon: Star, 
+                      reqMod: "6", 
+                      content: "Final Capstone codebase and deliverables." 
+                    }
                   ].map((deliv, i) => {
                     const unlocked = progress.completedModules.includes(deliv.reqMod);
                     const hasContent = unlocked && deliv.content && !deliv.content.includes("yet.");

@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "crypto";
 // import { createClient } from "@/lib/supabase/server";
 
 export interface CertificateRecord {
@@ -40,8 +39,12 @@ export async function generateCertificateHash(
   // Combine all the critical data points that must not be forged
   const dataString = `${userId}:${baselineScore}:${finalScore}:${projectSpine}:${salt}`;
   
-  // Generate a SHA-256 hash
-  const hash = crypto.createHash("sha256").update(dataString).digest("hex");
+  // Generate a SHA-256 hash using Web Crypto
+  const encoder = new TextEncoder();
+  const data = encoder.encode(dataString);
+  const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   
   // Return a readable short string (first 16 chars)
   return `cert-${hash.substring(0, 16)}`;

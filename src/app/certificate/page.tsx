@@ -35,87 +35,95 @@ export default function CertificatePage() {
     }
 
     async function generateCert() {
-      // Calculate real-time data from local state
-      const spineDisplay = projectSpine 
-        ? projectSpine.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-        : "AI Application Foundation";
+      try {
+        // Calculate real-time data from local state
+        const spineDisplay = projectSpine 
+          ? projectSpine.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+          : "AI Application Foundation";
 
-      // Extract module scores
-      const moduleScores = Object.entries(assessments)
-        .filter(([id]) => id.startsWith('m') && !id.includes('baseline') && !id.includes('final'))
-        .map(([id, state]) => {
-          let score = 0;
-          let total = 0;
-          if (state.graded) {
-            total = Object.keys(state.graded).length;
-            score = Object.values(state.graded).filter((g: any) => g.correct).length;
-          }
-          return {
-            moduleId: id,
-            moduleName: `Module ${id.replace('m', '')}`,
-            score: total > 0 ? Math.round((score / total) * 100) : 0,
-          };
-        })
-        .sort((a, b) => a.moduleId.localeCompare(b.moduleId));
+        // Extract module scores
+        const moduleScores = Object.entries(assessments)
+          .filter(([id]) => id.startsWith('m') && !id.includes('baseline') && !id.includes('final'))
+          .map(([id, state]) => {
+            let score = 0;
+            let total = 0;
+            if (state.graded) {
+              total = Object.keys(state.graded).length;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              score = Object.values(state.graded).filter((g: any) => g?.correct).length;
+            }
+            return {
+              moduleId: id,
+              moduleName: `Module ${id.replace('m', '')}`,
+              score: total > 0 ? Math.round((score / total) * 100) : 0,
+            };
+          })
+          .sort((a, b) => a.moduleId.localeCompare(b.moduleId));
 
-      // Determine Baseline and Final
-      let baselineScore = 0;
-      if (assessments['baseline']?.graded) {
-        const g = assessments['baseline'].graded;
-        const total = Object.keys(g).length;
-        baselineScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
-      } else {
-        baselineScore = 45;
+        // Determine Baseline and Final
+        let baselineScore = 0;
+        if (assessments['baseline']?.graded) {
+          const g = assessments['baseline'].graded;
+          const total = Object.keys(g).length;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          baselineScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x?.correct).length / total) * 100) : 0;
+        } else {
+          baselineScore = 45;
+        }
+
+        let finalScore = 0;
+        if (assessments['final']?.graded) {
+          const g = assessments['final'].graded;
+          const total = Object.keys(g).length;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          finalScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x?.correct).length / total) * 100) : 0;
+        } else if (moduleScores.length > 0) {
+          finalScore = Math.round(moduleScores.reduce((acc, curr) => acc + curr.score, 0) / moduleScores.length);
+        } else {
+          finalScore = 92;
+        }
+        
+        const userId = user?.id || "guest";
+
+        // Fetch cryptographic record
+        const certRecord = await getOrCreateCertificate({
+          userId,
+          baselineScore,
+          finalScore,
+          moduleScores: moduleScores.length > 0 ? moduleScores : [
+            { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
+            { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
+            { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
+            { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
+            { moduleId: "6", moduleName: "The Horizon", score: 100 },
+          ],
+          isVerified: false,
+          projectSpine: spineDisplay
+        });
+
+        const studentName = getDisplayName(user);
+        
+        let avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+        
+        if (!avatarUrl && user) {
+          const { data } = await createClient()
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (data?.avatar_url) avatarUrl = data.avatar_url;
+        }
+
+        setCertData({
+          ...certRecord,
+          studentName,
+          avatarUrl
+        });
+      } catch (err) {
+        console.error("Failed to generate certificate", err);
+      } finally {
+        setLoading(false);
       }
-
-      let finalScore = 0;
-      if (assessments['final']?.graded) {
-        const g = assessments['final'].graded;
-        const total = Object.keys(g).length;
-        finalScore = total > 0 ? Math.round((Object.values(g).filter((x: any) => x.correct).length / total) * 100) : 0;
-      } else if (moduleScores.length > 0) {
-        finalScore = Math.round(moduleScores.reduce((acc, curr) => acc + curr.score, 0) / moduleScores.length);
-      } else {
-        finalScore = 92;
-      }
-      
-      const userId = user?.id || "guest";
-
-      // Fetch cryptographic record
-      const certRecord = await getOrCreateCertificate({
-        userId,
-        baselineScore,
-        finalScore,
-        moduleScores: moduleScores.length > 0 ? moduleScores : [
-          { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
-          { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
-          { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
-          { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
-          { moduleId: "6", moduleName: "The Horizon", score: 100 },
-        ],
-        isVerified: false,
-        projectSpine: spineDisplay
-      });
-
-      const studentName = getDisplayName(user);
-      
-      let avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-      
-      if (!avatarUrl && user) {
-        const { data } = await createClient()
-          .from("profiles")
-          .select("avatar_url")
-          .eq("id", user.id)
-          .single();
-        if (data?.avatar_url) avatarUrl = data.avatar_url;
-      }
-
-      setCertData({
-        ...certRecord,
-        studentName,
-        avatarUrl
-      });
-      setLoading(false);
     }
 
     generateCert();
