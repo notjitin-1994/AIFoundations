@@ -40,50 +40,63 @@ export default function CourseDashboardPage() {
       progress.setEnrolled(true);
     }
 
-    // Auto-seed for specific testing account or if entirely empty
-    if (useProgressStore.getState().completedModules.length === 0 || (user?.email === "not.jitin@gmail.com" && useProgressStore.getState().gamification.xp < 500)) {
-      const seededBadges = ["first-steps", "architect", "prompt-eng", "tool-builder", "agent-master", "certified"];
-      const seededTools = ["RAG", "Vector DB", "Agents", "LangChain", "FastAPI", "Deployment"];
+    // Auto-seed for specific testing account
+    if (user?.email === "not.jitin@gmail.com") {
+      const currentState = useProgressStore.getState();
+      const needsFullSeed = currentState.gamification.xp < 500;
       
-      useProgressStore.getState().syncFromDB({
-        completedModules: ["0", "1", "2", "3", "4", "5", "6"],
-        gamification: {
-          xp: 2850,
-          badges: seededBadges,
-          toolsMastered: seededTools,
-          totalTimeSpentSeconds: 144000, // 40 hours
-          lastLoginDate: new Date().toISOString().split('T')[0],
-          currentStreak: 12,
-        },
-        assessments: {
-          "1": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          "2": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          "3": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          "4": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          "5": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-          "6": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
-        },
-        projectSpine: "research-companion",
-        projectSpineAnswers: {
-          ...useProgressStore.getState().projectSpineAnswers,
-          "1": useProgressStore.getState().projectSpineAnswers["1"] || useProgressStore.getState().projectSpineAnswers["m1"] || { rolePrompt: "# System Prompt\n\nYou are an expert research assistant. Your goal is to analyze data and provide structured insights.\n\n*(Mock artifact auto-populated for testing)*" },
-          "2": useProgressStore.getState().projectSpineAnswers["2"] || useProgressStore.getState().projectSpineAnswers["m2"] || { contextPrompt: "# Context Engineering\n\nPlease reference the following knowledge base articles to formulate your answer:\n1. Architecture Guidelines\n2. API Spec v2\n\n*(Mock artifact auto-populated for testing)*" },
-          "3": useProgressStore.getState().projectSpineAnswers["3"] || useProgressStore.getState().projectSpineAnswers["m3"] || { agentsMd: "# Agent Orchestration\n\n```yaml\nagents:\n  - name: Researcher\n    role: Gathers data\n  - name: Writer\n    role: Formats output\n```\n\n*(Mock artifact auto-populated for testing)*" }
-        },
-        activeModuleId: "6",
-      });
-    } else if (user?.email === "not.jitin@gmail.com") {
-      // Ensure missing artifacts are populated for test account even if xp >= 500
-      const currentAnswers = useProgressStore.getState().projectSpineAnswers || {};
-      if (!currentAnswers["1"] || !currentAnswers["2"] || !currentAnswers["3"]) {
-        useProgressStore.getState().syncFromDB({
+      const currentSpine = currentState.projectSpine || "research-companion";
+      
+      let mockAnswers = {
+        "1": { rolePrompt: `# System Prompt\n\nYou are an expert AI orchestrator specializing in the ${currentSpine.replace(/_/g, ' ')} domain. Your goal is to analyze data and provide structured insights.\n\n*(Mock artifact auto-populated for testing)*` },
+        "2": { contextPrompt: `# Context Engineering\n\nPlease reference the following knowledge base articles to formulate your answer for the ${currentSpine.replace(/_/g, ' ')} project:\n1. Architecture Guidelines\n2. API Spec v2\n\n*(Mock artifact auto-populated for testing)*` },
+        "3": { agentsMd: `# Agent Orchestration\n\n\`\`\`yaml\nagents:\n  - name: Primary Agent (${currentSpine.replace(/_/g, ' ')})\n    role: Executes core logic\n  - name: Evaluator\n    role: Validates output\n\`\`\`\n\n*(Mock artifact auto-populated for testing)*` }
+      };
+
+      if (needsFullSeed) {
+        const seededBadges = ["first-steps", "architect", "prompt-eng", "tool-builder", "agent-master", "certified"];
+        const seededTools = ["RAG", "Vector DB", "Agents", "LangChain", "FastAPI", "Deployment"];
+        
+        currentState.syncFromDB({
+          completedModules: ["0", "1", "2", "3", "4", "5", "6"],
+          gamification: {
+            xp: 2850,
+            badges: seededBadges,
+            toolsMastered: seededTools,
+            totalTimeSpentSeconds: 144000, // 40 hours
+            lastLoginDate: new Date().toISOString().split('T')[0],
+            currentStreak: 12,
+          },
+          assessments: {
+            "1": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+            "2": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+            "3": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+            "4": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+            "5": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+            "6": { passed: true, currentIdx: 0, answers: {}, graded: { 0: true, 1: true, 2: true, 3: true, 4: true } },
+          },
+          projectSpine: currentSpine as any,
           projectSpineAnswers: {
-            ...currentAnswers,
-            "1": currentAnswers["1"] || currentAnswers["m1"] || { rolePrompt: "# System Prompt\n\nYou are an expert research assistant. Your goal is to analyze data and provide structured insights.\n\n*(Mock artifact auto-populated for testing)*" },
-            "2": currentAnswers["2"] || currentAnswers["m2"] || { contextPrompt: "# Context Engineering\n\nPlease reference the following knowledge base articles to formulate your answer:\n1. Architecture Guidelines\n2. API Spec v2\n\n*(Mock artifact auto-populated for testing)*" },
-            "3": currentAnswers["3"] || currentAnswers["m3"] || { agentsMd: "# Agent Orchestration\n\n```yaml\nagents:\n  - name: Researcher\n    role: Gathers data\n  - name: Writer\n    role: Formats output\n```\n\n*(Mock artifact auto-populated for testing)*" }
-          }
+            ...currentState.projectSpineAnswers,
+            "1": currentState.projectSpineAnswers["1"] || currentState.projectSpineAnswers["m1"] || mockAnswers["1"],
+            "2": currentState.projectSpineAnswers["2"] || currentState.projectSpineAnswers["m2"] || mockAnswers["2"],
+            "3": currentState.projectSpineAnswers["3"] || currentState.projectSpineAnswers["m3"] || mockAnswers["3"]
+          },
+          activeModuleId: "6",
         });
+      } else {
+        // Ensure missing artifacts are populated for test account even if xp >= 500
+        const currentAnswers = currentState.projectSpineAnswers || {};
+        if (!currentAnswers["1"] || !currentAnswers["2"] || !currentAnswers["3"]) {
+          currentState.syncFromDB({
+            projectSpineAnswers: {
+              ...currentAnswers,
+              "1": currentAnswers["1"] || currentAnswers["m1"] || mockAnswers["1"],
+              "2": currentAnswers["2"] || currentAnswers["m2"] || mockAnswers["2"],
+              "3": currentAnswers["3"] || currentAnswers["m3"] || mockAnswers["3"]
+            }
+          });
+        }
       }
     }
   }, [user]);

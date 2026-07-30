@@ -9,8 +9,6 @@ import { gsap } from "gsap";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabase/client";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 // We keep a lightweight local interface for the component's internal state, extending the server record
 interface RealtimeCertData extends CertificateRecord {
@@ -39,7 +37,7 @@ export default function CertificatePage() {
     async function generateCert() {
       // Calculate real-time data from local state
       const spineDisplay = projectSpine 
-        ? projectSpine.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        ? projectSpine.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
         : "AI Application Foundation";
 
       // Extract module scores
@@ -146,6 +144,9 @@ export default function CertificatePage() {
     setDownloading(true);
     
     try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
       // Hide any UI elements inside the cert if needed, but our cert is self-contained.
       const canvas = await html2canvas(certRef.current, {
         scale: 2, // High resolution
