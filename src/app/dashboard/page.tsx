@@ -9,7 +9,8 @@ import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { 
   Trophy, Flame, Clock, Target, Star, Brain, Code, 
-  Database, Server, Shield, ArrowRight, CheckCircle2, Lock, Play, RotateCcw, Beaker, Wrench, Network, Cpu, X, Download
+  Database, Server, Shield, ArrowRight, CheckCircle2, Lock, Play, RotateCcw, Beaker, Wrench, Network, Cpu, X, Download,
+  Sparkles, Activity
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
