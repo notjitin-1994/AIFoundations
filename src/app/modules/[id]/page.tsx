@@ -122,7 +122,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  // Fallback for unbuilt modules
+  // Fallback for unknown modules
   const lesson = LESSONS[moduleId];
 
   if (!lesson) {

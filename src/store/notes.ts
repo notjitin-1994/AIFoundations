@@ -11,15 +11,18 @@ export interface Note {
 }
 
 interface NotesState {
+  userId: string | null;
   notes: Note[];
   saveNote: (moduleId: string, lessonIndex: number, slideIndex: number, content: string) => void;
   getNote: (moduleId: string, lessonIndex: number, slideIndex: number) => Note | undefined;
   clearAllNotes: () => void;
+  clearUserStore: (newUserId: string | null) => void;
 }
 
 export const useNotesStore = create<NotesState>()(
   persist(
     (set, get) => ({
+      userId: null,
       notes: [],
       saveNote: (moduleId, lessonIndex, slideIndex, content) => {
         set((state) => {
@@ -41,10 +44,17 @@ export const useNotesStore = create<NotesState>()(
       },
       clearAllNotes: () => {
         set({ notes: [] });
+      },
+      clearUserStore: (newUserId) => {
+        set({ userId: newUserId, notes: [] });
       }
     }),
     {
       name: 'aifoundations-notes',
+      partialize: (state) => ({
+        notes: state.notes,
+        userId: state.userId,
+      }),
     }
   )
 );

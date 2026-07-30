@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Foundations: Concept to Application
 
-## Getting Started
+**AI Foundations** is a custom, interactive e-learning web application designed to teach AI literacy to non-technical professionals. Instead of traditional video lectures, this project uses a highly interactive, voiceover-narrated slide deck engine built on Next.js 16 (App Router), React 19, and Framer Motion.
 
-First, run the development server:
+## 🚀 Features
+
+- **Custom Slide Engine (`CanvasViewer`)**: A bespoke interactive presentation engine with voiceover synchronization, GSAP timelines, and Framer Motion transitions.
+- **6 Comprehensive Modules**: From "The Intelligence Illusion" to "The Horizon", teaching concepts like tokens, context windows, RAG, and agentic workflows.
+- **Project-Based Learning**: Learners choose from 12 project templates in Module 0 and build upon them throughout the course.
+- **Rich Assessment System (`AssessmentRunner`)**: A built-in knowledge check engine powered by a centralized question bank.
+- **xAPI Integration**: Granular telemetry tracking learner progress, answers, and interactions to a Learning Record Store.
+- **Modern Tech Stack**: Next.js 16, React 19, Zustand (Persist), Shadcn UI, Tailwind CSS v4, GSAP, and Motion.
+
+## 📚 Key Documentation
+
+Before contributing to this codebase, you **must** read the following documents:
+
+1. **[AGENTS.md](./AGENTS.md)**: The canonical development guide and instruction set for AI agents (and human developers) working on this codebase.
+2. **[STYLE.md](./STYLE.md)**: The global design system, covering the "two-accent rule", glassmorphism ideology, and the critical "canvas-fit HARD rule".
+3. **[AI-Foundations-Concept2Application-Blueprint.md](./AI-Foundations-Concept2Application-Blueprint.md)**: The comprehensive course design blueprint detailing learning objectives and module structures.
+
+## 🛠️ Getting Started
+
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The main entry point for the course is `src/app/page.tsx` (Module 0) which routes into `src/app/modules/[id]/page.tsx` for Modules 1-6.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Architecture Overview
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/`: Next.js App Router (Layouts, pages, modules)
+- `src/components/lesson/`: Core lesson components (`CanvasViewer`, `AssessmentRunner`)
+- `src/components/modules/`: Slide definitions for each module (`m1` through `m6`)
+- `src/components/ui/`: Shadcn UI components
+- `src/store/`: Zustand stores for progress and narration state
+- `src/lib/`: Utilities, constants, and the `question-bank.ts`
+- `public/audio/`: Voiceover MP3s synced to slides
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Built for the AI-literate professional of tomorrow.*

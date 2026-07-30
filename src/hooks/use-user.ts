@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+import { useProgressStore } from "@/store/progress";
+import { useNotesStore } from "@/store/notes";
+
 export type { User };
 
 export function useUser() {
@@ -11,15 +14,33 @@ export function useUser() {
   const supabase = createClient();
 
   useEffect(() => {
+    const handleUserChange = (newUser: User | null) => {
+      setUser(newUser);
+      setIsLoading(false);
+      
+      const progressStore = useProgressStore.getState();
+      const notesStore = useNotesStore.getState();
+      
+      if (newUser) {
+        if (progressStore.userId !== newUser.id) {
+          progressStore.clearUserStore(newUser.id);
+          notesStore.clearUserStore(newUser.id);
+        }
+      } else {
+        if (progressStore.userId !== null) {
+          progressStore.clearUserStore(null);
+          notesStore.clearUserStore(null);
+        }
+      }
+    };
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setIsLoading(false);
+      handleUserChange(user);
     };
     getUser();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      handleUserChange(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);

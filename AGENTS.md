@@ -146,7 +146,7 @@ When the task matches a row above:
 
 ## 4. Authoring a new module
 
-When authoring a new module (e.g. the not-yet-built Modules 2–7) follow this sequence:
+When authoring any future extensions or new modules, follow this sequence:
 
 ### Step 1 — Course design first (master-instructional-design)
 
@@ -451,7 +451,7 @@ Per repo style — invoke the **`git-master`** skill for any non-trivial git wor
    stick with the slide-id-naming pattern.
 8. **Burning narration scripts and not producing the matching MP3.** Steel-thread the audio
    asset; an unreferenced narration script in TSX is meaningless to a learner.
-9. **Authoring Module 2–7 content without first invoking master-instructional-design** to
+9. **Authoring any new module content without first invoking master-instructional-design** to
    produce lesson-level objectives and storyboard.
 10. **Deleting or rewriting the blueprint document's planned-spec content.** The blueprint's
     "Built Implementation" subsection is additive — it documents *what shipped*, it does not

@@ -52,6 +52,7 @@ interface ProgressState {
   gamification: GamificationState;
 
   isEnrolled: boolean;
+  userId: string | null;
 
   setProjectSpine: (spine: ProjectSpine) => void;
   saveProjectSpineAnswer: (moduleId: string, answerData: ProjectSpineAnswerData) => void;
@@ -72,11 +73,13 @@ interface ProgressState {
   syncFromDB: (dbData: Partial<ProgressState>) => void;
   resetProgress: () => void;
   setEnrolled: (status: boolean) => void;
+  clearUserStore: (newUserId: string | null) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
   persist(
     (set) => ({
+      userId: null,
       completedModules: [],
       completedLessons: {},
       projectSpine: null,
@@ -322,6 +325,29 @@ export const useProgressStore = create<ProgressState>()(
           isEnrolled: status,
           lastUpdatedAt: new Date().toISOString()
         })),
+      clearUserStore: (newUserId) =>
+        set(() => ({
+          userId: newUserId,
+          completedModules: [],
+          completedLessons: {},
+          projectSpine: null,
+          projectSpineAnswers: {},
+          assessments: {},
+          activeLessonIndex: 0,
+          activeSlideIndex: 0,
+          totalSlidesInModule: 1,
+          activeModuleId: '0',
+          gamification: {
+            xp: 0,
+            badges: [],
+            toolsMastered: [],
+            totalTimeSpentSeconds: 0,
+            lastLoginDate: null,
+            currentStreak: 0,
+          },
+          lastUpdatedAt: new Date().toISOString(),
+          isEnrolled: false
+        })),
     }),
     {
       name: 'aifoundations-progress', // name of the item in the storage (must be unique)
@@ -334,6 +360,7 @@ export const useProgressStore = create<ProgressState>()(
         lastUpdatedAt: state.lastUpdatedAt,
         gamification: state.gamification,
         isEnrolled: state.isEnrolled,
+        userId: state.userId,
       }),
     }
   )

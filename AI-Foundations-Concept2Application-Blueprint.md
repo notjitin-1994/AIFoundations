@@ -24,16 +24,15 @@ This document is the **design blueprint**. The section "Built Implementation" in
 
 | Module | Spec | Built Implementation |
 |---|---|---|
-| 0 — Orientation | §4.1 | ✅ **Fully built** — 9-slide deck shipping in `src/app/page.tsx`. See §4.1 "Built Implementation". |
-| 1 — The Intelligence Illusion | §4.2 | ✅ **Built through the ML – Deep Learning – AI sections and the prompt/hallucination/bias closing arc** — 17-slide deck in `src/components/modules/m1/index.tsx`. See §4.2 "Built Implementation". |
-| 2 — The Goldfish Problem | §4.3 | ⏳ Not started — dynamic route falls through to a stub placeholder. |
-| 3 — The Toolbelt | §4.4 | ⏳ Not started. |
-| 4 — The Engine Room | §4.5 | ⏳ Not started. |
-| 5 — The Assembly Line | §4.6 | ⏳ Not started. |
-| 6 — The Local Sandbox | §4.7 | ⏳ Not started. |
-| 7 — The Horizon | §4.8 | ⏳ Not started. |
+| 0 — Orientation | §4.1 | ✅ **Fully built** — 9-slide deck in `src/app/page.tsx`. |
+| 1 — The Intelligence Illusion | §4.2 | ✅ **Fully built** — 17-slide deck in `src/components/modules/m1/index.tsx`. |
+| 2 — The Goldfish Problem | §4.3 | ✅ **Fully built** — 25-slide deck in `src/components/modules/m2/index.tsx`. |
+| 3 — The Toolbelt | §4.4 | ✅ **Fully built** — slide deck in `src/components/modules/m3/index.tsx`. |
+| 4 — The Engine Room | §4.5 | ✅ **Fully built** — slide deck in `src/components/modules/m4/index.tsx`. |
+| 5 — The Assembly Line | §4.6 | ✅ **Fully built** — capstone project slides in `src/components/modules/m5/index.tsx`. |
+| 6 — The Horizon | §4.7 | ✅ **Fully built** — final assessment & wrap-up in `src/components/modules/m6/index.tsx`. |
 
-Project templates shipped: 3 of 5 (Research Companion, Content Engine, Creative Studio). Per §8.1.
+Project templates shipped: 12 of 12 across 4 pillars. Per §8.1.
 
 The reusable `AssessmentRunner` component is in `src/components/lesson/assessment-runner.tsx`, fed by the question bank at `src/lib/question-bank.ts` (extended via `question-bank-extended-1.ts`). It supports four question types (multiple-choice, multiple-select, fill-blank, match-pairs), animated glass feedback overlays, per-module score breakdown, and xAPI statements for `attempted / answered / completed`.
 
@@ -129,7 +128,7 @@ The production process for this course follows the ADDIE instructional design mo
 | Packaging | Custom Web App / xAPI |
 | Target Audience | Non-technical adult learners |
 | Prerequisites | Basic computer literacy; no coding required |
-| Module Count | 8 (Modules 0–7) |
+| Module Count | 7 (Modules 0–6) |
 | Assessment | Lab checkpoints (xAPI), capstone rubric |
 
 ### 3.2 Module Sequence & Pedagogical Rationale
@@ -142,8 +141,7 @@ The production process for this course follows the ADDIE instructional design mo
 | 3 | The Toolbelt | Function calling, MCP, tools & capabilities | 2.0 hrs | Apply |
 | 4 | The Engine Room | Harness vs. model, agents, guardrails, orchestration | 2.0 hrs | Analyze, Apply |
 | 5 | The Assembly Line | Multi-step workflows, parallel agents, sub-labs | 3.0 hrs | Create |
-| 6 | The Local Sandbox | On-device AI, SLMs, local vs. cloud tradeoffs | 1.5 hrs | Understand |
-| 7 | The Horizon | Resource curation, continuous learning, capstone presentation | 2.5 hrs | Evaluate, Create |
+| 6 | The Horizon | Resource curation, continuous learning, capstone presentation | 2.5 hrs | Evaluate, Create |
 
 ### 3.3 Running Project Spine
 
@@ -285,7 +283,7 @@ Module 1 is shipped as a 17-slide `CanvasViewer` deck defined in `src/components
 | 1.4 Anatomy of a Prompt | slide 14 |
 | 1.5 Where AI Stumbles: Hallucinations and Bias | slides 15–16, plus closing quiz at slide 17 |
 
-**Built scope note (as of last build session):** the deck runs continuously from slide 1 through slide 17. Slides through `m1-generative-ai` (Transformer architecture) and `m1-next-token` (Next-Token Prediction) implement the AI-generation explanation arc; slide 13 (`LlmVsSlm`), 14 (Prompt Anatomy), 15 (Hallucination), 16 (Bias), and 17 (Module 1 final quiz) extend the deck into practical-use-of-LLMs territory. No content beyond these 17 slides has been authored for Module 1; Module 2 onwards is **not yet built** (the dynamic route falls through to a placeholder for any module other than 1).
+**Built scope note (as of last build session):** The deck runs continuously from slide 1 through slide 17. Slides through `m1-generative-ai` (Transformer architecture) and `m1-next-token` (Next-Token Prediction) implement the AI-generation explanation arc; slide 13 (`LlmVsSlm`), 14 (Prompt Anatomy), 15 (Hallucination), 16 (Bias), and 17 (Module 1 final quiz) extend the deck into practical-use-of-LLMs territory. Module 2 onwards are now **fully built**.
 
 ---
 
@@ -403,33 +401,7 @@ Each sub-lab ships with a Field Notes one-pager that is versioned separately fro
 
 ---
 
-### 4.7 Module 6: The Local Sandbox
-
-**Metaphor:** A sandbox is a safe, contained environment where you can experiment without consequences. This module treats local AI—running AI models on your own device rather than in the cloud—as a sandbox: a space where learners can explore the concepts of on-device AI without needing to set up complex hardware or software environments. The treatment is awareness-level only, providing conceptual understanding without hands-on setup requirements.
-
-**Learning Objectives**
-
-- Describe the capabilities and constraints of local AI at a conceptual level
-- Understand when local AI deployment makes sense and when cloud AI is preferable
-- Identify the hardware and software requirements for running AI locally
-
-**Lesson Breakdown**
-
-*Lesson 6.1: Why Run AI Locally?* — Three primary motivations: privacy (sensitive data never leaves the device), cost (no per-query API fees), and offline access (AI availability without internet connectivity). Each motivation is illustrated with a professional scenario.
-
-*Lesson 6.2: Small Language Models on Your Device* — Drawing on the Red Hat open source AI models article, Pinggy's guide to local LLM tools, and AI Magic X's on-device AI guide, this lesson explains how SLMs can be compressed through knowledge distillation and quantization (as documented by HuggingFace) to run on consumer hardware. The arXiv paper on edge-first language model inference (2505.16508) provides the research basis for understanding the performance tradeoffs.
-
-*Lesson 6.3: Tools for Running Local AI* — An awareness-level survey of popular tools including Ollama and RamaLama. Learners are not expected to install or configure these tools; the goal is to know they exist and understand their purpose.
-
-*Lesson 6.4: When Cloud Beats Local and Vice Versa* — A decision framework that helps learners evaluate whether a given use case is better served by local or cloud AI, considering factors like data sensitivity, model capability requirements, latency, and cost.
-
-**Key Concepts**
-
-On-device inference, SLMs, knowledge distillation, quantization, edge computing tradeoffs, Ollama, RamaLama, privacy benefits, offline access. *Estimated duration: 1.5 hours.*
-
----
-
-### 4.8 Module 7: The Horizon
+### 4.7 Module 6: The Horizon
 
 **Metaphor:** The horizon represents both the future and the limit of what we can see from our current vantage point. This module is about looking forward: curating a personal resource library for continued learning, developing strategies for staying current in a rapidly evolving field, and presenting the capstone project that demonstrates the learner's accumulated knowledge and skills.
 
@@ -442,11 +414,13 @@ On-device inference, SLMs, knowledge distillation, quantization, edge computing 
 
 **Lesson Breakdown**
 
-*Lesson 7.1: The Living Tool Landscape* — The Tool Landscape is a curated, versioned resource that lists current AI tools organized by category. Because the tool market evolves rapidly, this resource is maintained separately from the core course content and refreshed quarterly. Learners are introduced to the resource and encouraged to bookmark it for ongoing reference.
+*Lesson 6.1: LLMOps & The Reality of Production* — How to know if an LLM's output is actually good using LLM-as-a-Judge. Addressing prompt drift and edge cases.
 
-*Lesson 7.2: Building Your AI Learning Habit* — Practical strategies for continuous learning: subscribing to key newsletters, following thought leaders, participating in professional communities, and setting aside regular time for experimentation. The emphasis is on sustainable habits, not information overload.
+*Lesson 6.2: The Living Tool Landscape* — The landscape is evolving at a breakneck pace. Developing strategies for filtering the noise and focusing on durable paradigms. 
 
-*Lesson 7.3: Capstone Project Presentations* — Learners present their completed running project, demonstrating how they applied each module's concepts to their chosen template. The presentation is structured as a recorded walkthrough with reflection on design decisions, challenges encountered, and lessons learned.
+*Lesson 6.3: The Final Assessment* — Comprehensive final assessment to evaluate the journey from concept to application.
+
+*Lesson 6.4: Course Retrospect & Next Steps* — Graduation and final reflection on the journey.
 
 *Lesson 7.4: Course Retrospect and Next Steps* — A guided reflection exercise where learners review their self-assessment from Module 0, identify how their understanding has evolved, and articulate their next learning goals. This lesson closes the learning loop, providing a sense of accomplishment and a clear path forward.
 
