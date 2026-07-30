@@ -15,6 +15,7 @@ import {
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
 import { COURSE_MODULES } from "@/lib/course-data";
+import { wipeDatabaseProgress } from "@/actions/sync-progress";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -32,6 +33,7 @@ export default function CourseDashboardPage() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -99,7 +101,9 @@ export default function CourseDashboardPage() {
   else if (xp >= 1000 && badgesCount >= 3) learnerRank = "Advanced AI Architect";
   else if (xp >= 500) learnerRank = "AI Builder";
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
+    setIsRestarting(true);
+    await wipeDatabaseProgress();
     progress.resetProgress();
     router.push("/modules/0");
   };
@@ -179,10 +183,12 @@ export default function CourseDashboardPage() {
                 <Play className="w-4 h-4 fill-current" />
                 {!hasStarted ? "Start Course" : "Continue Course"}
               </button>
-              <button onClick={handleRestart} className="px-6 py-3 rounded-full bg-zinc-800 text-white font-medium text-sm hover:bg-zinc-700 transition-all flex items-center gap-2">
-                <RotateCcw className="w-4 h-4" />
-                Restart Course
-              </button>
+              {hasStarted && (
+                <button onClick={handleRestart} disabled={isRestarting} className="px-6 py-3 rounded-full bg-zinc-800 text-white font-medium text-sm hover:bg-zinc-700 transition-all flex items-center gap-2">
+                  <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
+                  {isRestarting ? "Restarting..." : "Restart Course"}
+                </button>
+              )}
               {(completedCount === totalModules || gamification.badges.includes('certified')) && (
                 <button onClick={() => router.push('/certificate')} className="px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/30 font-bold text-sm hover:border-primary/60 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] transition-all flex items-center gap-2">
                   <Trophy className="w-4 h-4 fill-primary/20" />

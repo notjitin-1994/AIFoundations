@@ -59,14 +59,40 @@ export async function fetchModuleProgress() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data } = await supabase
-      .from("module_progress")
-      .select("*")
-      .eq("user_id", user.id);
-
+    const { data, error } = await supabase.from("module_progress").select("*").eq("user_id", user.id);
+    if (error) {
+      console.error("fetchModuleProgress error:", error);
+      return null;
+    }
     return data;
   } catch (err) {
     console.error("fetchModuleProgress exception:", err);
     return null;
+  }
+}
+
+/**
+ * Wipes the learner's module progress from the database.
+ * Certificate data is stored in the 'certificates' table and is unaffected.
+ */
+export async function wipeDatabaseProgress() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, reason: "Not authenticated" };
+
+    const { error } = await supabase
+      .from("module_progress")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("wipeDatabaseProgress error:", error);
+      return { success: false, reason: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error("wipeDatabaseProgress exception:", err);
+    return { success: false, reason: "Internal error" };
   }
 }
