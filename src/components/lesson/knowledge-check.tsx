@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
+import { useProgressStore } from "@/store/progress";
 
 export interface KnowledgeCheckQuestion {
   prompt: string;
@@ -13,31 +14,39 @@ export interface KnowledgeCheckQuestion {
 }
 
 export interface KnowledgeCheckProps {
+  id?: string;
   title?: string;
   description?: string;
   questions: KnowledgeCheckQuestion[];
   onComplete?: () => void;
   successHeadline?: string;
   successSubline?: string;
+  isCompleted?: boolean;
 }
 
 const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export function KnowledgeCheck({
+  id,
   title = "Knowledge Check",
   description = "You must answer every question correctly to continue.",
   questions,
   onComplete,
   successHeadline = "Assessment Complete!",
   successSubline = "You've successfully demonstrated your understanding of this section.",
+  isCompleted,
 }: KnowledgeCheckProps) {
   const reduce = useReducedMotion();
   const { setNavOverride } = useCanvasNav();
+  const { assessments, saveAssessmentState } = useProgressStore();
+  const savedState = id ? assessments[id] : null;
+
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [status, setStatus] = useState<"answering" | "feedback">("answering");
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
+  const [initiallyCompleted] = useState(!!isCompleted || (savedState ? savedState.passed : false));
 
   const total = questions.length;
   const q = useMemo(() => questions[currentQ], [questions, currentQ]);
@@ -66,7 +75,20 @@ export function KnowledgeCheck({
   }
 
   useEffect(() => {
+    if (initiallyCompleted) {
+      // If already completed, just clear any nav override and report onComplete so CanvasViewer knows
+      if (onComplete) onComplete();
+      setNavOverride(null);
+      return;
+    }
     if (quizFinished) {
+      if (id) {
+        saveAssessmentState(id, {
+          passed: true,
+          currentIdx: total - 1,
+          answers: {},
+        });
+      }
       if (onComplete) onComplete();
       setNavOverride(null);
       return;
@@ -86,7 +108,49 @@ export function KnowledgeCheck({
     }
     return () => setNavOverride(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQ, selected, status, quizFinished, onComplete]);
+  }, [currentQ, selected, status, quizFinished, initiallyCompleted, onComplete]);
+
+  if (initiallyCompleted) {
+    return (
+      <div className="w-full h-full flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6 shrink-0 border-b border-white/10 pb-4">
+           <div>
+             <h2 className="text-sm md:text-base font-bold text-emerald-500 tracking-widest uppercase">
+               {successHeadline}
+             </h2>
+             <p className="text-xs text-muted-foreground mt-1">Review your answers below.</p>
+           </div>
+           <div className="text-emerald-500 font-medium bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 text-xs shrink-0 flex items-center gap-2">
+             <CheckCircle2 className="w-3 h-3" />
+             Completed
+           </div>
+        </div>
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pr-4 pb-12 custom-scrollbar">
+          {questions.map((question, i) => (
+            <div key={i} className="bg-card/40 border border-border/50 rounded-2xl p-5 md:p-6">
+              <h3 className="text-base md:text-lg font-bold mb-4">{i + 1}. {question.prompt}</h3>
+              <div className="space-y-2 mb-4">
+                {question.options.map((opt, j) => {
+                  const isCorrectAnswer = j === question.correctIndex;
+                  return (
+                    <div key={j} className={`p-3 rounded-xl border flex gap-3 ${isCorrectAnswer ? "border-emerald-500/50 bg-emerald-500/10" : "border-border/30 bg-black/20 opacity-50"}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 shrink-0 text-sm ${isCorrectAnswer ? "border-emerald-500 bg-emerald-500 text-emerald-950" : "border-border/50 text-muted-foreground"}`}>
+                        {String.fromCharCode(65 + j)}
+                      </div>
+                      <span className={isCorrectAnswer ? "text-emerald-400 font-medium" : "text-muted-foreground"}>{opt}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-sm text-muted-foreground bg-black/30 p-4 rounded-xl border border-white/5">
+                 <strong className="text-foreground">Explanation:</strong> {question.explanation}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (quizFinished) {
     return (
@@ -140,7 +204,7 @@ export function KnowledgeCheck({
                 {q.prompt}
               </h3>
 
-              <div className="space-y-2.5 w-full flex-1 overflow-y-auto min-h-0">
+              <div className="space-y-2.5 w-full flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                 {q.options.map((opt, i) => {
                   const isSelected = selected === i;
                   const isCorrectOption = status === "feedback" && i === q.correctIndex;
@@ -248,28 +312,16 @@ export function KnowledgeCheck({
                       className={`rounded-full ${isCorrect ? 'h-10 w-10 flex items-center justify-center' : 'px-6 py-2'} font-semibold text-sm transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                         isCorrect
                           ? "bg-emerald-500 hover:bg-emerald-600 text-emerald-950"
-                          : "bg-destructive hover:bg-destructive/85 text-destructive-foreground"
+                          : "bg-muted hover:bg-muted/80 text-foreground"
                       }`}
                     >
-                      {isCorrect ? <ArrowRight className="w-5 h-5" /> : "Retry"}
+                      {isCorrect ? <ArrowRight className="w-5 h-5" /> : "Try Again"}
                     </button>
                   </div>
 
-                  <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    {isCorrect
-                      ? "Great job! Let's review why this is the right answer."
-                      : "That's not the right answer. Please review the explanation and try again."}
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    {q.explanation}
                   </p>
-
-                  <motion.div
-                    initial={reduce ? false : { opacity: 0, transform: "translateY(4px)" }}
-                    animate={{ opacity: 1, transform: "translateY(0)" }}
-                    transition={{ duration: reduce ? 0 : 0.3, ease: easeOutQuart, delay: 0.1 }}
-                    className="bg-muted/40 border border-border/50 rounded-2xl p-5 mt-4"
-                  >
-                    <h4 className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">Explanation</h4>
-                    <p className="text-[15px] text-foreground/90 leading-relaxed">{q.explanation}</p>
-                  </motion.div>
                 </div>
               </div>
             </motion.div>

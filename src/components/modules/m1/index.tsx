@@ -808,9 +808,11 @@ const WHAT_AI_ASSESSMENT_QUESTIONS: KnowledgeCheckQuestion[] = [
   },
 ];
 
-function Assessment1({ onComplete }: { onComplete?: () => void }) {
+function Assessment1({ onComplete, isCompleted }: { onComplete?: () => void; isCompleted?: boolean }) {
   return (
     <KnowledgeCheck
+      id="m1-assessment-1"
+      isCompleted={isCompleted}
       title="What AI Is · AGI vs. Narrow AI · Next-Token Prediction"
       description="Ten questions on the Intelligence Illusion, AGI versus Narrow AI, the Turing Test, the Chinese Room experiment, and Next-Token Prediction. You must answer every question correctly to continue."
       questions={WHAT_AI_ASSESSMENT_QUESTIONS}
@@ -1347,9 +1349,11 @@ const ML_DNN_LLM_ASSESSMENT_QUESTIONS: KnowledgeCheckQuestion[] = [
   },
 ];
 
-function MlDnnLlmAssessment({ onComplete }: { onComplete?: () => void }) {
+function MlDnnLlmAssessment({ onComplete, isCompleted }: { onComplete?: () => void; isCompleted?: boolean }) {
   return (
     <KnowledgeCheck
+      id="m1-ml-dnn-llm-assessment"
+      isCompleted={isCompleted}
       title="ML · Deep Learning · LLMs & SLMs"
       description="Ten questions on Machine Learning, Deep Learning, Neural Networks, Transformers, and the LLM vs SLM trade-off. You must answer every question correctly to continue."
       questions={ML_DNN_LLM_ASSESSMENT_QUESTIONS}
@@ -1985,7 +1989,7 @@ function BiasInAI() {
 }
 
 // 10. Knowledge Check
-function Module1Quiz({ onComplete }: { onComplete: () => void }) {
+function Module1Quiz({ onComplete, isCompleted }: { onComplete?: () => void; isCompleted?: boolean }) {
   const questions: KnowledgeCheckQuestion[] = [
     // ── What is AI / The Intelligence Illusion (Q1-4) ──
     {
@@ -2225,6 +2229,8 @@ function Module1Quiz({ onComplete }: { onComplete: () => void }) {
 
   return (
     <KnowledgeCheck
+      id="m1-quiz"
+      isCompleted={isCompleted}
       title="Prompt Anatomy · Hallucinations · AI Bias · Module 1 Synthesis"
       description="Twenty questions covering Prompt Anatomy, Hallucination Risks, Bias in AI, and a synthesis of all Module 1 foundations. You must answer every question correctly to proceed."
       questions={questions}
@@ -2487,6 +2493,13 @@ function ProjectApplicationSlide({ onComplete }: { onComplete?: () => void }) {
         onNextStep();
         if (step === 6) defaultNext();
       },
+      onPrev: (defaultPrev) => {
+        if (step > 0) {
+          setStep(step - 1);
+        } else {
+          defaultPrev();
+        }
+      }
     });
     return () => setNavOverride(null);
   }, [step, rolePrompt, taskPrompt, contextPrompt, constraintPrompt, tempChoice, hallucinationNote, onComplete, setNavOverride, track, spineKey, spineName, saveProjectSpineAnswer]);
@@ -3146,7 +3159,7 @@ export const MODULE_1_SLIDES: Slide[] = [
   { id: "m1-video-whatis", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, component: (mark) => <VideoSlide url="https://www.youtube.com/watch?v=G2fqAlgmoPo" onComplete={mark} />, narrationText: "To break the intelligence illusion, we first need a shared understanding of how these models operate under the hood. This primer from Google Cloud Tech provides the perfect technical foundation. Please watch it before we continue." },
   { id: "m1-timeline", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TimelineOfAI onComplete={mark} />, narrationText: "" },
   { id: "m1-hollywood", type: "interactive", lessonIndex: 0, fullWidth: true, hasCustomAudio: true, requireCompletion: true, component: (mark) => <HollywoodVsReality onComplete={mark} />, narrationText: "It's critical to separate the Hollywood fantasy from reality. On one hand, we have Artificial General Intelligence, or AGI. In movies, this is depicted as sentient and self-aware, possessing human-like reasoning, and capable of performing any intellectual task. Currently, this remains science fiction. On the other hand, we have Narrow AI, which is what we use today. Narrow AI relies on highly specialized pattern matching, has absolutely no consciousness or intent, and is trained on specific datasets for specific tasks." },
-  { id: "m1-assessment-1", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, component: (mark) => <Assessment1 onComplete={mark} />, narrationText: "Before we move on to how machines actually learn, let's verify your understanding of what AI is and what it isn't. You must answer all questions correctly to proceed. Good luck!" },
+  { id: "m1-assessment-1", type: "interactive", lessonIndex: 0, fullWidth: true, requireCompletion: true, component: (mark, isCompleted) => <Assessment1 onComplete={mark} isCompleted={isCompleted} />, narrationText: "Before we move on to how machines actually learn, let's verify your understanding of what AI is and what it isn't. You must answer all questions correctly to proceed. Good luck!" },
   { id: "m1-ml-intro", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <MachineLearningIntroSlide onComplete={mark} />, narrationText: "Instead of programming explicit rules, we give machines data and let them discover the patterns themselves through three main approaches. This is the foundation of Machine Learning. It shifts the paradigm from writing code that solves a problem, to writing code that learns how to solve a problem by observing examples." },
   { id: "m1-ml-supervised", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <SupervisedLearningSlide onComplete={mark} />, narrationText: "The first approach is Supervised Learning. Think of this as the Classroom with an Answer Key. The model is given a dataset where every example is clearly labeled—like teaching a child with flashcards: 'This is a cat', 'This is a dog'. The machine learns to map the inputs to the known outputs, allowing it to predict answers for new, unseen data." },
   { id: "m1-ml-unsupervised", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <UnsupervisedLearningSlide onComplete={mark} />, narrationText: "The second approach is Unsupervised Learning. Imagine you are a Library Archeologist handed a massive pile of uncategorized, disorganized documents with no labels or answer key. Your job is to read through them and identify similarities to group them into logical clusters. This is exactly what the AI does—it finds hidden structures and patterns in raw data entirely on its own." },
@@ -3155,10 +3168,10 @@ export const MODULE_1_SLIDES: Slide[] = [
   { id: "m1-generative-ai", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <TransformersSlide onComplete={mark} />, narrationText: "How do these neural networks actually understand and generate text? The breakthrough came with the Transformer architecture. Instead of reading words one by one in order, the Transformer uses an 'attention mechanism' to look at the entire sequence of words simultaneously. It learns which words are contextually related to each other, no matter how far apart they are in a sentence. This massive leap in contextual understanding is what powers today's Generative AI." },
   { id: "m1-next-token", type: "interactive", lessonIndex: 1, fullWidth: true, requireCompletion: true, hasCustomAudio: true, component: (mark) => <NextTokenSlide onComplete={mark} />, narrationText: "At its absolute core, an AI like ChatGPT does not think; it predicts. It is a highly sophisticated probability engine running Next-Token Prediction. When you give it a prompt, it calculates the mathematical probability of what the very next fragment of a word—a token—should be. It selects it, adds it to the sequence, and runs the entire calculation again. Furthermore, you can control this math. The 'Temperature' setting controls randomness—a low temperature forces the safest, most likely word, while a high temperature allows for risk and creativity. Similarly, 'Top-P' restricts the pool of possible words to only the top percentage of likely candidates. Mastering these controls allows you to shape the AI's behavior." },
   { id: "m1-llm-vs-slm", type: "interactive", lessonIndex: 2, fullWidth: true, component: <LlmVsSlm />, narrationText: "Not all models need to know everything. Let's compare Large Language Models with Small Language Models. LLMs, like GPT-5.6 or Claude Sonnet 5, are massive models with hundreds of billions of parameters. They require entire data centers to run. They have vast knowledge breadth, but computing costs are high, and your data privacy means information leaves your device. Conversely, SLMs, like Phi-4 or Gemma 4, are efficient models designed to run locally on your phone or laptop. Their knowledge breadth is more focused, but computing costs are extremely low, and your data stays completely local, ensuring maximum privacy." },
-  { id: "m1-ml-dnn-llm-assessment", type: "interactive", lessonIndex: 2, fullWidth: true, requireCompletion: true, component: (mark) => <MlDnnLlmAssessment onComplete={mark} />, narrationText: "Now it's time to check your understanding of the machine learning, deep learning, neural networks, transformers, and LLMs and SLMs section. You will be asked ten questions. You must answer every question correctly to continue. Take your time and read each question carefully." },
+  { id: "m1-ml-dnn-llm-assessment", type: "interactive", lessonIndex: 2, fullWidth: true, requireCompletion: true, component: (mark, isCompleted) => <MlDnnLlmAssessment onComplete={mark} isCompleted={isCompleted} />, narrationText: "Now it's time to check your understanding of the machine learning, deep learning, neural networks, transformers, and LLMs and SLMs section. You will be asked ten questions. You must answer every question correctly to continue. Take your time and read each question carefully." },
   { id: "m1-anatomy", type: "interactive", lessonIndex: 3, fullWidth: true, requireCompletion: true, component: (mark) => <AnatomyOfPrompt onComplete={mark} />, narrationText: "How do we communicate with these models? We use Prompt Engineering to guide the context window. A perfect prompt typically has four anatomical parts. First, the Role: setting the persona, like 'You are an expert instructional designer.' This heavily weights the statistical model towards vocabulary and concepts associated with this role. Second, the Task: the specific action you want the AI to perform, like 'Write a 3-question multiple choice quiz'. Third, the Context: background information that prevents the model from making incorrect assumptions, such as 'The audience is adult learners'. And fourth, Constraints: strict boundaries on the output format, length, or tone, like 'Output only valid JSON'. Click through each one to explore." },
   { id: "m1-hallucination", type: "interactive", lessonIndex: 4, fullWidth: true, component: <HallucinationSlide />, narrationText: "Because models are just predicting the next most likely token, they can sometimes invent facts entirely. We call this a hallucination. For example, if you ask 'What is the population of Mars?', an AI might respond: 'The current population of Mars is approximately 4,200 research scientists and engineers.' This is factually incorrect. There is no human population on Mars. The model successfully predicted structurally sound English sentences that sounded highly plausible, but completely lacked factual grounding. Always remember: the AI generates, but you evaluate." },
   { id: "m1-bias", type: "interactive", lessonIndex: 4, fullWidth: true, component: <BiasInAI />, narrationText: "AI models learn from human data, making them a mirror of our systemic flaws. If the internet training data contains historical biases—like 'The CEO walked into his office' or 'The nurse checked her patient'—the model will reproduce them. When you prompt the trained AI to write a story about a CEO and a nurse, it will often automatically assign 'he' to the CEO and 'her' to the nurse. This reflects the statistical bias in its training data, not factual rules. We must be constantly vigilant of these inherited biases in AI generation." },
-  { id: "m1-quiz", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <Module1Quiz onComplete={mark} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of everything covered in this module — from what AI actually is, through machine learning types, neural networks, transformers, next-token prediction, LLMs versus SLMs, prompt anatomy, hallucinations, and bias. This final assessment has 20 questions covering all Module 1 lessons. Take your time, read each question carefully, and answer all correctly to proceed." },
+  { id: "m1-quiz", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark, isCompleted) => <Module1Quiz onComplete={mark} isCompleted={isCompleted} />, narrationText: "Now that we've demystified the intelligence illusion, let's check your understanding of everything covered in this module — from what AI actually is, through machine learning types, neural networks, transformers, next-token prediction, LLMs versus SLMs, prompt anatomy, hallucinations, and bias. This final assessment has 20 questions covering all Module 1 lessons. Take your time, read each question carefully, and answer all correctly to proceed." },
   { id: "m1-project-application", type: "interactive", lessonIndex: 4, fullWidth: true, requireCompletion: true, component: (mark) => <ProjectApplicationSlide onComplete={mark} />, narrationText: "You've proven your knowledge — now let's apply it. Using the four-part prompt anatomy you learned — Role, Task, Context, and Constraints — write a real prompt for your chosen project. Choose the right temperature setting for your use case, and identify the hallucination risk you need to watch for. This is where Module 1 moves from theory to practice." }
 ];

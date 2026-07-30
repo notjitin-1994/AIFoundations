@@ -51,7 +51,7 @@ export interface Slide {
   id: string;
   type: "content" | "interactive";
   content?: string;
-  component?: React.ReactNode | ((markCompleted: () => void) => React.ReactNode);
+  component?: React.ReactNode | ((markCompleted: () => void, isCompleted: boolean) => React.ReactNode);
   lessonIndex?: number;
   requireCompletion?: boolean;
   fullWidth?: boolean;
@@ -190,20 +190,30 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     });
   }, [currentIndex]);
 
+  const [lastSeenLessonParam, setLastSeenLessonParam] = useState(lessonParam);
+
+  // Reset entirely if the module changes (e.g. from Module 1 to Module 2)
   useEffect(() => {
-    const currentLesson = slides[currentIndex]?.lessonIndex;
-    const targetLessonIndex = lessonParam !== null ? parseInt(lessonParam, 10) : null;
-    
-    if (targetLessonIndex !== null && !isNaN(targetLessonIndex)) {
-      if (currentLesson !== targetLessonIndex) {
-        setCurrentIndex(initialIndex);
-        setHasInteracted(true);
+    setCurrentIndex(initialIndex);
+    setHasInteracted(initialIndex > 0);
+    setLastSeenLessonParam(lessonParam);
+    setCompletedSlides({});
+  }, [moduleId]);
+
+  // Only jump to a new lesson index if the URL param actually changed via Next.js router
+  useEffect(() => {
+    if (lessonParam !== lastSeenLessonParam) {
+      setLastSeenLessonParam(lessonParam);
+      const targetLessonIndex = lessonParam !== null ? parseInt(lessonParam, 10) : null;
+      if (targetLessonIndex !== null && !isNaN(targetLessonIndex)) {
+        const index = slides.findIndex(s => s.lessonIndex === targetLessonIndex);
+        if (index !== -1) {
+          setCurrentIndex(index);
+          setHasInteracted(true);
+        }
       }
-    } else if (lessonParam === null && currentIndex !== 0) {
-      // If there is no lessonParam, but we're not at 0, don't reset unless we actually started with no param
-      // Actually, standard behavior is just do nothing if they remove the param manually
     }
-  }, [lessonParam, initialIndex]);
+  }, [lessonParam, lastSeenLessonParam, slides]);
 
   useEffect(() => {
     const slide = slides[currentIndex];
@@ -475,7 +485,10 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                     </div>
                   ) : (
                     typeof slides[currentIndex].component === "function"
-                      ? (slides[currentIndex].component as (markCompleted: () => void) => React.ReactNode)(markCompleted)
+                      ? (slides[currentIndex].component as (markCompleted: () => void, isCompleted: boolean) => React.ReactNode)(
+                          markCompleted,
+                          !!completedSlides[currentIndex] || isAlreadyCompleted
+                        )
                       : slides[currentIndex].component
                   )}
                 </div>
@@ -628,7 +641,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                   !hasInteracted && currentIndex === 0 
                     ? "px-4 space-x-2 bg-primary text-primary-foreground hover:bg-primary/90" 
                     : narration.isFinished
-                      ? "px-4 space-x-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                      ? "px-4 space-x-2 bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 font-semibold"
                       : narration.isPlaying 
                         ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
                         : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -637,8 +650,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
               >
                 {narration.isFinished ? (
                   <>
-                    <RotateCcw className="w-4 h-4" />
-                    <span className="font-medium text-sm pr-1 text-inherit">Replay</span>
+                    <RotateCcw className="w-[18px] h-[18px] mr-1.5" strokeWidth={2.5} />
+                    <span className="font-semibold text-[15px] pr-1 tracking-wide">Replay</span>
                   </>
                 ) : narration.isPlaying ? (
                   <Pause className="w-4 h-4 fill-current" />
