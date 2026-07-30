@@ -5,7 +5,7 @@ import { ClipboardCheck } from "lucide-react";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 
 export function AssessmentIntroSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
 
@@ -37,6 +37,13 @@ export function AssessmentIntroSlide({ onComplete }: { onComplete?: () => void }
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

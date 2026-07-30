@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 
 export function ForgotNameSlide() {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
 
@@ -48,6 +48,13 @@ export function ForgotNameSlide() {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

@@ -99,7 +99,7 @@ const PANEL_CONTENT = [
 ];
 
 export function LifecycleSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -150,6 +150,13 @@ export function LifecycleSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // ── Nav override ───────────────────────────────────────────────────────────
   useEffect(() => {

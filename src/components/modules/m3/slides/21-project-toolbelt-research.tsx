@@ -21,7 +21,7 @@ const PROJECTS: Record<string, { title: string, description: string }> = {
 };
 
 export function ProjectToolbeltResearchSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const { projectSpine } = useProgressStore();
   const [copied, setCopied] = useState(false);
@@ -45,6 +45,13 @@ export function ProjectToolbeltResearchSlide({ onComplete }: { onComplete?: () =
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

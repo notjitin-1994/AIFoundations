@@ -6,7 +6,7 @@ import { Terminal, Wrench, AlertTriangle, Target, ArrowRight } from "lucide-reac
 import { cn } from "@/lib/utils";
 
 export function NaiveExecutionSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   
   const [activeStep, setActiveStep] = useState(0);
@@ -39,6 +39,13 @@ export function NaiveExecutionSlide({ onComplete }: { onComplete?: () => void })
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     const isDone = activeStep === 4;

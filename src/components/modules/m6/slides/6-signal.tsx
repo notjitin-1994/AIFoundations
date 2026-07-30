@@ -42,7 +42,7 @@ const SIGNAL_ITEMS = [
 // ─── component ───────────────────────────────────────────────────────────────
 
 export function SignalSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -124,6 +124,13 @@ export function SignalSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // ── nav override ───────────────────────────────────────────────────────────
   useEffect(() => {

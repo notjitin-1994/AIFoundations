@@ -25,7 +25,7 @@ const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any
 
 // 1. Title Slide
 function TitleSlide() {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -66,6 +66,13 @@ function TitleSlide() {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -190,7 +197,7 @@ function TitleSlide() {
 
 // 2. Video Slide
 function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -222,6 +229,12 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
       else tl.current.pause();
     }
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && ctaRef.current) {
@@ -308,7 +321,7 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
   const [unlockedIdx, setUnlockedIdx] = useState(0);
   const [introFinished, setIntroFinished] = useState(false);
   const [waitingForInteraction, setWaitingForInteraction] = useState(false);
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -408,6 +421,12 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
       audioRef.current.pause();
     }
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   const handleNodeClick = (idx: number) => {
     if (idx <= unlockedIdx) {
@@ -532,7 +551,7 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
 // 4. Hollywood vs Reality
 function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
   const [t, setT] = useState(0);
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -568,6 +587,12 @@ function HollywoodVsReality({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   const cardVariant: any = {
     hidden: { opacity: 0, y: 40, scale: 0.95, filter: "blur(15px)" },
@@ -826,7 +851,7 @@ function Assessment1({ onComplete, isCompleted }: { onComplete?: () => void; isC
 // 6.0 ML Intro (Minimal & Premium)
 function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) {
   const [t, setT] = useState(0);
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -853,6 +878,12 @@ function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) 
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(()=>{});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // Emil Design Eng: Spring config for natural physics
   const spring: any = { type: "spring", stiffness: 90, damping: 20 };
@@ -917,7 +948,7 @@ function MachineLearningIntroSlide({ onComplete }: { onComplete?: () => void }) 
 
 // 6.1-6.3 ML Core Concepts
 function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, definition, analogy, audioId, duration, timings, onComplete }: any) {
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -964,6 +995,12 @@ function MLConceptSlideBase({ title, icon: Icon, color, bg, border, image, defin
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
@@ -1035,7 +1072,7 @@ function LlmVsSlm() {
   const reduce = useReducedMotion();
   const easeDrawer: [number, number, number, number] = [0.32, 0.72, 0, 1];
   
-  const { progress, currentTrackId } = useNarrationStore();
+  const { progress, currentTrackId, seekTime } = useNarrationStore();
   const hasAutoSwitched = useRef(false);
 
   useEffect(() => {
@@ -1371,7 +1408,7 @@ function AnatomyOfPrompt({ onComplete }: { onComplete: () => void }) {
   const reduce = useReducedMotion();
   const easeOutQuart: [number, number, number, number] = [0.16, 1, 0.3, 1];
   const { setNavOverride } = useCanvasNav();
-  const { isFinished } = useNarrationStore();
+  const { isFinished, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const { projectSpine } = useProgressStore();
 
@@ -1722,7 +1759,7 @@ function StreamedResponse({ showError }: { showError: boolean }) {
 
 // 8. Hallucinations
 function HallucinationSlide() {
-  const { progress, currentTrackId } = useNarrationStore();
+  const { progress, currentTrackId, seekTime } = useNarrationStore();
   
   const [showPrompt, setShowPrompt] = useState(false);
   const [showResponse, setShowResponse] = useState(false);
@@ -2782,7 +2819,7 @@ function ProjectApplicationSlide({ onComplete }: { onComplete?: () => void }) {
 
 // 6.5 Deep Learning & Neural Networks
 function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -2812,6 +2849,12 @@ function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
@@ -2855,7 +2898,7 @@ function NeuralNetworksSlide({ onComplete }: { onComplete?: () => void }) {
 
 // 6.6 Transformers & Attention
 function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -2885,6 +2928,12 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-6 max-w-6xl mx-auto overflow-hidden relative">
@@ -2928,7 +2977,7 @@ function TransformersSlide({ onComplete }: { onComplete?: () => void }) {
 
 // 6.7 Next-Token Prediction Simulator
 function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, play, pause, finish } = useNarrationStore();
+  const { isPlaying, play, pause, finish, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sliderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3034,6 +3083,12 @@ function NextTokenSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying && audioRef.current.paused) audioRef.current.play().catch(() => {});
     else if (!isPlaying && !audioRef.current.paused) audioRef.current.pause();
   }, [isPlaying]);
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (sliderTimeoutRef.current) clearTimeout(sliderTimeoutRef.current);

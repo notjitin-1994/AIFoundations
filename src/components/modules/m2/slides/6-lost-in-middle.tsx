@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { AlertCircle } from "lucide-react";
 
 export function LostInMiddleSlide() {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -40,6 +40,13 @@ export function LostInMiddleSlide() {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden p-6 md:p-10 max-w-6xl mx-auto relative">

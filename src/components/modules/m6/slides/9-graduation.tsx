@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Award } from "lucide-react";
 
 export function GraduationSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { projectSpine, markModuleComplete, markLessonComplete } = useProgressStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
@@ -36,6 +36,13 @@ export function GraduationSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   const router = useRouter();
 

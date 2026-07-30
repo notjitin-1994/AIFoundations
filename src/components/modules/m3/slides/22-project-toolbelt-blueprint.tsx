@@ -7,7 +7,7 @@ import { useLRS } from "@/hooks/use-lrs";
 import { PenTool, Server, Wrench, FileCode2 } from "lucide-react";
 
 export function ProjectToolbeltBlueprintSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
   const { projectSpineAnswers, saveProjectSpineAnswer } = useProgressStore();
@@ -33,6 +33,13 @@ export function ProjectToolbeltBlueprintSlide({ onComplete }: { onComplete?: () 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // Hook into canvas nav
   useEffect(() => {

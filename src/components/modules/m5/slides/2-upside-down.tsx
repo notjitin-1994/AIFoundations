@@ -6,7 +6,7 @@ import { TemplateData } from "@/lib/m5-template-data";
 import { ArrowDown, Layers, Wrench, FileText, Sparkles, Database, ArrowUp } from "lucide-react";
 
 export function UpsideDownSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -52,6 +52,13 @@ export function UpsideDownSlide({ data, onComplete }: { data: TemplateData, onCo
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

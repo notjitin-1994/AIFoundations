@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { Database, Workflow, Shield, Plug, ArrowRight } from "lucide-react";
 
 export function MCPTeaserSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -33,6 +33,13 @@ export function MCPTeaserSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) onComplete();

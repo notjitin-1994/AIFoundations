@@ -7,7 +7,7 @@ import { ShieldAlert, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Cpu } f
 import { cn } from "@/lib/utils";
 
 export function VerificationSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
   
@@ -54,6 +54,13 @@ export function VerificationSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // Handle the ticking API bill during step 2
   useEffect(() => {

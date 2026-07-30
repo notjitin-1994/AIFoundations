@@ -12,6 +12,8 @@ interface NarrationState {
   setProgress: (progress: number) => void;
   finish: () => void;
   reset: () => void;
+  seekTime: number | null;
+  seek: (time: number) => void;
 }
 
 export const useNarrationStore = create<NarrationState>((set) => ({
@@ -36,5 +38,7 @@ export const useNarrationStore = create<NarrationState>((set) => ({
   }),
   setProgress: (progress) => set({ progress }),
   finish: () => set({ isPlaying: false, progress: 100, isFinished: true }),
-  reset: () => set({ isPlaying: false, currentTrackId: null, durationMs: 0, progress: 0, isFinished: false }),
+  reset: () => set({ isPlaying: false, currentTrackId: null, durationMs: 0, progress: 0, isFinished: false, seekTime: null }),
+  seekTime: null,
+  seek: (time) => set({ seekTime: time }),
 }));

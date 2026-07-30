@@ -1,3 +1,18 @@
+export const PROJECT_SPINES: Record<string, string> = {
+  bi_dashboard: 'Dynamic BI Dashboard',
+  dynamic_onboarding: 'Conversational Onboarding',
+  hitl_control_center: 'Human-in-the-Loop Control Center',
+  os_assistant: 'OS-Level Workflow Assistant',
+  edge_health_coach: 'Edge-AI Health Coach',
+  internal_rag_agent: 'Enterprise Knowledge Navigator',
+  synthetic_podcast_generator: 'Synthetic Podcast Generator',
+  viral_clip_engine: 'Longform-to-Viral Clip Engine',
+  global_localization: 'Zero-Touch Localization Engine',
+  multichannel_repurposing: 'Omnichannel Content Repurposer',
+  academic_literature_reviewer: 'Academic Research Synthesizer',
+  fiction_world_copilot: 'Creative World-Building Co-Pilot'
+};
+
 export const COURSE_MODULES = [
   { 
     id: "0", 

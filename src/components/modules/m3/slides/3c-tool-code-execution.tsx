@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { Terminal, BrainCircuit, Code2, ArrowRight, ArrowLeft } from "lucide-react";
 
 export function ToolCodeExecutionSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +60,13 @@ export function ToolCodeExecutionSlide({ onComplete }: { onComplete?: () => void
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

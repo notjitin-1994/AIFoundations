@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { Blocks, TestTube2, GitPullRequest, LineChart, BrainCircuit } from "lucide-react";
 
 export function ModularSkillsSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,6 +61,13 @@ export function ModularSkillsSlide({ onComplete }: { onComplete?: () => void }) 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

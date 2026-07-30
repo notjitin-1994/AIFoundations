@@ -7,7 +7,7 @@ import { Wrench, Network, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ToolsetChecklistSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const [activeNode, setActiveNode] = useState<number>(-1);
   const tl = useRef<gsap.core.Timeline | null>(null);
@@ -45,6 +45,13 @@ export function ToolsetChecklistSlide({ data, onComplete }: { data: TemplateData
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

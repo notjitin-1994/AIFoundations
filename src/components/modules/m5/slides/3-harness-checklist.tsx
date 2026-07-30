@@ -7,7 +7,7 @@ import { CheckCircle2, Circle, Settings2 } from "lucide-react";
 import { useLRS } from "@/hooks/use-lrs";
 
 export function HarnessChecklistSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const [checkedItems, setCheckedItems] = useState<number[]>([]);
   const { track } = useLRS();
@@ -34,6 +34,13 @@ export function HarnessChecklistSlide({ data, onComplete }: { data: TemplateData
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     const allChecked = checkedItems.length === data.harnessChecklist.length;

@@ -7,7 +7,7 @@ import { ShieldAlert, GitBranch, Activity, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BestPracticesSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -35,6 +35,13 @@ export function BestPracticesSlide({ data, onComplete }: { data: TemplateData, o
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

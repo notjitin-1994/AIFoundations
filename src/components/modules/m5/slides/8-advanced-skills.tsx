@@ -6,7 +6,7 @@ import { TemplateData } from "@/lib/m5-template-data";
 import { Compass, Globe, Server, Code, Maximize2 } from "lucide-react";
 
 export function AdvancedSkillsSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -40,6 +40,13 @@ export function AdvancedSkillsSlide({ data, onComplete }: { data: TemplateData, 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

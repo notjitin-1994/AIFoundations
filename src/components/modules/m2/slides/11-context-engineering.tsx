@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { Filter, ArrowDownToLine, HardDrive } from "lucide-react";
 
 export function ContextEngineeringSlide() {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -30,6 +30,13 @@ export function ContextEngineeringSlide() {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   const cards = [
     {

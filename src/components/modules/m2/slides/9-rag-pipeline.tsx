@@ -7,7 +7,7 @@ import { Database, FileText, Bot, User, CheckCircle2 } from "lucide-react";
 import { useLRS } from "@/hooks/use-lrs";
 
 export function RagPipelineSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
@@ -36,6 +36,13 @@ export function RagPipelineSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     // Auto-complete the final step when reaching it

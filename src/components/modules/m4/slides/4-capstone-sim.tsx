@@ -53,7 +53,7 @@ const PROJECT_TRACES: Record<string, { goal: string, trace: Array<{type: 'though
 };
 
 export function CapstoneSimSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const { projectSpine } = useProgressStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
@@ -87,6 +87,13 @@ export function CapstoneSimSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (simState === 'running') {

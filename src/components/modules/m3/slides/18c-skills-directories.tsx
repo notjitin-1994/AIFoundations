@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { TerminalSquare, Copy, CheckCircle } from "lucide-react";
 
 export function SkillsDirectoriesSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const [copied, setCopied] = useState(false);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -60,6 +60,13 @@ export function SkillsDirectoriesSlide({ onComplete }: { onComplete?: () => void
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

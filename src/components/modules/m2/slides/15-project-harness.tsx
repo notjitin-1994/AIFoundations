@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import { useLRS } from "@/hooks/use-lrs";
 
 export function ProjectHarnessSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
@@ -28,6 +28,13 @@ export function ProjectHarnessSlide({ onComplete }: { onComplete?: () => void })
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     const isValid = selectedHarness === "antigravity" || (selectedHarness === "custom" && customValue.trim().length > 0);

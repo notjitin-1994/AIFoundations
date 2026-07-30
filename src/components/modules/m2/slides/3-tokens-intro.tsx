@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 
 export function TokensIntroSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
   const [isDone, setIsDone] = useState(false);
@@ -50,6 +50,13 @@ export function TokensIntroSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

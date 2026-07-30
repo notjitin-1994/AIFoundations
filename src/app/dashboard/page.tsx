@@ -10,11 +10,11 @@ import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { 
   Trophy, Flame, Clock, Target, Star, Brain, Code, 
   Database, Server, Shield, ArrowRight, CheckCircle2, Lock, Play, RotateCcw, Beaker, Wrench, Network, Cpu, X, Download,
-  Sparkles, Activity
+  Sparkles, Activity, Zap, GraduationCap, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
-import { COURSE_MODULES } from "@/lib/course-data";
+import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
 import { wipeDatabaseProgress } from "@/actions/sync-progress";
 
 if (typeof window !== 'undefined') {
@@ -26,6 +26,7 @@ export default function CourseDashboardPage() {
   const { user } = useUser();
   const progress = useProgressStore();
   const [selectedDeliverable, setSelectedDeliverable] = useState<{ title: string; content: string } | null>(null);
+  const [badgePage, setBadgePage] = useState(0);
 
   const gamification = progress.gamification || {
     xp: 0, currentStreak: 0, totalTimeSpentSeconds: 0, badges: [], toolsMastered: []
@@ -109,7 +110,16 @@ export default function CourseDashboardPage() {
   };
 
   const handleContinue = () => {
-    const nextModuleId = progress.activeModuleId || "0";
+    let nextModuleId = progress.activeModuleId || "0";
+    
+    // If the active module is already completed, find the next uncompleted module in the sequence
+    if (progress.completedModules.includes(nextModuleId)) {
+      const uncompletedModule = COURSE_MODULES.find(m => !progress.completedModules.includes(m.id));
+      if (uncompletedModule) {
+        nextModuleId = uncompletedModule.id;
+      }
+    }
+    
     router.push(`/modules/${nextModuleId}`);
   };
 
@@ -335,16 +345,42 @@ export default function CourseDashboardPage() {
 
                         {/* Module Meta Data / Tags */}
                         <div className="flex flex-wrap gap-2.5">
-                          {assessment && assessment.graded && (
-                            <div className="px-3 py-1.5 rounded-md bg-zinc-900/80 border border-white/5 text-[11px] font-medium text-zinc-400 flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Star className={`w-3.5 h-3.5 ${(Object.keys(assessment.graded).length / (assessment.questions?.length || 1)) === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]' : 'text-primary'}`} />
-                              Score: {Math.round((Object.keys(assessment.graded).length / (assessment.questions?.length || 1)) * 100)}%
-                            </div>
-                          )}
                           {mod.id === "0" && progress.projectSpine && (
                             <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md">
                               <Database className="w-3.5 h-3.5" />
-                              Spine: {progress.projectSpine}
+                              Project Foundation: {PROJECT_SPINES[progress.projectSpine] || progress.projectSpine}
+                            </div>
+                          )}
+                          
+                          {/* Module Deliverables */}
+                          {mod.id === "1" && progress.projectSpineAnswers?.["1"] && (
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Target className="w-3.5 h-3.5" />
+                              System Prompt Designed
+                            </div>
+                          )}
+                          {mod.id === "2" && progress.projectSpineAnswers?.["2"] && (
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Beaker className="w-3.5 h-3.5" />
+                              RAG Architecture Designed
+                            </div>
+                          )}
+                          {mod.id === "3" && progress.projectSpineAnswers?.["3"] && (
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Wrench className="w-3.5 h-3.5" />
+                              Toolbelt & MCP Registered
+                            </div>
+                          )}
+                          {mod.id === "4" && progress.projectSpineAnswers?.["4"] && (
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Network className="w-3.5 h-3.5" />
+                              Agentic Loop Created
+                            </div>
+                          )}
+                          {mod.id === "5" && progress.projectSpineAnswers?.["5"] && (
+                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              Capstone Submitted
                             </div>
                           )}
                         </div>
@@ -372,22 +408,61 @@ export default function CourseDashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Skill Constellation</h3>
-                  <span className="text-xs font-mono text-primary/60">{gamification.badges.length + (isPerfectionist?1:0) + (isDeepDiver?1:0) + (isUnbrokenFocus?1:0)} / 9 Unlocked</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-primary/60">{
+                      gamification.badges.length + (isPerfectionist?1:0) + (isDeepDiver?1:0) + (isUnbrokenFocus?1:0)
+                    } / 20 Unlocked</span>
+                    
+                    {/* Pagination Controls */}
+                    <div className="flex items-center gap-1 bg-zinc-950/50 rounded-full border border-white/5 p-0.5">
+                      <button 
+                        onClick={() => setBadgePage(0)}
+                        disabled={badgePage === 0}
+                        className={`p-1 rounded-full transition-colors ${badgePage === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:text-white text-zinc-400'}`}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="flex gap-1 px-1">
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${badgePage === 0 ? 'bg-primary' : 'bg-white/20'}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${badgePage === 1 ? 'bg-primary' : 'bg-white/20'}`} />
+                      </div>
+                      <button 
+                        onClick={() => setBadgePage(1)}
+                        disabled={badgePage === 1}
+                        className={`p-1 rounded-full transition-colors ${badgePage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 hover:text-white text-zinc-400'}`}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-3 md:gap-4">
+                <div className="grid grid-cols-5 gap-2 md:gap-3">
                   {[
-                    { id: 'first-steps', name: 'First Steps', icon: Star, unlocked: gamification.badges.includes('first-steps') || progress.completedModules.includes('0'), tier: 'bronze' },
-                    { id: 'architect', name: 'Architect', icon: Brain, unlocked: gamification.badges.includes('architect') || !!progress.projectSpine, tier: 'silver' },
-                    { id: 'prompt-eng', name: 'Prompt Eng', icon: Code, unlocked: progress.completedModules.includes('2'), tier: progress.assessments['2']?.graded ? 'gold' : 'bronze' },
-                    { id: 'tool-builder', name: 'Tool Builder', icon: Target, unlocked: progress.completedModules.includes('3'), tier: 'silver' },
-                    { id: 'agent-master', name: 'Agent Master', icon: Server, unlocked: progress.completedModules.includes('4'), tier: 'gold' },
-                    { id: 'certified', name: 'Certified', icon: Trophy, unlocked: progress.completedModules.includes('6'), tier: 'diamond' },
-                    // Behavioral Badges
-                    { id: 'perfectionist', name: 'Perfectionist', icon: CheckCircle2, unlocked: isPerfectionist, tier: 'obsidian', tooltip: 'Score 100% on a module assessment on the first attempt' },
+                    // Page 1: The Core Journey (10 Badges)
+                    { id: 'first-steps', name: 'First Steps', icon: Star, unlocked: gamification.badges.includes('first-steps') || progress.completedModules.includes('0'), tier: 'bronze', tooltip: 'Complete Module 0: Orientation' },
+                    { id: 'illusionist', name: 'Illusionist', icon: Brain, unlocked: progress.completedModules.includes('1'), tier: 'bronze', tooltip: 'Complete Module 1: The Intelligence Illusion' },
+                    { id: 'memory-architect', name: 'Memory', icon: Database, unlocked: progress.completedModules.includes('2'), tier: 'bronze', tooltip: 'Complete Module 2: The Goldfish Problem' },
+                    { id: 'toolbelt', name: 'Toolbelt', icon: Wrench, unlocked: progress.completedModules.includes('3'), tier: 'silver', tooltip: 'Complete Module 3: The Toolbelt' },
+                    { id: 'loop-engineer', name: 'Loop Eng', icon: Network, unlocked: progress.completedModules.includes('4'), tier: 'gold', tooltip: 'Complete Module 4: The Engine Room' },
+                    { id: 'master-assembly', name: 'Assembly', icon: Cpu, unlocked: progress.completedModules.includes('5'), tier: 'diamond', tooltip: 'Complete Module 5: The Assembly Line' },
+                    { id: 'certified', name: 'Certified', icon: Trophy, unlocked: gamification.badges.includes('certified') || progress.completedModules.includes('6'), tier: 'obsidian', tooltip: 'Pass the Final Assessment in Module 6' },
+                    { id: 'strategist', name: 'Strategist', icon: Target, unlocked: !!progress.projectSpine, tier: 'bronze', tooltip: 'Select a Project Spine' },
+                    { id: 'sys-designer', name: 'Designer', icon: Code, unlocked: !!progress.projectSpineAnswers?.["1"], tier: 'bronze', tooltip: 'Draft the System Prompt in Module 1' },
+                    { id: 'knowledge-weaver', name: 'Weaver', icon: Beaker, unlocked: !!progress.projectSpineAnswers?.["2"], tier: 'silver', tooltip: 'Design the RAG Architecture in Module 2' },
+                    
+                    // Page 2: Mastery & Exploration (10 Badges)
+                    { id: 'protocol-pioneer', name: 'Protocol', icon: Server, unlocked: !!progress.projectSpineAnswers?.["3"], tier: 'silver', tooltip: 'Register Tools & MCPs in Module 3' },
+                    { id: 'auto-architect', name: 'Automation', icon: Network, unlocked: !!progress.projectSpineAnswers?.["4"], tier: 'gold', tooltip: 'Orchestrate the Agentic Loop in Module 4' },
+                    { id: 'capstone', name: 'Capstone', icon: Sparkles, unlocked: !!progress.projectSpineAnswers?.["5"], tier: 'diamond', tooltip: 'Submit the Final Capstone in Module 5' },
+                    { id: 'perfectionist', name: 'Flawless', icon: CheckCircle2, unlocked: isPerfectionist, tier: 'obsidian', tooltip: 'Score 100% on a module assessment on the first attempt' },
                     { id: 'deep-diver', name: 'Deep Diver', icon: Activity, unlocked: isDeepDiver, tier: 'gold', tooltip: 'Invest over 1 hour of active learning time' },
-                    { id: 'unbroken-focus', name: 'Unbroken Focus', icon: Flame, unlocked: isUnbrokenFocus, tier: 'diamond', tooltip: 'Maintain a 3+ day active learning streak' },
-                  ].map(badge => {
+                    { id: 'unbroken-focus', name: 'Focus', icon: Flame, unlocked: isUnbrokenFocus, tier: 'diamond', tooltip: 'Maintain a 3+ day active learning streak' },
+                    { id: 'relentless', name: 'Relentless', icon: Flame, unlocked: (gamification.currentStreak || 0) >= 7, tier: 'obsidian', tooltip: 'Maintain a 7+ day active learning streak' },
+                    { id: 'xp-hunter', name: 'XP Hunter', icon: Zap, unlocked: (gamification.xp || 0) >= 1000, tier: 'silver', tooltip: 'Accumulate 1,000 Total XP' },
+                    { id: 'polymath', name: 'Polymath', icon: GraduationCap, unlocked: (gamification.xp || 0) >= 5000, tier: 'diamond', tooltip: 'Accumulate 5,000 Total XP' },
+                    { id: 'tool-collector', name: 'Collector', icon: Wrench, unlocked: (gamification.toolsMastered?.length || 0) >= 5, tier: 'gold', tooltip: 'Master 5+ distinct AI frameworks/tools' }
+                  ].slice(badgePage * 10, (badgePage * 10) + 10).map(badge => {
                     const tierColors: Record<string, string> = {
                       bronze: "from-orange-900/30 to-amber-700/10 border-orange-500/30 text-orange-400",
                       silver: "from-zinc-400/20 to-zinc-600/10 border-zinc-400/40 text-zinc-300",
@@ -398,10 +473,10 @@ export default function CourseDashboardPage() {
 
                     return (
                       <div key={badge.id} className="group relative flex flex-col items-center">
-                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl overflow-hidden relative ${
+                        <div className={`w-[48px] h-[48px] md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl overflow-hidden relative ${
                           badge.unlocked 
                             ? `bg-gradient-to-br border hover:scale-110 hover:-translate-y-2 z-10 ${tierColors[badge.tier || 'bronze']}` 
-                            : "bg-zinc-950 border border-white/5 text-zinc-800"
+                            : "bg-zinc-950/80 border border-white/5 text-zinc-800 grayscale"
                         }`}>
                           {badge.unlocked && (
                             <>
@@ -409,17 +484,17 @@ export default function CourseDashboardPage() {
                               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)] transition-opacity duration-300" />
                             </>
                           )}
-                          <badge.icon className={`w-8 h-8 md:w-10 md:h-10 relative z-10 ${!badge.unlocked ? 'opacity-20' : ''}`} strokeWidth={badge.unlocked ? 2 : 1.5} />
+                          <badge.icon className={`w-5 h-5 md:w-6 md:h-6 relative z-10 transition-opacity duration-500 ${!badge.unlocked ? 'opacity-10 group-hover:opacity-30' : ''}`} strokeWidth={badge.unlocked ? 2 : 1.5} />
                         </div>
-                        <p className={`text-[10px] md:text-xs font-bold mt-2 text-center tracking-wider transition-colors duration-300 ${badge.unlocked ? 'text-zinc-200' : 'text-zinc-600'}`}>
-                          {badge.name}
+                        <p className={`text-[9px] md:text-[10px] font-bold mt-2 text-center tracking-wider transition-colors duration-300 w-full truncate px-0.5 ${badge.unlocked ? 'text-zinc-200' : 'text-zinc-700 select-none'}`}>
+                          {badge.unlocked ? badge.name : "Locked"}
                         </p>
                         
                         {/* Glassmorphism Tooltip */}
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
-                          <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-lg p-2 text-[10px] text-zinc-300 text-center shadow-2xl relative">
+                          <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-2.5 text-[10px] text-zinc-300 text-center shadow-2xl relative">
                             {badge.unlocked ? (badge.tooltip || `Unlocked ${badge.name}`) : (badge.tooltip || "Complete requirements to unlock")}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900/90" />
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900/95" />
                           </div>
                         </div>
                       </div>

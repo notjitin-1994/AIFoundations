@@ -7,7 +7,7 @@ import { Search, AlertTriangle, CheckCircle2, Scan, BrainCircuit } from "lucide-
 import { useLRS } from "@/hooks/use-lrs";
 
 export function AttentionHeatmapSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
@@ -36,6 +36,13 @@ export function AttentionHeatmapSlide({ onComplete }: { onComplete?: () => void 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     // Update explored zones

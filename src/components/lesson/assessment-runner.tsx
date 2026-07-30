@@ -80,10 +80,10 @@ export function AssessmentRunner({
   const hasPassed = savedState?.passed;
 
   const [started, setStarted] = useState(!!savedState && !hasPassed);
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>(savedState?.questions || []);
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>((savedState?.questions as AssessmentQuestion[]) || []);
   const [currentIdx, setCurrentIdx] = useState(savedState?.currentIdx || 0);
   const [answers, setAnswers] = useState<Record<number, unknown>>(savedState?.answers || {});
-  const [graded, setGraded] = useState<Record<number, { correct: boolean; partial?: number; feedback?: string } | null>>(savedState?.graded || {});
+  const [graded, setGraded] = useState<Record<number, { correct: boolean; partial?: number; feedback?: string } | null>>((savedState?.graded as Record<number, { correct: boolean; partial?: number; feedback?: string } | null>) || {});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>(savedState?.submitted || {});
   const [incorrectAttempts, setIncorrectAttempts] = useState<Record<number, number>>(savedState?.incorrectAttempts || {});
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -93,10 +93,10 @@ export function AssessmentRunner({
   useEffect(() => {
     const storeState = useProgressStore.getState().assessments[thisModuleId];
     if (storeState && !storeState.passed && storeState.questions && storeState.questions.length > 0) {
-      setQuestions(storeState.questions);
+      setQuestions(storeState.questions as AssessmentQuestion[]);
       setCurrentIdx(storeState.currentIdx || 0);
       setAnswers(storeState.answers || {});
-      setGraded(storeState.graded || {});
+      setGraded(storeState.graded as Record<number, { correct: boolean; partial?: number; feedback?: string } | null> || {});
       setSubmitted(storeState.submitted || {});
       setIncorrectAttempts(storeState.incorrectAttempts || {});
       setStarted(true);

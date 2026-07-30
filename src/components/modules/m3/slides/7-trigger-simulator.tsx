@@ -6,7 +6,7 @@ import { useLRS } from "@/hooks/use-lrs";
 import { Terminal, Send, Search, CheckCircle2 } from "lucide-react";
 
 export function TriggerSimulatorSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
@@ -57,6 +57,13 @@ export function TriggerSimulatorSlide({ onComplete }: { onComplete?: () => void 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     setNavOverride({

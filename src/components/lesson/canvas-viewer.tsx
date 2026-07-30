@@ -515,22 +515,39 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           {/* Seekbar */}
           {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
             <div 
-              className="absolute top-0 left-0 w-full h-1 bg-zinc-200 dark:bg-zinc-800 cursor-pointer group hover:h-2 transition-all"
+              className="absolute top-0 left-0 w-full h-6 -mt-3 cursor-pointer group flex flex-col justify-center z-50"
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
-                if (audioRef.current && audioRef.current.duration) {
-                  audioRef.current.currentTime = (pct / 100) * audioRef.current.duration;
+                
+                const duration = audioRef.current?.duration || (useNarrationStore.getState().durationMs / 1000);
+                if (duration > 0) {
+                  const newTime = (pct / 100) * duration;
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = newTime;
+                  }
                   narration.setProgress(pct);
+                  narration.seek(newTime);
+                  
+                  sendXAPIStatement(
+                    "http://id.tincanapi.com/verb/skipped",
+                    "scrubbed",
+                    `http://smartslate.com/activities/${moduleId}/slides/${slides[currentIndex].id}`,
+                    `Slide ${currentIndex + 1}: ${slides[currentIndex].id}`,
+                    "User scrubbed the timeline",
+                    { moduleId, slideId: slides[currentIndex].id, lessonIndex: currentIndex }
+                  ).catch(() => {});
                 }
               }}
             >
-              <div 
-                className="h-full bg-primary relative"
-                style={{ width: `${narration.progress}%` }}
-              >
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 group-hover:h-2 transition-all relative pointer-events-none">
+                <div 
+                  className="h-full bg-primary relative transition-all duration-75"
+                  style={{ width: `${narration.progress}%` }}
+                >
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
               </div>
             </div>
           )}

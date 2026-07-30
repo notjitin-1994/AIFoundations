@@ -19,7 +19,7 @@ const BARS = [
 const CHART_H = 140; // px — fixed chart height to stay canvas-safe
 
 export function DriftSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -102,6 +102,13 @@ export function DriftSlide({ onComplete }: { onComplete?: () => void }) {
     if (isPlaying) tl.current.play();
     else tl.current.pause();
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   // ── Nav override ──────────────────────────────────────────────────────────
   useEffect(() => {

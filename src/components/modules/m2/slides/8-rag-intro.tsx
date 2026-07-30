@@ -6,7 +6,7 @@ import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { BookOpen, Search, BrainCircuit, FileText, Sparkles } from "lucide-react";
 
 export function RagIntroSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const { setNavOverride } = useCanvasNav();
 
@@ -42,6 +42,13 @@ export function RagIntroSlide({ onComplete }: { onComplete?: () => void }) {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

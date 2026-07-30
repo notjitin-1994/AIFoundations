@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { Terminal, Download, Cpu } from "lucide-react";
 
 export function EnhancingHarnessSlide({ onComplete }: { onComplete?: () => void }) {
-  const { isPlaying, isFinished } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const headerRef = useRef<HTMLDivElement>(null);
@@ -48,6 +48,13 @@ export function EnhancingHarnessSlide({ onComplete }: { onComplete?: () => void 
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   useEffect(() => {
     if (isFinished && onComplete) {

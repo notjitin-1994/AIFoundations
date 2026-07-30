@@ -4,7 +4,7 @@ import { useNarrationStore } from "@/store/narration";
 import { Code, LineChart, PenTool } from "lucide-react";
 
 export function RealWorldConsequencesSlide() {
-  const { isPlaying } = useNarrationStore();
+  const { isPlaying, seekTime } = useNarrationStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const card1Ref = useRef<HTMLDivElement>(null);
@@ -39,6 +39,13 @@ export function RealWorldConsequencesSlide() {
       else tl.current.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof tl !== "undefined" && tl?.current && seekTime !== null) {
+      tl.current.time(seekTime);
+    }
+  }, [seekTime]);
+
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden p-6 md:p-10 max-w-5xl mx-auto">
