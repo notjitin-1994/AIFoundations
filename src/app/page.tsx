@@ -39,6 +39,11 @@ export default function CourseMarketingPage() {
   }, []);
 
   const handlePayment = () => {
+    if (!user) {
+      router.push("/signup?intent=enroll");
+      return;
+    }
+
     if (typeof window === "undefined" || !(window as any).Razorpay) {
       console.error("Razorpay SDK not loaded");
       return;
@@ -59,8 +64,8 @@ export default function CourseMarketingPage() {
         router.push("/dashboard");
       },
       prefill: {
-        name: "Learner",
-        email: "learner@example.com",
+        name: user.user_metadata?.first_name || "Learner",
+        email: user.email || "learner@example.com",
       },
       theme: {
         color: "#18181b", // bg-zinc-900 to match theme
@@ -75,6 +80,21 @@ export default function CourseMarketingPage() {
     const rzp = new (window as any).Razorpay(options);
     rzp.open();
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const intent = searchParams.get("intent");
+      if (intent === "enroll" && user && !isEnrolled && !isProcessing) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("intent");
+        window.history.replaceState({}, "", url);
+        
+        // slight delay to ensure Razorpay script is loaded
+        setTimeout(() => handlePayment(), 500);
+      }
+    }
+  }, [user, isEnrolled, isProcessing]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">

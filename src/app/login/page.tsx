@@ -59,7 +59,13 @@ export default function LoginPage() {
       reset({ email: data.email, password: "" });
       return;
     }
-    router.push("/");
+    const searchParams = new URLSearchParams(window.location.search);
+    const intent = searchParams.get("intent");
+    if (intent === "enroll") {
+      router.push("/?intent=enroll");
+    } else {
+      router.push("/");
+    }
     router.refresh();
   }
 

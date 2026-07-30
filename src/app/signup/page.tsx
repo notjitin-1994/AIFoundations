@@ -146,7 +146,13 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/");
+    const searchParams = new URLSearchParams(window.location.search);
+    const intent = searchParams.get("intent");
+    if (intent === "enroll") {
+      router.push("/?intent=enroll");
+    } else {
+      router.push("/");
+    }
     router.refresh();
   };
 
