@@ -179,7 +179,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
 
   const handleRestart = () => {
     resetProgress();
-    router.push("/courses/aifoundations-concept2application/modules/0");
+    router.push("/modules/0");
     router.refresh();
   };
 

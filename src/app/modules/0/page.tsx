@@ -66,7 +66,7 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
           { moduleId: "0", slideId: "project-selector", result: { completion: true } }
         );
         onComplete();
-        setTimeout(() => { router.push('/courses/aifoundations-concept2application/modules/1'); }, 1500);
+        setTimeout(() => { router.push('/modules/1'); }, 1500);
       }
     });
     return () => setNavOverride(null);

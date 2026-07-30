@@ -112,12 +112,12 @@ export default function CourseDashboardPage() {
 
   const handleRestart = () => {
     progress.resetProgress();
-    router.push("/courses/aifoundations-concept2application/modules/0");
+    router.push("/modules/0");
   };
 
   const handleContinue = () => {
     const nextModuleId = progress.activeModuleId || "0";
-    router.push(`/courses/aifoundations-concept2application/modules/${nextModuleId}`);
+    router.push(`/modules/${nextModuleId}`);
   };
 
   const handleSeedTestData = () => {
@@ -212,7 +212,7 @@ export default function CourseDashboardPage() {
                 Restart Course
               </button>
               {completedCount === totalModules && (
-                <button onClick={() => router.push('/courses/aifoundations-concept2application/certificate')} className="px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/30 font-bold text-sm hover:border-primary/60 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] transition-all flex items-center gap-2">
+                <button onClick={() => router.push('/certificate')} className="px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 text-primary border border-primary/30 font-bold text-sm hover:border-primary/60 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] transition-all flex items-center gap-2">
                   <Trophy className="w-4 h-4 fill-primary/20" />
                   View Certificate
                 </button>
@@ -326,7 +326,7 @@ export default function CourseDashboardPage() {
                             <h3 className="text-xl font-bold font-heading mb-2">{mod.title}</h3>
                           </div>
                           {!isLocked && (
-                            <Link href={`/courses/aifoundations-concept2application/modules/${mod.id}`} className="shrink-0">
+                            <Link href={`/modules/${mod.id}`} className="shrink-0">
                               <button className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
                                 isActive ? "bg-primary text-zinc-950 hover:bg-teal-400" : "bg-white/10 text-white hover:bg-white/20"
                               }`}>

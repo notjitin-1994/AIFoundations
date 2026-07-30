@@ -46,7 +46,7 @@ export function GraduationSlide({ onComplete }: { onComplete?: () => void }) {
       onNext: () => {
         markLessonComplete("6", 3);
         markModuleComplete("6");
-        router.push("/courses/aifoundations-concept2application/certificate");
+        router.push("/certificate");
       }
     });
     return () => setNavOverride(null);

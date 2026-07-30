@@ -142,7 +142,7 @@ export function Hero() {
             >
               <MagneticButton>
                 <Link
-                  href="/courses/aifoundations-concept2application"
+                  href="/"
                   className="group inline-flex items-center gap-2.5 rounded-full bg-secondary px-6 py-3 text-sm font-semibold text-white shadow-2xl shadow-secondary/25 transition-transform duration-200 active:scale-[0.97]"
                   style={{
                     transitionTimingFunction:

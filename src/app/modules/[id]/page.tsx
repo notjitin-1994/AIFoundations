@@ -57,9 +57,9 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
     const nextModuleNum = parseInt(moduleId, 10) + 1;
     if (nextModuleNum <= 6) {
-      router.push(`/courses/aifoundations-concept2application/modules/${nextModuleNum}`);
+      router.push(`/modules/${nextModuleNum}`);
     } else {
-      router.push(`/courses/aifoundations-concept2application/certificate`);
+      router.push(`/certificate`);
     }
   };
 

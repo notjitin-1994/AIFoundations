@@ -7,7 +7,7 @@ import { gsap } from "gsap";
 /**
  * CoursePreviewCard — animated skeletal replica of the lesson experience.
  *
- * Layout mirrors the real page from /courses/aifoundations-concept2application/modules/0:
+ * Layout mirrors the real page from /modules/0:
  * sidebar + header + 16:10 canvas (split-layout slide) + nav footer. All
  * content is skeleton bars (gray placeholders) communicating "your content
  * goes here."
@@ -128,7 +128,7 @@ export function CoursePreviewCard({ heroRef }: { heroRef: React.RefObject<HTMLEl
             <div className="mx-auto flex w-full max-w-sm items-center gap-2 rounded-md bg-background/50 px-3 py-1 ring-1 ring-white/5">
               <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
               <span className="truncate font-mono text-[10px] text-muted-foreground">
-                orbit.smartslate.io/courses/aifoundations-concept2application
+                orbit.smartslate.io
               </span>
             </div>
             <div className="w-12" aria-hidden />

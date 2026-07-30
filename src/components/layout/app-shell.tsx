@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const isCertificateRoute = pathname.includes("/certificate");
-  const isMarketingRoute = pathname === "/" || pathname === "/courses/aifoundations-concept2application";
+  const isMarketingRoute = pathname === "/" || pathname === "/";
   const isDashboardRoute = pathname.includes("/dashboard");
   const hideSidebar = isCertificateRoute || isMarketingRoute || isDashboardRoute;
 

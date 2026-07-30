@@ -2,7 +2,7 @@ export const COURSE_MODULES = [
   { 
     id: "0", 
     title: "0. Orientation", 
-    path: "/courses/aifoundations-concept2application/modules/0",
+    path: "/modules/0",
     overview: "Get familiar with the platform, set your learning goals, and choose the AI project template you will build throughout this course.",
     imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80",
     lessons: [
@@ -15,7 +15,7 @@ export const COURSE_MODULES = [
   { 
     id: "1", 
     title: "1. The Intelligence Illusion", 
-    path: "/courses/aifoundations-concept2application/modules/1",
+    path: "/modules/1",
     overview: "Dismantle the Hollywood myths of AI. Understand how Large Language Models actually work under the hood using probabilities, not reasoning.",
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1920&q=80",
     lessons: [
@@ -29,7 +29,7 @@ export const COURSE_MODULES = [
   { 
     id: "2", 
     title: "2. The Goldfish Problem", 
-    path: "/courses/aifoundations-concept2application/modules/2",
+    path: "/modules/2",
     overview: "AI has no inherent memory. Learn how context windows work and how Retrieval-Augmented Generation (RAG) gives models long-term recall.",
     videoUrl: "https://videos.pexels.com/video-files/3129595/3129595-uhd_2560_1440_30fps.mp4",
     lessons: [
@@ -43,7 +43,7 @@ export const COURSE_MODULES = [
   { 
     id: "3", 
     title: "3. The Toolbelt", 
-    path: "/courses/aifoundations-concept2application/modules/3",
+    path: "/modules/3",
     overview: "Language models are trapped in text boxes. Discover how function calling and the Model Context Protocol (MCP) let AI take real-world actions.",
     imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80",
     lessons: [
@@ -57,7 +57,7 @@ export const COURSE_MODULES = [
   { 
     id: "4", 
     title: "4. The Engine Room", 
-    path: "/courses/aifoundations-concept2application/modules/4",
+    path: "/modules/4",
     overview: "Design autonomous systems that reason, act, observe, and verify. Move from prompting the AI to building a self-correcting loop that builds your project.",
     videoUrl: "https://videos.pexels.com/video-files/3129957/3129957-uhd_2560_1440_25fps.mp4",
     lessons: [
@@ -70,7 +70,7 @@ export const COURSE_MODULES = [
   { 
     id: "5", 
     title: "5. The Assembly Line", 
-    path: "/courses/aifoundations-concept2application/modules/5",
+    path: "/modules/5",
     overview: "Stop using zero-shot prompts. Design multi-step workflows that chain specialized AI tasks together for content, code, and media generation.",
     videoUrl: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4",
     lessons: [
@@ -88,7 +88,7 @@ export const COURSE_MODULES = [
   { 
     id: "6", 
     title: "6. The Horizon", 
-    path: "/courses/aifoundations-concept2application/modules/6",
+    path: "/modules/6",
     overview: "Look to the future of AI. Build a continuous learning habit and present your final capstone project to the community.",
     imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80",
     lessons: [

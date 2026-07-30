@@ -63,7 +63,7 @@ export function MarketingNavbar() {
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           ) : user ? (
             <div className="flex items-center space-x-3 bg-white/5 pr-4 pl-1 py-1 rounded-full border border-white/10">
-              <Link href="/courses/aifoundations-concept2application/dashboard" className="flex items-center space-x-2 group">
+              <Link href="/dashboard" className="flex items-center space-x-2 group">
                 <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20 group-hover:border-primary/50 transition-colors">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" className="h-full w-full object-cover" />

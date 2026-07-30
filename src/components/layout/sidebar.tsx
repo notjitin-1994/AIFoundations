@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 const MODULES = [
   { 
-    id: "0", title: "0. Orientation", path: "/courses/aifoundations-concept2application/modules/0",
+    id: "0", title: "0. Orientation", path: "/modules/0",
     lessons: [
       "0.1 Welcome and Roadmap",
       "0.2 Myth-Busting",
@@ -18,7 +18,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "1", title: "1. The Intelligence Illusion", path: "/courses/aifoundations-concept2application/modules/1",
+    id: "1", title: "1. The Intelligence Illusion", path: "/modules/1",
     lessons: [
       "1.1 What AI Actually Is",
       "1.2 Machine Learning in Plain Language",
@@ -28,7 +28,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "2", title: "2. The Goldfish Problem", path: "/courses/aifoundations-concept2application/modules/2",
+    id: "2", title: "2. The Goldfish Problem", path: "/modules/2",
     lessons: [
       "2.1 The Goldfish Metaphor",
       "2.2 Tokens: The Currency of AI",
@@ -38,7 +38,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "3", title: "3. The Toolbelt", path: "/courses/aifoundations-concept2application/modules/3",
+    id: "3", title: "3. The Toolbelt", path: "/modules/3",
     lessons: [
       "3.1 From Chat to Action",
       "3.2 Function Calling Demystified",
@@ -48,7 +48,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "4", title: "4. The Engine Room", path: "/courses/aifoundations-concept2application/modules/4",
+    id: "4", title: "4. The Engine Room", path: "/modules/4",
     lessons: [
       "4.1 Harness vs. Model",
       "4.2 Autonomy, Tools, Memory",
@@ -58,7 +58,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "5", title: "5. The Assembly Line", path: "/courses/aifoundations-concept2application/modules/5",
+    id: "5", title: "5. The Assembly Line", path: "/modules/5",
     lessons: [
       "5.1 The Project Assembly",
       "5.2 Harness Validation",
@@ -71,7 +71,7 @@ const MODULES = [
     ]
   },
   { 
-    id: "6", title: "6. The Horizon", path: "/courses/aifoundations-concept2application/modules/6",
+    id: "6", title: "6. The Horizon", path: "/modules/6",
     lessons: [
       "6.1 LLMOps & The Reality of Production",
       "6.2 The Living Tool Landscape",
