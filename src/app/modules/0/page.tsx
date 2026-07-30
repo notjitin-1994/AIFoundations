@@ -22,11 +22,15 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const [selectedSpine, setSelectedSpine] = useState<string | null>(projectSpine || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { setNavOverride } = useCanvasNav();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (projectSpine && !selectedPillar) {
+    if (projectSpine && !selectedPillar && !hasInitialized.current) {
       const pillar = Object.keys(PROJECTS).find(p => PROJECTS[p].some(proj => proj.id === projectSpine));
-      if (pillar) setSelectedPillar(pillar);
+      if (pillar) {
+        setSelectedPillar(pillar);
+      }
+      hasInitialized.current = true;
     }
   }, [projectSpine, selectedPillar]);
 
