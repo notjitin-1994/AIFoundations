@@ -88,7 +88,7 @@ export function RecapSlide({ data, onComplete }: { data: TemplateData, onComplet
         </div>
 
         <div className="final-reveal opacity-0 scale-95 w-full md:w-1/2 bg-gradient-to-br from-primary/20 to-indigo-600/20 border border-primary/30 rounded-3xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0_0_40px_rgba(167,218,219,0.15)]">
-          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+          <div className="absolute inset-0 bg-[url('/courses/aifoundations-concept2application/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
           <Bot className="w-12 h-12 text-primary mb-4 relative z-10 drop-shadow-[0_0_15px_rgba(167,218,219,0.5)]" />
           <h2 className="text-2xl font-bold text-white mb-2 relative z-10">{data.title}</h2>
           <p className="text-white/70 text-sm relative z-10">{data.description}</p>

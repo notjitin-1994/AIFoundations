@@ -89,7 +89,7 @@ export function SkillsDirectoriesSlide({ onComplete }: { onComplete?: () => void
             {/* skills.sh */}
             <a href="https://skills.sh" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-4 flex flex-col items-center text-center gap-3 w-[260px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-primary/50 transition-all hover:-translate-y-1">
               <div className="w-12 h-12 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_15px_rgba(167,218,219,0.1)] group-hover:bg-primary/20 transition-colors">
-                <img src="/images/favicons/skills-sh.png" alt="skills.sh" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/images/favicons/github.png" }} />
+                <img src="/courses/aifoundations-concept2application/images/favicons/skills-sh.png" alt="skills.sh" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/courses/aifoundations-concept2application/images/favicons/github.png" }} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white mb-1 group-hover:text-primary transition-colors">skills.sh</h3>
@@ -100,7 +100,7 @@ export function SkillsDirectoriesSlide({ onComplete }: { onComplete?: () => void
             {/* Cursor Directory */}
             <a href="https://cursor.directory" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-4 flex flex-col items-center text-center gap-3 w-[260px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-blue-500/50 transition-all hover:-translate-y-1">
               <div className="w-12 h-12 shrink-0 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)] group-hover:bg-blue-500/20 transition-colors">
-                <img src="/images/favicons/cursor-directory.png" alt="Cursor Directory" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/images/favicons/github.png" }} />
+                <img src="/courses/aifoundations-concept2application/images/favicons/cursor-directory.png" alt="Cursor Directory" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/courses/aifoundations-concept2application/images/favicons/github.png" }} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">cursor.directory</h3>
@@ -111,7 +111,7 @@ export function SkillsDirectoriesSlide({ onComplete }: { onComplete?: () => void
             {/* Awesome Skills */}
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-4 flex flex-col items-center text-center gap-3 w-[260px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-orange-500/50 transition-all hover:-translate-y-1">
               <div className="w-12 h-12 shrink-0 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.1)] group-hover:bg-orange-500/20 transition-colors">
-                <img src="/images/favicons/github-skills.png" alt="GitHub" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/images/favicons/github.png" }} />
+                <img src="/courses/aifoundations-concept2application/images/favicons/github-skills.png" alt="GitHub" className="w-6 h-6 rounded-sm object-contain" onError={(e) => { e.currentTarget.src = "/courses/aifoundations-concept2application/images/favicons/github.png" }} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">GitHub Collections</h3>

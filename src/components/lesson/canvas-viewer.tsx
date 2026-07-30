@@ -239,7 +239,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     }
 
     if (slide?.narrationText && !slide.hasCustomAudio) {
-      const audio = new Audio(`/audio/${slide.id}.mp3`);
+      const basePath = "/courses/aifoundations-concept2application";
+      const audio = new Audio(`${basePath}/audio/${slide.id}.mp3`);
       audioRef.current = audio;
       audio.muted = isMuted; // inherit current mute state across slide changes
       

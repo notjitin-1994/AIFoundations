@@ -355,7 +355,8 @@ function TimelineOfAI({ onComplete }: { onComplete?: () => void }) {
       audioRef.current = null;
     }
     const audioName = track === "intro" ? "m1-timeline-intro" : `m1-timeline-${track}`;
-    const audio = new Audio(`/audio/${audioName}.mp3`);
+    const basePath = "/courses/aifoundations-concept2application";
+    const audio = new Audio(`${basePath}/audio/${audioName}.mp3`);
     audioRef.current = audio;
     
     // Play with global narration store

@@ -88,7 +88,7 @@ export function UpsideDownSlide({ data, onComplete }: { data: TemplateData, onCo
           
           {/* Top of normal stack (Prompt) */}
           <div className="highlight-top stack-item bg-black/40 border border-white/10 rounded-2xl p-5 flex items-center gap-5 transition-all duration-500 relative overflow-hidden">
-            <div className="magic-particles absolute inset-0 opacity-0 bg-[url('/noise.png')] mix-blend-overlay pointer-events-none" />
+            <div className="magic-particles absolute inset-0 opacity-0 bg-[url('/courses/aifoundations-concept2application/noise.png')] mix-blend-overlay pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent opacity-0 magic-particles" />
             
             <div className="w-12 h-12 shrink-0 rounded-xl bg-white/5 flex items-center justify-center relative z-10">

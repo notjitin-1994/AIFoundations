@@ -81,7 +81,7 @@ export function ImportantMcpsSlide({ onComplete }: { onComplete?: () => void }) 
             {/* Smithery */}
             <a href="https://smithery.ai" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 w-[240px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-primary/50 transition-colors">
               <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_15px_rgba(167,218,219,0.1)] group-hover:bg-primary/20 transition-colors">
-                <img src="/images/favicons/smithery.png" alt="Smithery.ai" className="w-5 h-5 rounded-sm object-contain" />
+                <img src="/courses/aifoundations-concept2application/images/favicons/smithery.png" alt="Smithery.ai" className="w-5 h-5 rounded-sm object-contain" />
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-white mb-0.5 group-hover:text-primary transition-colors">Smithery.ai</h3>
@@ -92,7 +92,7 @@ export function ImportantMcpsSlide({ onComplete }: { onComplete?: () => void }) 
             {/* MCP.so */}
             <a href="https://mcp.so" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 w-[240px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-indigo-500/50 transition-colors">
               <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.1)] group-hover:bg-indigo-500/20 transition-colors">
-                <img src="/images/favicons/mcp-so.png" alt="MCP.so" className="w-5 h-5 rounded-sm object-contain" />
+                <img src="/courses/aifoundations-concept2application/images/favicons/mcp-so.png" alt="MCP.so" className="w-5 h-5 rounded-sm object-contain" />
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-white mb-0.5 group-hover:text-indigo-400 transition-colors">MCP.so</h3>
@@ -103,7 +103,7 @@ export function ImportantMcpsSlide({ onComplete }: { onComplete?: () => void }) 
             {/* Glama.ai */}
             <a href="https://glama.ai" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 w-[240px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-blue-500/50 transition-colors">
               <div className="w-10 h-10 shrink-0 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)] group-hover:bg-blue-500/20 transition-colors">
-                <img src="/images/favicons/glama.png" alt="Glama.ai" className="w-5 h-5 rounded-sm object-contain" />
+                <img src="/courses/aifoundations-concept2application/images/favicons/glama.png" alt="Glama.ai" className="w-5 h-5 rounded-sm object-contain" />
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-white mb-0.5 group-hover:text-blue-400 transition-colors">Glama.ai</h3>
@@ -114,7 +114,7 @@ export function ImportantMcpsSlide({ onComplete }: { onComplete?: () => void }) 
             {/* Official Registry */}
             <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 w-[240px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-emerald-500/50 transition-colors">
               <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:bg-emerald-500/20 transition-colors">
-                <img src="/images/favicons/mcp-official.png" alt="Official Registry" className="w-5 h-5 rounded-sm object-contain" />
+                <img src="/courses/aifoundations-concept2application/images/favicons/mcp-official.png" alt="Official Registry" className="w-5 h-5 rounded-sm object-contain" />
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-white mb-0.5 group-hover:text-emerald-400 transition-colors">Official Registry</h3>
@@ -125,7 +125,7 @@ export function ImportantMcpsSlide({ onComplete }: { onComplete?: () => void }) 
             {/* Awesome MCP */}
             <a href="https://github.com/punkpeye/awesome-mcp-servers" target="_blank" rel="noopener noreferrer" className="bg-[#0a0a0a] backdrop-blur-3xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 w-[240px] shadow-[0_10px_30px_rgba(0,0,0,0.5)] group hover:border-orange-500/50 transition-colors">
               <div className="w-10 h-10 shrink-0 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.1)] group-hover:bg-orange-500/20 transition-colors">
-                <img src="/images/favicons/github.png" alt="Awesome MCP" className="w-5 h-5 rounded-sm object-contain" />
+                <img src="/courses/aifoundations-concept2application/images/favicons/github.png" alt="Awesome MCP" className="w-5 h-5 rounded-sm object-contain" />
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-white mb-0.5 group-hover:text-orange-400 transition-colors">Awesome MCP</h3>
