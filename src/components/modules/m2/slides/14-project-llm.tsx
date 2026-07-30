@@ -5,11 +5,13 @@ import { useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { CheckCircle2, Zap, PenLine } from "lucide-react";
 import { motion } from "motion/react";
 import { useLRS } from "@/hooks/use-lrs";
+import { useProgressStore } from "@/store/progress";
 
 export function ProjectLLMSlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
+  const { saveProjectSpineAnswer } = useProgressStore();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   const [selectedLLM, setSelectedLLM] = useState<string | null>(null);
@@ -58,12 +60,13 @@ export function ProjectLLMSlide({ onComplete }: { onComplete?: () => void }) {
       nextDisabled: !isValid,
       nextLabel: isValid ? "Continue" : "Select an Engine",
       onNext: (handleNext) => {
+        saveProjectSpineAnswer("2", { tempChoice: selectedLLM === "custom" ? customValue : selectedLLM });
         if (onComplete) onComplete();
         handleNext();
       }
     });
     return () => setNavOverride(null);
-  }, [selectedLLM, customValue, onComplete, setNavOverride]);
+  }, [selectedLLM, customValue, onComplete, setNavOverride, saveProjectSpineAnswer]);
 
   return (
     <div className="w-full h-full flex flex-col overflow-y-auto min-h-0 p-4 md:p-6 lg:py-8 max-w-4xl mx-auto items-center justify-center relative">

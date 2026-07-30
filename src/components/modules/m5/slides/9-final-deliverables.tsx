@@ -4,11 +4,13 @@ import { TemplateData } from "@/lib/m5-template-data";
 import { GitBranch, Globe, Database, ArrowRight } from "lucide-react";
 import { useNarrationStore } from "@/store/narration";
 import { useLRS } from "@/hooks/use-lrs";
+import { useProgressStore } from "@/store/progress";
 
 export function FinalDeliverablesSlide({ data, onComplete }: { data: TemplateData, onComplete?: () => void }) {
   const { isFinished } = useNarrationStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
+  const { saveProjectSpineAnswer } = useProgressStore();
 
   const [githubUrl, setGithubUrl] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
@@ -21,14 +23,14 @@ export function FinalDeliverablesSlide({ data, onComplete }: { data: TemplateDat
       nextLabel: "Submit Capstone",
       nextDisabled: !isFinished || !isValid,
       onNext: (handleNext) => {
-        // In a real app, this would hit an API to save deliverables
+        saveProjectSpineAnswer("5", { tempChoice: liveUrl });
         console.log("Submitting deliverables:", { githubUrl, liveUrl, dbUrl });
         handleNext();
         if (onComplete) onComplete();
       }
     });
     return () => setNavOverride(null);
-  }, [isFinished, isValid, githubUrl, liveUrl, dbUrl, setNavOverride, onComplete]);
+  }, [isFinished, isValid, githubUrl, liveUrl, dbUrl, setNavOverride, onComplete, saveProjectSpineAnswer]);
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-6 md:p-10 max-w-4xl mx-auto overflow-hidden">

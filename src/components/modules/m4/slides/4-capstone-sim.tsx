@@ -54,7 +54,7 @@ const PROJECT_TRACES: Record<string, { goal: string, trace: Array<{type: 'though
 
 export function CapstoneSimSlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, seekTime } = useNarrationStore();
-  const { projectSpine } = useProgressStore();
+  const { projectSpine, saveProjectSpineAnswer } = useProgressStore();
   const { setNavOverride } = useCanvasNav();
   const { track } = useLRS();
   
@@ -123,12 +123,13 @@ export function CapstoneSimSlide({ onComplete }: { onComplete?: () => void }) {
     setNavOverride({
       nextDisabled: !isDone,
       onNext: (handleNext) => {
+        saveProjectSpineAnswer("4", { tempChoice: "completed" });
         handleNext();
         if (onComplete) onComplete();
       }
     });
     return () => setNavOverride(null);
-  }, [simState, harnessVerified, setNavOverride, onComplete]);
+  }, [simState, harnessVerified, setNavOverride, onComplete, saveProjectSpineAnswer]);
 
   return (
     <div className="w-full h-full flex flex-col p-4 md:p-6 lg:p-10 max-w-5xl mx-auto overflow-hidden relative">
