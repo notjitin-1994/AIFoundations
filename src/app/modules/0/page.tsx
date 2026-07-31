@@ -422,87 +422,6 @@ function WelcomeAttentionSlide() {
   );
 }
 
-function VisionRoadmapSlide() {
-  const { isPlaying, isFinished } = useNarrationStore();
-  const tl = useRef<gsap.core.Timeline | null>(null);
-  
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const textRef = useRef<HTMLParagraphElement>(null);
-  const videoRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timeline = gsap.timeline({ paused: true });
-    timeline.fromTo(titleRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, 0);
-    timeline.fromTo(textRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, 3);
-    tl.current = timeline;
-    return () => { timeline.kill(); };
-  }, []);
-
-  useEffect(() => {
-    if (tl.current) {
-      if (isPlaying) tl.current.play();
-      else tl.current.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (isFinished) {
-      const finishTl = gsap.timeline();
-      if (videoRef.current) finishTl.fromTo(videoRef.current, { opacity: 0, x: -20, scale: 0.97 }, { opacity: 1, x: 0, scale: 1, duration: 0.8, ease: "power4.out" }, 0);
-      if (ctaRef.current) finishTl.fromTo(ctaRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.4);
-    }
-  }, [isFinished]);
-
-  return (
-    <div className="w-full h-full flex flex-col items-center justify-center mx-auto px-6 md:px-10 lg:px-12 overflow-hidden">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        {/* Left Column - Video */}
-        <div className="order-2 lg:order-1 flex items-center">
-           <div ref={videoRef} className="w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 shadow-lg bg-black relative group cursor-pointer flex items-center justify-center opacity-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2938&auto=format&fit=crop" alt="Video Thumbnail" className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-40 transition-opacity duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/80 to-transparent" />
-              <div className="relative z-10 flex flex-col items-center justify-center transform group-hover:scale-105 transition-transform duration-500">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md shadow-xl flex items-center justify-center text-white mb-2 border border-white/20">
-                  <Play className="w-5 h-5 ml-1" />
-                </div>
-              </div>
-              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white font-medium z-10 border border-white/10 flex items-center">
-                <Play className="w-3 h-3 mr-1.5" />
-                Welcome_Message.mp4
-              </div>
-           </div>
-        </div>
-
-        {/* Right Column - Text */}
-        <div className="flex flex-col justify-center order-1 lg:order-2 text-left py-2">
-          <div>
-            <h2 ref={titleRef} className="opacity-0 text-2xl md:text-3xl font-bold tracking-tight mb-2 text-foreground leading-tight">
-              Our Vision for You
-            </h2>
-            <p ref={textRef} className="opacity-0 text-sm md:text-base text-muted-foreground leading-relaxed">
-              A quick welcome from our leadership team. We stand at a transformational moment, and this course bridges the gap between awareness and application.
-            </p>
-          </div>
-          
-          <div ref={ctaRef} className="bg-primary/5 border border-primary/10 rounded-xl p-4 backdrop-blur-md relative overflow-hidden group opacity-0 mt-4">
-            <div className="relative z-10">
-              <p className="font-bold text-foreground text-sm mb-0.5">Vision & Roadmap</p>
-              <p className="text-xs text-muted-foreground mb-3">Created by <a href="#" className="text-primary hover:underline font-medium">Internal Leadership</a></p>
-              <Button className="w-full h-8 text-xs group/btn" variant="default" asChild>
-                <a href="#">
-                  View Transcript
-                  <ArrowRight className="w-3 h-3 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function WhatIsGenAISlide({ onComplete }: { onComplete?: () => void }) {
   const { isPlaying, isFinished } = useNarrationStore();
@@ -849,14 +768,6 @@ const MODULE_0_SLIDES: Slide[] = [
     fullWidth: true,
     narrationText: "Hello, and welcome. You are exactly where you need to be. We are living through a massive technological shift, and it's completely normal to feel a bit overwhelmed or unsure of where to start. That's exactly why we built AI Foundations. Our goal is to take you from just hearing about AI, to actually using it confidently in your daily work, in a space where it's safe to experiment.",
     component: <WelcomeAttentionSlide />
-  },
-  {
-    id: "welcome-vision-video",
-    type: "interactive",
-    lessonIndex: 0,
-    fullWidth: true,
-    narrationText: "Before we dive into the details, we want to share the big picture. Our leadership team has put together a short message outlining their vision for you, and where this journey will lead. Please take a moment to watch this introduction.",
-    component: <VisionRoadmapSlide />
   },
   {
     id: "what-is-gen-ai",

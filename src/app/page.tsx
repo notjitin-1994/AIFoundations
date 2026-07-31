@@ -113,12 +113,6 @@ export default function CourseMarketingPage() {
               <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" /> Back to Orbit Catalog
             </a>
             
-            <div className="animate-fade inline-flex items-center gap-2 px-3 py-1 bg-card/40 backdrop-blur-md border border-white/10 rounded-full text-xs font-bold uppercase tracking-widest text-primary mb-6 shadow-xl">
-              <span className="text-primary">★ 4.9 Rating</span>
-              <span className="w-1 h-1 rounded-full bg-primary/30"></span>
-              2,104 Students
-            </div>
-
             <h1 className="animate-fade font-heading text-5xl md:text-6xl lg:text-[4rem] font-bold text-foreground tracking-tighter leading-[1.1] mb-6 text-balance">
               AI Foundations: <br />
               <span className="text-primary">Concept to Application</span>
