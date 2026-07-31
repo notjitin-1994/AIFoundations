@@ -13,11 +13,11 @@ import {
   Sparkles, Activity, Zap, GraduationCap, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
+import { fetchModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
-import { wipeDatabaseProgress } from "@/actions/sync-progress";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -42,6 +42,30 @@ export default function CourseDashboardPage() {
     setMounted(true);
     // Record login for streak tracking
     progress.recordLogin();
+
+    if (user) {
+      fetchModuleProgress().then(dbProgress => {
+        if (dbProgress) {
+          const newMap = { ...progress.moduleProgressMap };
+          const newCompleted = [...progress.completedModules];
+          dbProgress.forEach((p: any) => {
+            const courseMod = COURSE_MODULES.find(m => m.id === p.module_id);
+            if (p.completed && !newCompleted.includes(p.module_id)) {
+              newCompleted.push(p.module_id);
+            }
+            newMap[p.module_id] = {
+              activeSlideIndex: p.active_slide_index || 0,
+              totalSlidesInModule: courseMod?.slideCount || 1,
+              completed: !!p.completed
+            };
+          });
+          progress.syncFromDB({ 
+             completedModules: newCompleted,
+             moduleProgressMap: newMap
+          });
+        }
+      });
+    }
   }, [user]);
 
   useEffect(() => {
@@ -69,16 +93,25 @@ export default function CourseDashboardPage() {
   const totalModules = COURSE_MODULES.length;
   const completedCount = mounted ? progress.completedModules.length : 0;
   
-  // Base progress from fully completed modules
-  const baseProgress = mounted ? (completedCount / totalModules) * 100 : 0;
+  let progressPercent = 0;
+  if (mounted) {
+    let totalFraction = 0;
+    COURSE_MODULES.forEach(mod => {
+      const mapEntry = progress.moduleProgressMap?.[mod.id];
+      if (progress.completedModules.includes(mod.id) || mapEntry?.completed) {
+        totalFraction += 1;
+      } else if (mapEntry) {
+        const totalForMod = mapEntry.totalSlidesInModule || mod.slideCount || 1;
+        totalFraction += (mapEntry.activeSlideIndex || 0) / Math.max(1, totalForMod);
+      } else if (progress.activeModuleId === mod.id && !progress.completedModules.includes(mod.id)) {
+        // Fallback for current active module if not yet in map
+        const totalForMod = progress.totalSlidesInModule || mod.slideCount || 1;
+        totalFraction += (progress.activeSlideIndex || 0) / Math.max(1, totalForMod);
+      }
+    });
+    progressPercent = Math.round((totalFraction / totalModules) * 100);
+  }
 
-  // Granular progress from current module's active slide ONLY if it's not already completed
-  const isCurrentModuleCompleted = mounted && progress.completedModules.includes(progress.activeModuleId || "0");
-  const currentModuleProgress = isCurrentModuleCompleted
-    ? 0
-    : (mounted ? ((progress.activeSlideIndex || 0) / Math.max(1, progress.totalSlidesInModule || 1)) * (100 / totalModules) : 0);
-
-  const progressPercent = mounted ? Math.round(Math.min(100, baseProgress + currentModuleProgress)) : 0;
   const hoursInvested = mounted ? (gamification.totalTimeSpentSeconds / 3600).toFixed(1) : "0.0";
   
   // Behavioral Badges Logic

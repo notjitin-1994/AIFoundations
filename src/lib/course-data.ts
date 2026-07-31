@@ -20,6 +20,7 @@ export const COURSE_MODULES = [
     path: "/modules/0",
     overview: "Get familiar with the platform, set your learning goals, and choose the AI project template you will build throughout this course.",
     imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80",
+    slideCount: 26,
     lessons: [
       "0.1 Welcome and Roadmap",
       "0.2 Myth-Busting",
@@ -33,6 +34,7 @@ export const COURSE_MODULES = [
     path: "/modules/1",
     overview: "Dismantle the Hollywood myths of AI. Understand how Large Language Models actually work under the hood using probabilities, not reasoning.",
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1920&q=80",
+    slideCount: 68,
     lessons: [
       "1.1 What AI Actually Is",
       "1.2 Machine Learning in Plain Language",
@@ -47,6 +49,7 @@ export const COURSE_MODULES = [
     path: "/modules/2",
     overview: "AI has no inherent memory. Learn how context windows work and how Retrieval-Augmented Generation (RAG) gives models long-term recall.",
     videoUrl: "https://videos.pexels.com/video-files/3129595/3129595-uhd_2560_1440_30fps.mp4",
+    slideCount: 25,
     lessons: [
       "2.1 The Goldfish Metaphor",
       "2.2 Tokens: The Currency of AI",
@@ -61,6 +64,7 @@ export const COURSE_MODULES = [
     path: "/modules/3",
     overview: "Language models are trapped in text boxes. Discover how function calling and the Model Context Protocol (MCP) let AI take real-world actions.",
     imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80",
+    slideCount: 30,
     lessons: [
       "3.1 From Chat to Action",
       "3.2 Function Calling Demystified",
@@ -75,6 +79,7 @@ export const COURSE_MODULES = [
     path: "/modules/4",
     overview: "Design autonomous systems that reason, act, observe, and verify. Move from prompting the AI to building a self-correcting loop that builds your project.",
     videoUrl: "https://videos.pexels.com/video-files/3129957/3129957-uhd_2560_1440_25fps.mp4",
+    slideCount: 7,
     lessons: [
       "4.1 Anatomy of a Loop",
       "4.2 The ReAct Pattern",
@@ -88,6 +93,7 @@ export const COURSE_MODULES = [
     path: "/modules/5",
     overview: "Stop using zero-shot prompts. Design multi-step workflows that chain specialized AI tasks together for content, code, and media generation.",
     videoUrl: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4",
+    slideCount: 10,
     lessons: [
       "5.1 The Upside-Down Approach",
       "5.2 Harness Architecture",
@@ -99,13 +105,13 @@ export const COURSE_MODULES = [
       "5.8 Capstone Submission"
     ]
   },
-
   { 
     id: "6", 
     title: "6. The Horizon", 
     path: "/modules/6",
     overview: "Look to the future of AI. Build a continuous learning habit and present your final capstone project to the community.",
     imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80",
+    slideCount: 9,
     lessons: [
       "6.1 LLMOps & The Reality of Production",
       "6.2 The Living Tool Landscape",

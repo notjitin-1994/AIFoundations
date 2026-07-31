@@ -46,6 +46,7 @@ interface ProgressState {
   activeSlideIndex: number;
   totalSlidesInModule: number;
   activeModuleId: string;
+  moduleProgressMap: Record<string, { activeSlideIndex: number, totalSlidesInModule: number, completed: boolean }>;
   lastUpdatedAt: string; // ISO string representing the last local modification time
   
   // Gamification
@@ -61,6 +62,7 @@ interface ProgressState {
   markLessonComplete: (moduleId: string, lessonIndex: number) => void;
   setActiveLessonIndex: (index: number) => void;
   setActiveSlideProgress: (slideIndex: number, totalSlides: number, moduleId?: string) => void;
+  setModuleProgressMap: (map: Record<string, { activeSlideIndex: number, totalSlidesInModule: number, completed: boolean }>) => void;
   
   // Gamification Actions
   addXP: (amount: number) => void;
@@ -89,6 +91,7 @@ export const useProgressStore = create<ProgressState>()(
       activeSlideIndex: 0,
       totalSlidesInModule: 1,
       activeModuleId: '0',
+      moduleProgressMap: {},
       lastUpdatedAt: new Date().toISOString(),
       gamification: {
         xp: 0,
@@ -188,6 +191,13 @@ export const useProgressStore = create<ProgressState>()(
 
           return {
             completedModules: [...state.completedModules, moduleId],
+            moduleProgressMap: {
+              ...state.moduleProgressMap,
+              [moduleId]: {
+                ...state.moduleProgressMap[moduleId],
+                completed: true
+              }
+            },
             gamification: {
               ...state.gamification,
               badges: newBadges,
@@ -218,12 +228,24 @@ export const useProgressStore = create<ProgressState>()(
       setActiveLessonIndex: (index) => set({ activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() }),
 
       setActiveSlideProgress: (slideIndex, totalSlides, moduleId) => 
-        set(() => ({ 
+        set((state) => ({ 
           activeSlideIndex: slideIndex, 
           totalSlidesInModule: totalSlides,
           ...(moduleId ? { activeModuleId: moduleId } : {}),
+          ...(moduleId ? {
+            moduleProgressMap: {
+              ...state.moduleProgressMap,
+              [moduleId]: {
+                activeSlideIndex: slideIndex,
+                totalSlidesInModule: totalSlides,
+                completed: state.completedModules.includes(moduleId)
+              }
+            }
+          } : {}),
           lastUpdatedAt: new Date().toISOString()
         })),
+
+      setModuleProgressMap: (map) => set({ moduleProgressMap: map, lastUpdatedAt: new Date().toISOString() }),
 
       addXP: (amount) => 
         set((state) => ({
@@ -298,28 +320,28 @@ export const useProgressStore = create<ProgressState>()(
           ...dbData,
         })),
 
-      resetProgress: () =>
-        set((state) => ({
-          completedModules: [],
-          completedLessons: {},
-          projectSpine: null,
-          projectSpineAnswers: {},
-          assessments: {},
-          activeLessonIndex: 0,
-          activeSlideIndex: 0,
-          totalSlidesInModule: 1,
-          activeModuleId: '0',
-          gamification: {
-            xp: 0,
-            badges: [],
-            toolsMastered: [],
-            totalTimeSpentSeconds: 0,
-            lastLoginDate: null,
-            currentStreak: 0,
-          },
-          lastUpdatedAt: new Date().toISOString(),
-          isEnrolled: state.isEnrolled
-        })),
+      resetProgress: () => set((state) => ({ 
+        completedModules: [], 
+        completedLessons: {},
+        projectSpine: null,
+        projectSpineAnswers: {},
+        assessments: {},
+        activeLessonIndex: 0,
+        activeSlideIndex: 0,
+        totalSlidesInModule: 1,
+        activeModuleId: '0',
+        moduleProgressMap: {},
+        gamification: {
+          xp: 0,
+          badges: [],
+          toolsMastered: [],
+          totalTimeSpentSeconds: 0,
+          lastLoginDate: null,
+          currentStreak: 0,
+        },
+        lastUpdatedAt: new Date().toISOString(),
+        isEnrolled: state.isEnrolled
+      })),
       setEnrolled: (status) =>
         set(() => ({
           isEnrolled: status,
