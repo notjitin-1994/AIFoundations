@@ -52,6 +52,8 @@ export default function CourseDashboardPage() {
           let mergedSpine = progress.projectSpine;
           let mergedSpineAnswers = { ...progress.projectSpineAnswers };
           let mergedGamification = { ...progress.gamification };
+          let mergedCompletedLessons = { ...progress.completedLessons };
+          let mergedCompletedSlides = { ...progress.completedSlides };
 
           dbProgress.forEach((p: any) => {
             const courseMod = COURSE_MODULES.find(m => m.id === p.module_id);
@@ -78,6 +80,12 @@ export default function CourseDashboardPage() {
                 mergedGamification = p.gamification;
               }
             }
+            if (p.completed_lessons) {
+              mergedCompletedLessons = { ...mergedCompletedLessons, ...p.completed_lessons };
+            }
+            if (p.completed_slides) {
+              mergedCompletedSlides = { ...mergedCompletedSlides, ...p.completed_slides };
+            }
           });
           progress.syncFromDB({ 
              completedModules: newCompleted,
@@ -85,7 +93,9 @@ export default function CourseDashboardPage() {
              assessments: mergedAssessments,
              projectSpine: mergedSpine,
              projectSpineAnswers: mergedSpineAnswers,
-             gamification: mergedGamification
+             gamification: mergedGamification,
+             completedLessons: mergedCompletedLessons,
+             completedSlides: mergedCompletedSlides
           });
         }
       });
@@ -122,15 +132,20 @@ export default function CourseDashboardPage() {
   if (mounted) {
     COURSE_MODULES.forEach(mod => {
       const mapEntry = progress.moduleProgressMap?.[mod.id];
+      const completedSlidesCount = progress.completedSlides?.[mod.id]?.length || 0;
+      
       if (progress.completedModules.includes(mod.id) || mapEntry?.completed) {
         totalFraction += 1;
       } else if (mapEntry) {
         const totalForMod = mapEntry.totalSlidesInModule || mod.slideCount || 1;
-        totalFraction += (mapEntry.activeSlideIndex || 0) / Math.max(1, totalForMod);
+        // Use completedSlides array length for true granular progress, fallback to active index
+        const count = Math.max(completedSlidesCount, mapEntry.activeSlideIndex || 0);
+        totalFraction += count / Math.max(1, totalForMod);
       } else if (progress.activeModuleId === mod.id && !progress.completedModules.includes(mod.id)) {
         // Fallback for current active module if not yet in map
         const totalForMod = progress.totalSlidesInModule || mod.slideCount || 1;
-        totalFraction += (progress.activeSlideIndex || 0) / Math.max(1, totalForMod);
+        const count = Math.max(completedSlidesCount, progress.activeSlideIndex || 0);
+        totalFraction += count / Math.max(1, totalForMod);
       }
     });
     progressPercent = Math.round((totalFraction / totalModules) * 100);

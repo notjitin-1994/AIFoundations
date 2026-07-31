@@ -1,27 +1,17 @@
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '/home/jitin/orbit-v1/.env.local' });
+const { Client } = require('pg');
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const client = new Client({
+  connectionString: 'postgresql://postgres:Vtvt%40123%401994@db.lymilwegnuzimngpawik.supabase.co:5432/postgres'
+});
 
-async function main() {
-  const { data: users, error: uErr } = await supabase.auth.admin.listUsers();
-  if (uErr) console.error(uErr);
-  const user = users.users.find(u => u.email === 'not.jitin@gmail.com');
-  console.log("User:", user);
-  
-  if (user) {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    console.log("Profile:", profile);
-    
-    // Check if there's an enrollments or access table
-    const { data: enrollments } = await supabase.from('enrollments').select('*').eq('user_id', user.id);
-    console.log("Enrollments:", enrollments);
-    
-    const { data: purchases } = await supabase.from('purchases').select('*').eq('user_id', user.id);
-    console.log("Purchases:", purchases);
-  }
+async function run() {
+  await client.connect();
+  const res = await client.query(`SELECT id, email FROM auth.users WHERE email = 'bharat.nair.mail@gmail.com'`);
+  console.log('Users:', res.rows);
+
+  const courses = await client.query(`SELECT id, slug, title FROM public.courses`);
+  console.log('Courses:', courses.rows);
+
+  await client.end();
 }
-main();
+run().catch(console.error);

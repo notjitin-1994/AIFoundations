@@ -40,6 +40,7 @@ export interface GamificationState {
 interface ProgressState {
   completedModules: string[];
   completedLessons: Record<string, number[]>;
+  completedSlides: Record<string, string[]>;
   projectSpine: ProjectSpine;
   projectSpineAnswers: Record<string, ProjectSpineAnswerData>;
   assessments: Record<string, AssessmentState>;
@@ -61,6 +62,7 @@ interface ProgressState {
   saveAssessmentState: (moduleId: string, state: AssessmentState) => void;
   markModuleComplete: (moduleId: string) => void;
   markLessonComplete: (moduleId: string, lessonIndex: number) => void;
+  markSlideComplete: (moduleId: string, slideId: string) => void;
   setActiveLessonIndex: (index: number) => void;
   setActiveSlideProgress: (slideIndex: number, totalSlides: number, moduleId?: string) => void;
   setModuleProgressMap: (map: Record<string, { activeSlideIndex: number, totalSlidesInModule: number, completed: boolean }>) => void;
@@ -85,6 +87,7 @@ export const useProgressStore = create<ProgressState>()(
       userId: null,
       completedModules: [],
       completedLessons: {},
+      completedSlides: {},
       projectSpine: null,
       projectSpineAnswers: {},
       assessments: {},
@@ -226,6 +229,23 @@ export const useProgressStore = create<ProgressState>()(
           };
         }),
 
+      markSlideComplete: (moduleId, slideId) =>
+        set((state) => {
+          const modSlides = state.completedSlides[moduleId] || [];
+          if (modSlides.includes(slideId)) return state;
+          return {
+            completedSlides: {
+              ...state.completedSlides,
+              [moduleId]: [...modSlides, slideId]
+            },
+            gamification: {
+              ...state.gamification,
+              xp: state.gamification.xp + 5 // 5 XP for completing a slide
+            },
+            lastUpdatedAt: new Date().toISOString()
+          };
+        }),
+
       setActiveLessonIndex: (index) => set({ activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() }),
 
       setActiveSlideProgress: (slideIndex, totalSlides, moduleId) => 
@@ -324,6 +344,7 @@ export const useProgressStore = create<ProgressState>()(
       resetProgress: () => set((state) => ({ 
         completedModules: [], 
         completedLessons: {},
+        completedSlides: {},
         projectSpine: null,
         projectSpineAnswers: {},
         assessments: {},

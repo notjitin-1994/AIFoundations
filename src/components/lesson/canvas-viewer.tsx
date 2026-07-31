@@ -170,7 +170,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   
   const reduce = useReducedMotion();
   const router = useRouter();
-  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons, resetProgress } = useProgressStore();
+  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, markSlideComplete, completedModules, completedLessons, resetProgress } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
@@ -343,6 +343,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, []);
 
   const handleNext = () => {
+    if (moduleId !== "unknown") {
+      markSlideComplete(moduleId, slides[currentIndex].id);
+    }
     if (currentIndex < slides.length - 1) {
       const currentLesson = slides[currentIndex]?.lessonIndex;
       const nextLesson = slides[currentIndex + 1]?.lessonIndex;

@@ -55,6 +55,8 @@ export function useSyncEngine(moduleId: string) {
             newData.gamification = modProgress.gamification;
           }
         }
+        if (modProgress.completed_lessons) newData.completedLessons = { ...useProgressStore.getState().completedLessons, ...modProgress.completed_lessons };
+        if (modProgress.completed_slides) newData.completedSlides = { ...useProgressStore.getState().completedSlides, ...modProgress.completed_slides };
         
         syncFromDB(newData);
       } catch (err) {
@@ -77,7 +79,9 @@ export function useSyncEngine(moduleId: string) {
             assessments: state.assessments,
             projectSpine: state.projectSpine,
             projectSpineAnswers: state.projectSpineAnswers,
-            gamification: state.gamification
+            gamification: state.gamification,
+            completedLessons: state.completedLessons,
+            completedSlides: state.completedSlides
           }).catch(() => {});
         }, 1000); // 1s debounce
       }
@@ -93,7 +97,9 @@ export function useSyncEngine(moduleId: string) {
         assessments: useProgressStore.getState().assessments,
         projectSpine: useProgressStore.getState().projectSpine,
         projectSpineAnswers: useProgressStore.getState().projectSpineAnswers,
-        gamification: useProgressStore.getState().gamification
+        gamification: useProgressStore.getState().gamification,
+        completedLessons: useProgressStore.getState().completedLessons,
+        completedSlides: useProgressStore.getState().completedSlides
       }).catch(() => {});
     };
 

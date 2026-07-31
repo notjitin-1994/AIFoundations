@@ -18,6 +18,8 @@ export async function syncModuleProgress(
     projectSpine?: any;
     projectSpineAnswers?: any;
     gamification?: any;
+    completedLessons?: any;
+    completedSlides?: any;
   }
 ) {
   try {
@@ -43,6 +45,8 @@ export async function syncModuleProgress(
     if (data.projectSpine !== undefined) payload.project_spine = data.projectSpine;
     if (data.projectSpineAnswers !== undefined) payload.project_spine_answers = data.projectSpineAnswers;
     if (data.gamification !== undefined) payload.gamification = data.gamification;
+    if (data.completedLessons !== undefined) payload.completed_lessons = data.completedLessons;
+    if (data.completedSlides !== undefined) payload.completed_slides = data.completedSlides;
 
     const { error } = await supabase.from("module_progress").upsert(payload, {
       onConflict: "user_id,module_id",
