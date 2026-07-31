@@ -45,8 +45,8 @@ export function useSyncEngine(moduleId: string) {
         if (modProgress.completed && !completedModules.includes(moduleId)) {
           newData.completedModules = [...completedModules, moduleId];
         }
-        newData.activeLessonIndex = modProgress.active_lesson_index ?? 0;
-        newData.activeSlideIndex = modProgress.active_slide_index ?? 0;
+        newData.activeLessonIndex = Math.max(modProgress.active_lesson_index ?? 0, useProgressStore.getState().activeLessonIndex);
+        newData.activeSlideIndex = Math.max(modProgress.active_slide_index ?? 0, useProgressStore.getState().activeSlideIndex);
         if (modProgress.assessments) newData.assessments = { ...useProgressStore.getState().assessments, ...modProgress.assessments };
         if (modProgress.project_spine) newData.projectSpine = modProgress.project_spine;
         if (modProgress.project_spine_answers) newData.projectSpineAnswers = { ...useProgressStore.getState().projectSpineAnswers, ...modProgress.project_spine_answers };
@@ -56,7 +56,15 @@ export function useSyncEngine(moduleId: string) {
           }
         }
         if (modProgress.completed_lessons) newData.completedLessons = { ...useProgressStore.getState().completedLessons, ...modProgress.completed_lessons };
-        if (modProgress.completed_slides) newData.completedSlides = { ...useProgressStore.getState().completedSlides, ...modProgress.completed_slides };
+        if (modProgress.completed_slides) {
+          const mergedCompletedSlides = { ...useProgressStore.getState().completedSlides };
+          Object.keys(modProgress.completed_slides).forEach(modId => {
+            const local = mergedCompletedSlides[modId] || [];
+            const remote = modProgress.completed_slides[modId] || [];
+            mergedCompletedSlides[modId] = Array.from(new Set([...local, ...remote]));
+          });
+          newData.completedSlides = mergedCompletedSlides;
+        }
         
         syncFromDB(newData);
       } catch (err) {
@@ -113,6 +121,7 @@ export function useSyncEngine(moduleId: string) {
     return () => {
       cancelled = true;
       clearTimeout(debounceTimer);
+      handleBeforeUnload(); // Sync immediately on unmount (client-side navigation)
       unsubscribe();
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('visibilitychange', handleBeforeUnload);

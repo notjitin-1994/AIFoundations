@@ -10,10 +10,11 @@ import { useProgressStore } from "@/store/progress";
 import { useUser } from "@/hooks/use-user";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading: authLoading } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
 
@@ -99,6 +100,7 @@ export default function CourseMarketingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
+      <AuthModal isOpen={!authLoading && !user} />
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <MarketingNavbar />
 
