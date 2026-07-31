@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { fetchModuleProgress } from "@/actions/sync-progress";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function CourseMarketingPage() {
 
   useEffect(() => {
     // Auto-enroll the test accounts
-    const isTestAccount = user?.email === "not.jitin@gmail.com" || user?.email === "jitin@glitchzerolabs.com";
+    const isTestAccount = user?.email === "not.jitin@gmail.com" || user?.email === "jitin@glitchzerolabs.com" || user?.email === "bharat.nair.mail@gmail.com";
     if (isTestAccount && !isEnrolled) {
       useProgressStore.getState().setEnrolled(true);
       router.push("/dashboard");
@@ -29,6 +30,17 @@ export default function CourseMarketingPage() {
 
     if (isEnrolled) {
       router.push("/dashboard");
+      return;
+    }
+
+    // If not locally enrolled but user is logged in, check DB for any progress (implies enrollment on another device)
+    if (user && !isEnrolled) {
+      fetchModuleProgress().then((dbProgress) => {
+        if (dbProgress && dbProgress.length > 0) {
+          useProgressStore.getState().setEnrolled(true);
+          router.push("/dashboard");
+        }
+      });
     }
   }, [isEnrolled, router, user]);
 
