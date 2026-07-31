@@ -197,6 +197,7 @@ export default function CourseDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
+      <AuthModal isOpen={!authLoading && !user} />
       <MarketingNavbar />
 
       <main className="pt-40 pb-32 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">

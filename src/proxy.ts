@@ -22,11 +22,7 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  if (!user && (pathname.startsWith('/dashboard') || pathname.startsWith('/modules'))) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
+  // Removed server-side redirect to /login to allow AuthModal to handle unauthenticated state
   return supabaseResponse
 }
 
