@@ -14,6 +14,7 @@ import { useNarrationStore } from "@/store/narration";
 import { Suspense } from "react";
 import { useUser } from "@/hooks/use-user";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { useSyncEngine } from "@/hooks/use-sync-engine";
 
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
@@ -844,6 +845,7 @@ const MODULE_0_SLIDES: Slide[] = [
 
 export default function OrientationModule() {
   const { user, isLoading: authLoading } = useUser();
+  useSyncEngine("0");
 
   const handleModuleComplete = () => {
     // ProjectSpineSelector handles the redirect

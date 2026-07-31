@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import ReactMarkdown from "react-markdown";
-import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2, VolumeX, Library, HelpCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Play, Pause, Volume2, VolumeX, Library, HelpCircle, ShieldAlert } from "lucide-react";
 import { useProgressStore } from "@/store/progress";
 import { useNarrationStore } from "@/store/narration";
 import { sendXAPIStatement } from "@/actions/xapi";
@@ -173,9 +173,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, completedModules, completedLessons, resetProgress } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(false);
   const scheduledSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -234,16 +234,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     // Broadcast granular slide progress
     setActiveSlideProgress(currentIndex, slides.length, moduleId);
 
-    // Persist slide progress to database (debounced via timeout)
-    if (moduleId !== "unknown" && slide?.lessonIndex !== undefined) {
-      const timer = setTimeout(() => {
-        syncModuleProgress(moduleId, {
-          activeSlideIndex: currentIndex,
-          activeLessonIndex: slide.lessonIndex,
-        });
-      }, 500);
-      scheduledSyncRef.current = timer;
-    }
+    // Removed manual debounce sync, useSyncEngine handles this now
 
     // Cleanup previous audio if any
     if (audioRef.current) {
@@ -256,7 +247,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       const basePath = "/courses/aifoundations-concept2application";
       const audio = new Audio(`${basePath}/audio/${slide.id}.mp3`);
       audioRef.current = audio;
-      audio.muted = isMuted; // inherit current mute state across slide changes
+      audio.muted = narration.isMuted; // inherit current mute state across slide changes
       
       audio.onended = () => {
         narration.finish();
@@ -311,9 +302,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   useEffect(() => {
     // Sync mute state to audio element whenever it changes
     if (audioRef.current) {
-      audioRef.current.muted = isMuted;
+      audioRef.current.muted = narration.isMuted;
     }
-  }, [isMuted]);
+  }, [narration.isMuted]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -359,16 +350,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       if (currentLesson !== undefined && nextLesson !== undefined && currentLesson !== nextLesson) {
         if (moduleId !== "unknown") {
           markLessonComplete(moduleId, currentLesson);
-          syncModuleProgress(moduleId, {
-            activeLessonIndex: nextLesson,
-            activeSlideIndex: currentIndex + 1,
-          });
         }
-      } else if (currentLesson !== undefined && moduleId !== "unknown") {
-        syncModuleProgress(moduleId, {
-          activeLessonIndex: currentLesson,
-          activeSlideIndex: currentIndex + 1,
-        });
       }
       
       setDirection(1);
@@ -378,11 +360,6 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       const currentLesson = slides[currentIndex]?.lessonIndex;
       if (currentLesson !== undefined && moduleId !== "unknown") {
         markLessonComplete(moduleId, currentLesson);
-        syncModuleProgress(moduleId, {
-          completed: true,
-          activeLessonIndex: currentLesson,
-          activeSlideIndex: currentIndex,
-        });
       }
       onComplete();
     }
@@ -412,16 +389,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       x: reduce ? 0 : dir * -24,
     }),
   };
-
-  const finalHandlePrev = () => {
-    if (!hasInteracted) setHasInteracted(true);
-    if (navOverride?.disablePrev) return;
-    if (navOverride?.onPrev) {
-      navOverride.onPrev(handlePrev);
-    } else {
-      handlePrev();
-    }
-  };
+  // Keyboard navigation & Window Freeze
 
   const currentLessonIndex = slides[currentIndex]?.lessonIndex;
   const isModuleCompleted = moduleId !== "unknown" && completedModules.includes(moduleId);
@@ -462,9 +430,63 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const prevDisabled = navOverride?.disablePrev !== undefined ? navOverride.disablePrev : currentIndex === 0;
   const NextIcon = navOverride?.nextIcon || (currentIndex === slides.length - 1 ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />);
 
+  const finalHandlePrev = () => {
+    if (!hasInteracted) setHasInteracted(true);
+    if (navOverride?.disablePrev) return;
+    if (navOverride?.onPrev) {
+      navOverride.onPrev(handlePrev);
+    } else {
+      handlePrev();
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' && !nextDisabled) finalHandleNext();
+      if (e.key === 'ArrowLeft' && !prevDisabled) finalHandlePrev();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsBlurred(true);
+        narration.pause();
+      } else {
+        setIsBlurred(false);
+      }
+    };
+
+    const handleBlur = () => {
+      setIsBlurred(true);
+      narration.pause();
+    };
+
+    const handleFocus = () => {
+      setIsBlurred(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [nextDisabled, prevDisabled, currentIndex, narration]);
+
   return (
     <>
       <CanvasNavContext.Provider value={{ setNavOverride, goToSlide: setCurrentIndex }}>
+      {isBlurred && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-white">
+          <ShieldAlert className="w-16 h-16 text-primary mb-4" />
+          <h2 className="text-3xl font-bold mb-2">Course Paused</h2>
+          <p className="text-zinc-300">Please return to the window to continue learning.</p>
+        </div>
+      )}
       <div className="w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center relative">
         {/* Canvas Container */}
         <div className="relative w-full aspect-[16/10] max-h-[90vh] bg-card border border-border shadow-2xl rounded-xl overflow-hidden flex flex-col">
@@ -520,46 +542,6 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           </div>
 
           <div className="h-20 border-t border-border bg-card/50 backdrop-blur-xl px-6 flex items-center justify-between shrink-0 relative">
-          {/* Seekbar */}
-          {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
-            <div 
-              className="absolute top-0 left-0 w-full h-6 -mt-3 cursor-pointer group flex flex-col justify-center z-50"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
-                
-                const duration = audioRef.current?.duration || (useNarrationStore.getState().durationMs / 1000);
-                if (duration > 0) {
-                  const newTime = (pct / 100) * duration;
-                  if (audioRef.current) {
-                    audioRef.current.currentTime = newTime;
-                  }
-                  narration.setProgress(pct);
-                  narration.seek(newTime);
-                  
-                  sendXAPIStatement(
-                    "http://id.tincanapi.com/verb/skipped",
-                    "scrubbed",
-                    `http://smartslate.com/activities/${moduleId}/slides/${slides[currentIndex].id}`,
-                    `Slide ${currentIndex + 1}: ${slides[currentIndex].id}`,
-                    "User scrubbed the timeline",
-                    { moduleId, slideId: slides[currentIndex].id, lessonIndex: currentIndex }
-                  ).catch(() => {});
-                }
-              }}
-            >
-              <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 group-hover:h-2 transition-all relative pointer-events-none">
-                <div 
-                  className="h-full bg-primary relative transition-all duration-75"
-                  style={{ width: `${narration.progress}%` }}
-                >
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </div>
-            </div>
-          )}
-          
           <div className="flex items-center space-x-3 w-full max-w-[200px]">
             {/* Left side actions */}
             <div className="flex items-center space-x-2">
@@ -615,12 +597,12 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
             {/* Mute / Unmute — only shown when the slide has audio */}
             {(slides[currentIndex].narrationText || slides[currentIndex].hasCustomAudio) && (
               <button
-                onClick={() => setIsMuted(m => !m)}
-                aria-label={isMuted ? "Unmute narration" : "Mute narration"}
-                title={isMuted ? "Unmute" : "Mute"}
+                onClick={() => narration.toggleMute()}
+                aria-label={narration.isMuted ? "Unmute narration" : "Mute narration"}
+                title={narration.isMuted ? "Unmute" : "Mute"}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 transition-all active:scale-95"
               >
-                {isMuted
+                {narration.isMuted
                   ? <VolumeX className="w-4 h-4" />
                   : <Volume2 className="w-4 h-4" />}
               </button>

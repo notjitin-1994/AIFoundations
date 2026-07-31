@@ -48,6 +48,11 @@ export default function CourseDashboardPage() {
         if (dbProgress) {
           const newMap = { ...progress.moduleProgressMap };
           const newCompleted = [...progress.completedModules];
+          let mergedAssessments = { ...progress.assessments };
+          let mergedSpine = progress.projectSpine;
+          let mergedSpineAnswers = { ...progress.projectSpineAnswers };
+          let mergedGamification = { ...progress.gamification };
+
           dbProgress.forEach((p: any) => {
             const courseMod = COURSE_MODULES.find(m => m.id === p.module_id);
             if (p.completed && !newCompleted.includes(p.module_id)) {
@@ -58,10 +63,29 @@ export default function CourseDashboardPage() {
               totalSlidesInModule: courseMod?.slideCount || 1,
               completed: !!p.completed
             };
+            if (p.assessments) {
+              mergedAssessments = { ...mergedAssessments, ...p.assessments };
+            }
+            if (p.project_spine) {
+              mergedSpine = p.project_spine;
+            }
+            if (p.project_spine_answers) {
+              mergedSpineAnswers = { ...mergedSpineAnswers, ...p.project_spine_answers };
+            }
+            if (p.gamification) {
+              // Keep the one with highest XP
+              if (p.gamification.xp > mergedGamification.xp) {
+                mergedGamification = p.gamification;
+              }
+            }
           });
           progress.syncFromDB({ 
              completedModules: newCompleted,
-             moduleProgressMap: newMap
+             moduleProgressMap: newMap,
+             assessments: mergedAssessments,
+             projectSpine: mergedSpine,
+             projectSpineAnswers: mergedSpineAnswers,
+             gamification: mergedGamification
           });
         }
       });
@@ -94,8 +118,8 @@ export default function CourseDashboardPage() {
   const completedCount = mounted ? progress.completedModules.length : 0;
   
   let progressPercent = 0;
+  let totalFraction = 0;
   if (mounted) {
-    let totalFraction = 0;
     COURSE_MODULES.forEach(mod => {
       const mapEntry = progress.moduleProgressMap?.[mod.id];
       if (progress.completedModules.includes(mod.id) || mapEntry?.completed) {
@@ -313,7 +337,7 @@ export default function CourseDashboardPage() {
               {/* Active timeline progress fill */}
               <div 
                 className="absolute left-[35px] md:left-[43px] top-6 w-px bg-gradient-to-b from-primary to-primary shadow-[0_0_15px_rgba(167,218,219,0.5)] transition-all duration-1000 ease-out z-0"
-                style={{ height: mounted ? `${Math.max(0, (progress.activeModuleId ? parseInt(progress.activeModuleId) : 0) / (totalModules - 1) * 100)}%` : '0%' }}
+                style={{ height: mounted ? `${Math.min(100, Math.max(0, totalFraction / (totalModules - 1) * 100))}%` : '0%' }}
               />
 
               <div className="space-y-0">

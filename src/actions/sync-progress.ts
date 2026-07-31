@@ -14,6 +14,10 @@ export async function syncModuleProgress(
     activeLessonIndex?: number;
     activeSlideIndex?: number;
     updated_at?: string;
+    assessments?: any;
+    projectSpine?: any;
+    projectSpineAnswers?: any;
+    gamification?: any;
   }
 ) {
   try {
@@ -33,6 +37,12 @@ export async function syncModuleProgress(
     }
     if (data.activeLessonIndex !== undefined) payload.active_lesson_index = data.activeLessonIndex;
     if (data.activeSlideIndex !== undefined) payload.active_slide_index = data.activeSlideIndex;
+    
+    // Additional state fields (ensure the DB schema supports them or uses JSONB)
+    if (data.assessments !== undefined) payload.assessments = data.assessments;
+    if (data.projectSpine !== undefined) payload.project_spine = data.projectSpine;
+    if (data.projectSpineAnswers !== undefined) payload.project_spine_answers = data.projectSpineAnswers;
+    if (data.gamification !== undefined) payload.gamification = data.gamification;
 
     const { error } = await supabase.from("module_progress").upsert(payload, {
       onConflict: "user_id,module_id",

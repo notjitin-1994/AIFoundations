@@ -15,6 +15,7 @@ export interface ProjectSpineAnswerData {
   mcps?: string;
   tools?: string;
   skills?: string;
+  completed?: boolean;
 }
 
 export interface AssessmentState {
@@ -359,6 +360,7 @@ export const useProgressStore = create<ProgressState>()(
           activeSlideIndex: 0,
           totalSlidesInModule: 1,
           activeModuleId: '0',
+          moduleProgressMap: {},
           gamification: {
             xp: 0,
             badges: [],

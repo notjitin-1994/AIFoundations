@@ -40,58 +40,60 @@ export function useSyncEngine(moduleId: string) {
         const modProgress = dbProgress.find((p: any) => p.module_id === moduleId);
         if (!modProgress) return;
 
-        const dbTimestamp = modProgress.updated_at ? new Date(modProgress.updated_at).getTime() : 0;
-        const localTimestamp = new Date(lastUpdatedAtRef.current).getTime();
-
-        // Conflict Resolution: Last-Write-Wins
-        if (dbTimestamp > localTimestamp) {
-          // DB is newer (user made progress on another device)
-          // We hydrate the local store to match DB
-          const newData: any = {};
-          if (modProgress.completed && !completedModules.includes(moduleId)) {
-            newData.completedModules = [...completedModules, moduleId];
-          }
-          newData.activeLessonIndex = modProgress.active_lesson_index ?? 0;
-          newData.activeSlideIndex = modProgress.active_slide_index ?? 0;
-          newData.lastUpdatedAt = modProgress.updated_at;
-          
-          syncFromDB(newData);
-        } else if (localTimestamp > dbTimestamp) {
-          // Local is newer. Force an immediate DB update.
-          await syncModuleProgress(moduleId, {
-            activeSlideIndex,
-            activeLessonIndex,
-            completed: completedModules.includes(moduleId),
-            updated_at: lastUpdatedAtRef.current
-          });
+        // DB is the absolute source of truth
+        const newData: any = {};
+        if (modProgress.completed && !completedModules.includes(moduleId)) {
+          newData.completedModules = [...completedModules, moduleId];
         }
+        newData.activeLessonIndex = modProgress.active_lesson_index ?? 0;
+        newData.activeSlideIndex = modProgress.active_slide_index ?? 0;
+        if (modProgress.assessments) newData.assessments = { ...useProgressStore.getState().assessments, ...modProgress.assessments };
+        if (modProgress.project_spine) newData.projectSpine = modProgress.project_spine;
+        if (modProgress.project_spine_answers) newData.projectSpineAnswers = { ...useProgressStore.getState().projectSpineAnswers, ...modProgress.project_spine_answers };
+        if (modProgress.gamification) {
+          if (modProgress.gamification.xp > useProgressStore.getState().gamification.xp) {
+            newData.gamification = modProgress.gamification;
+          }
+        }
+        
+        syncFromDB(newData);
       } catch (err) {
         console.error("Initial sync failed", err);
       }
     };
-
     performInitialSync();
 
-    // Setup 60s heartbeat sync
-    const interval = setInterval(() => {
-      syncModuleProgress(moduleId, {
-        activeSlideIndex: useProgressStore.getState().activeSlideIndex,
-        activeLessonIndex: useProgressStore.getState().activeLessonIndex,
-        completed: useProgressStore.getState().completedModules.includes(moduleId),
-        updated_at: lastUpdatedAtRef.current
-      }).catch(() => {});
-    }, 60000);
+    // Subscribe to all changes in the store to sync them to the DB
+    let debounceTimer: NodeJS.Timeout;
+    const unsubscribe = useProgressStore.subscribe((state, prevState) => {
+      if (state.lastUpdatedAt !== prevState.lastUpdatedAt) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          syncModuleProgress(moduleId, {
+            activeSlideIndex: state.activeSlideIndex,
+            activeLessonIndex: state.activeLessonIndex,
+            completed: state.completedModules.includes(moduleId),
+            updated_at: state.lastUpdatedAt,
+            assessments: state.assessments,
+            projectSpine: state.projectSpine,
+            projectSpineAnswers: state.projectSpineAnswers,
+            gamification: state.gamification
+          }).catch(() => {});
+        }, 1000); // 1s debounce
+      }
+    });
 
     // Setup beforeunload sync
     const handleBeforeUnload = () => {
-      // Use beacon API if possible, otherwise normal fetch
-      // syncModuleProgress uses server actions which are just fetch calls under the hood.
-      // We'll call it and not wait for the result.
       syncModuleProgress(moduleId, {
         activeSlideIndex: useProgressStore.getState().activeSlideIndex,
         activeLessonIndex: useProgressStore.getState().activeLessonIndex,
         completed: useProgressStore.getState().completedModules.includes(moduleId),
-        updated_at: lastUpdatedAtRef.current
+        updated_at: lastUpdatedAtRef.current,
+        assessments: useProgressStore.getState().assessments,
+        projectSpine: useProgressStore.getState().projectSpine,
+        projectSpineAnswers: useProgressStore.getState().projectSpineAnswers,
+        gamification: useProgressStore.getState().gamification
       }).catch(() => {});
     };
 
@@ -104,7 +106,8 @@ export function useSyncEngine(moduleId: string) {
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      clearTimeout(debounceTimer);
+      unsubscribe();
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('visibilitychange', handleBeforeUnload);
     };

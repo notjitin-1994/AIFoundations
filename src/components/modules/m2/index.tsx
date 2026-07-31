@@ -21,6 +21,7 @@ import { FindingToolsSlide } from "./slides/13-finding-tools";
 import { ProjectLLMSlide } from "./slides/14-project-llm";
 import { ProjectHarnessSlide } from "./slides/15-project-harness";
 import { ProjectCheckpointSlide } from "./slides/16-project-checkpoint";
+import { ProjectContextSlide } from "./slides/15b-project-context";
 import { AssessmentRunner } from "@/components/lesson/assessment-runner";
 
 export const MODULE_2_SLIDES: Slide[] = [
@@ -96,6 +97,7 @@ export const MODULE_2_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-2-quiz-1"
         kind="module"
         moduleIds={["2"]}
         tags={["llm", "mechanism", "slm", "deployment", "ml", "tokens", "tokens-estimation", "tokens-tokenization"]}
@@ -179,6 +181,7 @@ export const MODULE_2_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-2-quiz-2"
         kind="module"
         moduleIds={["2"]}
         tags={["context-window", "context-window-cost", "lost-in-middle", "rag", "rag-architecture", "rag-embeddings", "rag-fine-tuning", "rag-chunking", "rag-chunking-application"]}
@@ -256,6 +259,16 @@ export const MODULE_2_SLIDES: Slide[] = [
     component: (mark) => <ProjectHarnessSlide onComplete={mark} />
   },
   {
+    id: "m2-project-context",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Now it's time to set up your project environment. You will create a new folder, a docs folder, and generate a comprehensive AI Context document using an LLM. This document will ensure your agent writes code that exactly matches your architectural rules.",
+    component: (mark) => <ProjectContextSlide onComplete={mark} />
+  },
+  {
     id: "m2-project-checkpoint",
     type: "interactive",
     lessonIndex: 4,
@@ -272,6 +285,7 @@ export const MODULE_2_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-2-quiz"
         kind="module"
         moduleIds={["2"]}
         tags={["context-engineering", "mcp", "markdown-skills", "engine-harness"]}

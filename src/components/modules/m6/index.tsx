@@ -78,6 +78,7 @@ export const MODULE_6_SLIDES: Slide[] = [
     requireCompletion: true,
     component: (mark) => (
       <AssessmentRunner
+        id="m6-7-assessment"
         kind="final"
         moduleIds={["1", "2", "3", "4", "5", "6"]}
         totalQuestions={15}

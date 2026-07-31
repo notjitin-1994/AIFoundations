@@ -197,7 +197,7 @@ function TitleSlide() {
 
 // 2. Video Slide
 function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }) {
-  const { isPlaying, isFinished, seekTime } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime, isMuted } = useNarrationStore();
   const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -206,6 +206,8 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
   const videoRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   
+  const [isWatched, setIsWatched] = useState(false);
+
   // Extract YouTube ID for embed URL
   const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
 
@@ -248,16 +250,15 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
         {/* Left Column - Video */}
         <div className="order-2 lg:order-1">
            <div ref={videoRef} className="opacity-0 w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black relative">
-              <iframe 
-                width="100%" 
-                height="100%" 
-                src={`https://www.youtube.com/embed/${videoId}?rel=0`} 
-                title="Generative AI Explained" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-                onLoad={() => {
+              <ReactPlayer
+                url={`https://www.youtube.com/watch?v=${videoId}`}
+                width="100%"
+                height="100%"
+                muted={isMuted}
+                playing={false}
+                controls={true}
+                className="absolute inset-0"
+                onStart={() => {
                   track(
                     "http://adlnet.gov/expapi/verbs/launched",
                     "launched",
@@ -267,8 +268,7 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
                     { moduleId: "1", slideId: "m1-video-whatis" }
                   );
                 }}
-              >
-              </iframe>
+              />
            </div>
         </div>
 
@@ -301,11 +301,23 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
                   <ArrowRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
                 </a>
               </Button>
-              <Button className="flex-1 h-9 text-xs group/btn bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30" variant="outline" onClick={() => {
-                onComplete();
-              }}>
-                Mark Watched
-                <CheckCircle2 className="w-3 h-3 ml-1 group-hover/btn:scale-110 transition-transform" />
+              <Button 
+                className={`flex-1 h-9 text-xs group/btn border transition-colors ${
+                  isWatched 
+                    ? "bg-teal-500/20 text-teal-400 border-teal-500/30 hover:bg-teal-500/30" 
+                    : "bg-primary/10 hover:bg-primary/20 text-primary border-primary/30"
+                }`} 
+                variant="outline" 
+                onClick={() => {
+                  setIsWatched(true);
+                  onComplete();
+                }}
+              >
+                {isWatched ? "Watched" : "Mark Watched"}
+                {isWatched 
+                  ? <CheckCircle2 className="w-3 h-3 ml-1 text-teal-400" />
+                  : <CheckCircle2 className="w-3 h-3 ml-1 group-hover/btn:scale-110 transition-transform" />
+                }
               </Button>
             </div>
           </div>

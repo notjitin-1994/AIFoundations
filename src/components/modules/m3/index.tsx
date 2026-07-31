@@ -99,6 +99,7 @@ export const MODULE_3_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-3-quiz-1"
         kind="module"
         moduleIds={["3"]}
         tags={["m3-l1"]}
@@ -189,6 +190,7 @@ export const MODULE_3_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-3-quiz-2"
         kind="module"
         moduleIds={["3"]}
         tags={["m3-l2"]}
@@ -271,6 +273,7 @@ export const MODULE_3_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-3-quiz-3"
         kind="module"
         moduleIds={["3"]}
         tags={["m3-l3"]}
@@ -327,6 +330,7 @@ export const MODULE_3_SLIDES: Slide[] = [
     fullWidth: true,
     component: (mark) => (
       <AssessmentRunner
+        id="module-3-quiz"
         kind="final"
         moduleIds={["3"]}
         tags={["m3-final"]}

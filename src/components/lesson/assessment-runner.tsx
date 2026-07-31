@@ -40,6 +40,7 @@ const MODULES = [
 type AssessmentKind = "baseline" | "module" | "final";
 
 interface AssessmentRunnerProps {
+  id?: string;
   kind: AssessmentKind;
   /** number of questions per module */
   perModule?: number;
@@ -69,10 +70,10 @@ const TYPE_LABELS: Record<string, { label: string; icon: React.ElementType }> = 
 };
 
 export function AssessmentRunner({
-  kind, perModule = 1, totalQuestions, moduleIds, tags, title, description, onComplete,
+  id, kind, perModule = 1, totalQuestions, moduleIds, tags, title, description, onComplete,
 }: AssessmentRunnerProps) {
   const canvasNav = useContext(CanvasNavContext);
-  const thisModuleId = moduleIds?.[0] ?? kind;
+  const thisModuleId = id ?? moduleIds?.[0] ?? kind;
 
   const { assessments, saveAssessmentState } = useProgressStore();
   

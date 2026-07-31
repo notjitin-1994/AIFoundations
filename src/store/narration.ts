@@ -14,6 +14,8 @@ interface NarrationState {
   reset: () => void;
   seekTime: number | null;
   seek: (time: number) => void;
+  isMuted: boolean;
+  toggleMute: () => void;
 }
 
 export const useNarrationStore = create<NarrationState>((set) => ({
@@ -41,4 +43,6 @@ export const useNarrationStore = create<NarrationState>((set) => ({
   reset: () => set({ isPlaying: false, currentTrackId: null, durationMs: 0, progress: 0, isFinished: false, seekTime: null }),
   seekTime: null,
   seek: (time) => set({ seekTime: time }),
+  isMuted: false,
+  toggleMute: () => set((state) => ({ isMuted: !state.isMuted })),
 }));
