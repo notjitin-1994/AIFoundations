@@ -12,7 +12,7 @@
  * the module key) and only sets completed=true where it is not already set.
  * Never overwrites existing data.
  */
-import { readFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const dryRun = process.argv.includes("--dry-run");
@@ -66,7 +66,7 @@ WHERE completed = false AND completed_at IS NOT NULL;
 
 function run(sql) {
   const file = `/tmp/opencode/backfill-${Date.now()}.sql`;
-  require("node:fs").writeFileSync(file, sql);
+  writeFileSync(file, sql);
   const args = ["-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", file];
   if (dryRun) args.splice(args.length - 1, 0, ...["-c", "BEGIN;"]);
   const res = spawnSync("psql", [...args, process.env.DATABASE_URL], { encoding: "utf8" });
