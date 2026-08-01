@@ -493,6 +493,7 @@ export const useProgressStore = create<ProgressState>()(
           userId: newUserId,
           completedModules: [],
           completedLessons: {},
+          completedSlides: {},
           projectSpine: null,
           projectSpineAnswers: {},
           assessments: {},
@@ -518,6 +519,8 @@ export const useProgressStore = create<ProgressState>()(
       partialize: (state) => ({
         completedModules: state.completedModules,
         completedLessons: state.completedLessons,
+        completedSlides: state.completedSlides,
+        moduleProgressMap: state.moduleProgressMap,
         projectSpine: state.projectSpine,
         projectSpineAnswers: state.projectSpineAnswers,
         assessments: state.assessments,

@@ -16,7 +16,6 @@ export function useSyncEngine(moduleId: string) {
   const [isSynced, setIsSynced] = useState(false);
   const { 
     lastUpdatedAt, 
-    completedModules, 
     syncFromDB 
   } = useProgressStore();
   
@@ -121,7 +120,29 @@ export function useSyncEngine(moduleId: string) {
     return () => {
       cancelled = true;
     };
-  }, [moduleId, syncFromDB, completedModules]); // Only run when moduleId changes (page mount)
+  }, [moduleId, syncFromDB]); // Only run when moduleId changes (page mount)
+
+  // Background heartbeat & beforeunload sync
+  useEffect(() => {
+    if (!moduleId || moduleId === 'unknown') return;
+
+    // Heartbeat every 30s to sync active module
+    const intervalId = setInterval(() => {
+      useProgressStore.getState().syncToDB(moduleId).catch(console.error);
+    }, 30000);
+
+    const handleBeforeUnload = () => {
+      // Synchronous-like fire-and-forget push
+      useProgressStore.getState().syncToDB(moduleId).catch(console.error);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [moduleId]);
 
   return { isSynced };
 }
