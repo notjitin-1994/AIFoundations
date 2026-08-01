@@ -168,6 +168,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, [lessonParam, slideParam, slides]);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [highestSeenIndex, setHighestSeenIndex] = useState(initialIndex);
   const [replayCount, setReplayCount] = useState(0);
   const [direction, setDirection] = useState(1);
   const [completedSlides, setCompletedSlides] = useState<Record<number, boolean>>({});
@@ -228,6 +229,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   }, [lessonParam, lastSeenLessonParam, slides]);
 
   useEffect(() => {
+    setHighestSeenIndex((prev) => Math.max(prev, currentIndex));
+
     const slide = slides[currentIndex];
     if (slide && slide.lessonIndex !== undefined) {
       setActiveLessonIndex(slide.lessonIndex);
@@ -385,7 +388,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   };
 
   const completedCount = globalCompletedSlides?.[moduleId]?.length || 0;
-  const progressPercent = Math.round((Math.max(currentIndex + 1, completedCount) / slides.length) * 100);
+  // Progress is driven by the maximum of: the highest index they've seen + 1, OR the number of slides they've actually marked complete
+  const progressPercent = Math.round((Math.max(highestSeenIndex + 1, completedCount) / slides.length) * 100);
 
   const slideVariants = {
     initial: (dir: number) => ({

@@ -363,6 +363,12 @@ export default function CourseDashboardPage() {
                   const isLocked = idx > 0 && !progress.completedModules.includes(COURSE_MODULES[idx - 1].id) && !isComplete;
                   const isActive = mounted && !isComplete && !isLocked;
                   const assessment = progress.assessments[mod.id];
+                  
+                  const mapEntry = progress.moduleProgressMap?.[mod.id];
+                  const completedSlidesCount = progress.completedSlides?.[mod.id]?.length || 0;
+                  const totalForMod = mapEntry?.totalSlidesInModule || mod.slideCount || 1;
+                  const fallbackIndex = progress.activeModuleId === mod.id ? (progress.activeSlideIndex || 0) : (mapEntry?.activeSlideIndex || 0);
+                  const countForDisplay = isComplete ? totalForMod : Math.max(completedSlidesCount, fallbackIndex);
 
                   return (
                     <div 
@@ -417,6 +423,16 @@ export default function CourseDashboardPage() {
 
                         {/* Module Meta Data / Tags */}
                         <div className="flex flex-wrap gap-2.5">
+                          {/* Granular Progress Badge */}
+                          <div className={`px-3 py-1.5 rounded-md border text-[11px] font-medium flex items-center gap-1.5 backdrop-blur-md transition-colors ${
+                            isComplete ? 'bg-primary/10 border-primary/20 text-primary' :
+                            isActive ? 'bg-primary/10 border-primary/20 text-primary' :
+                            'bg-white/5 border-white/10 text-zinc-400'
+                          }`}>
+                            <Target className="w-3.5 h-3.5" />
+                            {isComplete ? 'Completed' : `${countForDisplay} / ${totalForMod} Slides`}
+                          </div>
+
                           {mod.id === "0" && progress.projectSpine && (
                             <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md">
                               <Database className="w-3.5 h-3.5" />
