@@ -7,11 +7,13 @@ import { useNotesStore } from "@/store/notes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { COURSE_MODULES } from "@/lib/course-data";
+import { computeCourseProgress } from "@/lib/progress-metrics";
+import type { CourseTotals } from "@/lib/progress-metrics";
 
 export function Header() {
   const router = useRouter();
   const { user, isLoading } = useUser();
-  const { completedModules, activeSlideIndex, totalSlidesInModule, activeModuleId, moduleProgressMap, completedSlides } = useProgressStore();
+  const { completedModules, moduleProgressMap, completedSlides } = useProgressStore();
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -44,28 +46,17 @@ export function Header() {
     }
   }, [user]);
 
+  const courseTotals = COURSE_MODULES.reduce<CourseTotals>((acc, mod) => ({ ...acc, [mod.id]: mod.slideCount }), {});
   let progressPercent = 0;
   if (mounted) {
-    let globalCompleted = 0;
-    let globalTotal = 0;
-
-    COURSE_MODULES.forEach(mod => {
-      const mapEntry = moduleProgressMap?.[mod.id];
-      const completedCount = completedSlides?.[mod.id]?.length || 0;
-      const totalForMod = mapEntry?.totalSlidesInModule || mod.slideCount || 1;
-      
-      globalTotal += totalForMod;
-
-      if (completedModules.includes(mod.id) || mapEntry?.completed) {
-        globalCompleted += totalForMod;
-      } else if (mapEntry || completedCount > 0 || activeModuleId === mod.id) {
-        const fallbackIndex = activeModuleId === mod.id ? (activeSlideIndex || 0) : (mapEntry?.activeSlideIndex || 0);
-        const count = Math.max(completedCount, fallbackIndex);
-        globalCompleted += count;
-      }
-    });
-
-    progressPercent = globalTotal > 0 ? Math.round((globalCompleted / globalTotal) * 100) : 0;
+    progressPercent = computeCourseProgress(
+      {
+        completedModules,
+        completedSlides,
+        moduleProgressMap,
+      },
+      courseTotals
+    ).percent;
   }
 
   return (

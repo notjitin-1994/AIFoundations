@@ -15,6 +15,8 @@ import {
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { fetchModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
 import { mergeRemoteProgress, hasStartedCourse } from "@/lib/progress-merge";
+import { computeCourseProgress } from "@/lib/progress-metrics";
+import type { CourseTotals } from "@/lib/progress-metrics";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useNotesStore } from "@/store/notes";
@@ -96,32 +98,19 @@ export default function CourseDashboardPage() {
   const totalModules = COURSE_MODULES.length;
   const completedCount = mounted ? progress.completedModules.length : 0;
   
-  let progressPercent = 0;
-  let totalFraction = 0;
-  if (mounted) {
-    let globalCompletedSlides = 0;
-    let globalTotalSlides = 0;
-
-    COURSE_MODULES.forEach(mod => {
-      const mapEntry = progress.moduleProgressMap?.[mod.id];
-      const completedSlidesCount = progress.completedSlides?.[mod.id]?.length || 0;
-      const totalForMod = mapEntry?.totalSlidesInModule || mod.slideCount || 1;
-      
-      globalTotalSlides += totalForMod;
-
-      if (progress.completedModules.includes(mod.id) || mapEntry?.completed) {
-        globalCompletedSlides += totalForMod;
-        totalFraction += 1;
-      } else if (mapEntry || completedSlidesCount > 0 || progress.activeModuleId === mod.id) {
-        const fallbackIndex = progress.activeModuleId === mod.id ? (progress.activeSlideIndex || 0) : (mapEntry?.activeSlideIndex || 0);
-        const count = Math.max(completedSlidesCount, fallbackIndex);
-        globalCompletedSlides += count;
-        totalFraction += count / Math.max(1, totalForMod);
-      }
-    });
-    // Calculate global percentage based on exact slides completed vs total slides in course
-    progressPercent = globalTotalSlides > 0 ? Math.round((globalCompletedSlides / globalTotalSlides) * 100) : 0;
-  }
+  const courseTotals = COURSE_MODULES.reduce<CourseTotals>((acc, mod) => ({ ...acc, [mod.id]: mod.slideCount }), {});
+  const progressMetrics = mounted
+    ? computeCourseProgress(
+        {
+          completedModules: progress.completedModules,
+          completedSlides: progress.completedSlides,
+          moduleProgressMap: progress.moduleProgressMap,
+        },
+        courseTotals
+      )
+    : { percent: 0, completedSlides: 0, totalSlides: 0, totalFraction: 0, perModule: {} };
+  const progressPercent = progressMetrics.percent;
+  const totalFraction = progressMetrics.totalFraction;
 
   const hoursInvested = mounted ? (gamification.totalTimeSpentSeconds / 3600).toFixed(1) : "0.0";
   

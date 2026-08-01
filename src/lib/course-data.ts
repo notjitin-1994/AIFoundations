@@ -20,7 +20,7 @@ export const COURSE_MODULES = [
     path: "/modules/0",
     overview: "Get familiar with the platform, set your learning goals, and choose the AI project template you will build throughout this course.",
     imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80",
-    slideCount: 26,
+    slideCount: 8,
     lessons: [
       "0.1 Welcome and Roadmap",
       "0.2 Myth-Busting",
@@ -34,7 +34,7 @@ export const COURSE_MODULES = [
     path: "/modules/1",
     overview: "Dismantle the Hollywood myths of AI. Understand how Large Language Models actually work under the hood using probabilities, not reasoning.",
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1920&q=80",
-    slideCount: 68,
+    slideCount: 19,
     lessons: [
       "1.1 What AI Actually Is",
       "1.2 Machine Learning in Plain Language",
@@ -49,7 +49,7 @@ export const COURSE_MODULES = [
     path: "/modules/2",
     overview: "AI has no inherent memory. Learn how context windows work and how Retrieval-Augmented Generation (RAG) gives models long-term recall.",
     videoUrl: "https://videos.pexels.com/video-files/3129595/3129595-uhd_2560_1440_30fps.mp4",
-    slideCount: 25,
+    slideCount: 26,
     lessons: [
       "2.1 The Goldfish Metaphor",
       "2.2 Tokens: The Currency of AI",
