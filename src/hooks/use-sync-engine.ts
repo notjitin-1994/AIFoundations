@@ -36,36 +36,73 @@ export function useSyncEngine(moduleId: string) {
         const dbProgress = await fetchModuleProgress();
         if (cancelled || !dbProgress) return;
 
-        const modProgress = dbProgress.find((p: Record<string, unknown>) => p.module_id === moduleId);
-        if (!modProgress) return;
-
-        // DB is the absolute source of truth
+        // DB is the absolute source of truth. We merge ALL rows to fully hydrate the store.
+        const currentState = useProgressStore.getState();
         const newData: Record<string, unknown> = {};
-        if (modProgress.completed && !completedModules.includes(moduleId)) {
-          newData.completedModules = [...completedModules, moduleId];
-        }
-        newData.activeLessonIndex = Math.max(modProgress.active_lesson_index ?? 0, useProgressStore.getState().activeLessonIndex);
-        newData.activeSlideIndex = Math.max(modProgress.active_slide_index ?? 0, useProgressStore.getState().activeSlideIndex);
-        if (modProgress.assessments) newData.assessments = { ...useProgressStore.getState().assessments, ...modProgress.assessments };
-        if (modProgress.project_spine) newData.projectSpine = modProgress.project_spine;
-        if (modProgress.project_spine_answers) newData.projectSpineAnswers = { ...useProgressStore.getState().projectSpineAnswers, ...modProgress.project_spine_answers };
-        if (modProgress.gamification) {
-          if (modProgress.gamification.xp > useProgressStore.getState().gamification.xp) {
-            newData.gamification = modProgress.gamification;
+        
+        const newCompleted = [...currentState.completedModules];
+        const newMap = { ...currentState.moduleProgressMap };
+        let mergedAssessments = { ...currentState.assessments };
+        let mergedSpine = currentState.projectSpine;
+        let mergedSpineAnswers = { ...currentState.projectSpineAnswers };
+        let mergedGamification = { ...currentState.gamification };
+        let mergedCompletedLessons = { ...currentState.completedLessons };
+        const mergedCompletedSlides = { ...currentState.completedSlides };
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        dbProgress.forEach((p: any) => {
+          if (p.completed && !newCompleted.includes(p.module_id)) {
+            newCompleted.push(p.module_id);
           }
-        }
-        if (modProgress.completed_lessons) newData.completedLessons = { ...useProgressStore.getState().completedLessons, ...modProgress.completed_lessons };
-        if (modProgress.completed_slides) {
-          const mergedCompletedSlides = { ...useProgressStore.getState().completedSlides };
-          Object.keys(modProgress.completed_slides).forEach(modId => {
-            const local = mergedCompletedSlides[modId] || [];
-            const remote = modProgress.completed_slides[modId] || [];
-            mergedCompletedSlides[modId] = Array.from(new Set([...local, ...remote]));
-          });
-          newData.completedSlides = mergedCompletedSlides;
-        }
+          
+          const existingMapEntry = newMap[p.module_id];
+          newMap[p.module_id] = {
+            activeSlideIndex: Math.max(p.active_slide_index || 0, existingMapEntry?.activeSlideIndex || 0),
+            totalSlidesInModule: existingMapEntry?.totalSlidesInModule || 1, // Will be updated by CanvasViewer
+            completed: !!p.completed || !!existingMapEntry?.completed
+          };
+          
+          if (p.assessments) {
+            mergedAssessments = { ...mergedAssessments, ...p.assessments };
+          }
+          if (p.project_spine) {
+            mergedSpine = p.project_spine;
+          }
+          if (p.project_spine_answers) {
+            mergedSpineAnswers = { ...mergedSpineAnswers, ...p.project_spine_answers };
+          }
+          if (p.gamification) {
+            if (p.gamification.xp > mergedGamification.xp) {
+              mergedGamification = p.gamification;
+            }
+          }
+          if (p.completed_lessons) {
+            mergedCompletedLessons = { ...mergedCompletedLessons, ...p.completed_lessons };
+          }
+          if (p.completed_slides) {
+            Object.keys(p.completed_slides).forEach(modId => {
+              const local = mergedCompletedSlides[modId] || [];
+              const remote = p.completed_slides[modId] || [];
+              mergedCompletedSlides[modId] = Array.from(new Set([...local, ...remote]));
+            });
+          }
+        });
         
-        
+        newData.completedModules = newCompleted;
+        newData.moduleProgressMap = newMap;
+        newData.assessments = mergedAssessments;
+        newData.projectSpine = mergedSpine;
+        newData.projectSpineAnswers = mergedSpineAnswers;
+        newData.gamification = mergedGamification;
+        newData.completedLessons = mergedCompletedLessons;
+        newData.completedSlides = mergedCompletedSlides;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const currentMod = dbProgress.find((p: any) => p.module_id === moduleId);
+        if (currentMod) {
+          newData.activeLessonIndex = Math.max(currentMod.active_lesson_index ?? 0, currentState.activeLessonIndex);
+          newData.activeSlideIndex = Math.max(currentMod.active_slide_index ?? 0, currentState.activeSlideIndex);
+        }
         syncFromDB(newData);
         setIsSynced(true);
       } catch (err) {
