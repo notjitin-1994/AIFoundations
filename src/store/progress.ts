@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { syncModuleProgress, logProgressEvent } from '@/actions/sync-progress';
+
+let syncQueue: Promise<void> = Promise.resolve();
 import { logProgressEvent, syncModuleProgress } from '@/actions/sync-progress';
 
 export type ProjectSpineType = string | null;
@@ -49,7 +52,12 @@ interface ProgressState {
   activeSlideIndex: number;
   totalSlidesInModule: number;
   activeModuleId: string;
-  moduleProgressMap: Record<string, { activeSlideIndex: number, totalSlidesInModule: number, completed: boolean }>;
+  moduleProgressMap: Record<string, {
+    activeSlideIndex: number;
+    activeLessonIndex: number;
+    totalSlidesInModule: number;
+    completed: boolean;
+  }>;
   lastUpdatedAt: string; // ISO string representing the last local modification time
   
   // Gamification
@@ -211,7 +219,9 @@ export const useProgressStore = create<ProgressState>()(
             moduleProgressMap: {
               ...state.moduleProgressMap,
               [moduleId]: {
-                ...state.moduleProgressMap[moduleId],
+                activeSlideIndex: state.moduleProgressMap[moduleId]?.activeSlideIndex || 0,
+                activeLessonIndex: state.moduleProgressMap[moduleId]?.activeLessonIndex || 0,
+                totalSlidesInModule: state.moduleProgressMap[moduleId]?.totalSlidesInModule || 1,
                 completed: true
               }
             },
@@ -269,7 +279,27 @@ export const useProgressStore = create<ProgressState>()(
         useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
 
-      setActiveLessonIndex: (index) => set({ activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() }),
+      setActiveLessonIndex: (index, moduleId) => {
+        set((state) => {
+          if (!moduleId) return { activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() };
+          return {
+            activeLessonIndex: index,
+            moduleProgressMap: {
+              ...state.moduleProgressMap,
+              [moduleId]: {
+                activeSlideIndex: state.moduleProgressMap[moduleId]?.activeSlideIndex || 0,
+                totalSlidesInModule: state.moduleProgressMap[moduleId]?.totalSlidesInModule || 1,
+                activeLessonIndex: index,
+                completed: state.moduleProgressMap[moduleId]?.completed || false
+              }
+            },
+            lastUpdatedAt: new Date().toISOString()
+          };
+        });
+        if (moduleId) {
+          useProgressStore.getState().syncToDB(moduleId).catch(console.error);
+        }
+      },
 
       setActiveSlideProgress: (slideIndex, totalSlides, moduleId) => {
         set((state) => ({ 
@@ -281,6 +311,7 @@ export const useProgressStore = create<ProgressState>()(
               ...state.moduleProgressMap,
               [moduleId]: {
                 activeSlideIndex: slideIndex,
+                activeLessonIndex: state.moduleProgressMap[moduleId]?.activeLessonIndex || state.activeLessonIndex,
                 totalSlidesInModule: totalSlides,
                 completed: state.completedModules.includes(moduleId)
               }
@@ -380,26 +411,40 @@ export const useProgressStore = create<ProgressState>()(
         })),
 
       syncToDB: async (moduleId: string) => {
-        const state = useProgressStore.getState();
-        if (!state.userId) return; // Only sync if logged in
+        return new Promise<void>((resolve) => {
+          syncQueue = syncQueue.then(async () => {
+            const state = useProgressStore.getState();
+            if (!state.userId) return resolve(); // Only sync if logged in
 
-        await syncModuleProgress(moduleId, {
-          activeSlideIndex: state.activeSlideIndex,
-          activeLessonIndex: state.activeLessonIndex,
-          completed: state.completedModules.includes(moduleId),
-          updated_at: state.lastUpdatedAt,
-          assessments: state.assessments,
-          projectSpine: state.projectSpine,
-          projectSpineAnswers: state.projectSpineAnswers,
-          gamification: state.gamification,
-          completedLessons: state.completedLessons,
-          completedSlides: state.completedSlides
+            const mapEntry = state.moduleProgressMap[moduleId];
+            const isCurrentActive = state.activeModuleId === moduleId;
+
+            await syncModuleProgress(moduleId, {
+              activeSlideIndex: mapEntry?.activeSlideIndex ?? (isCurrentActive ? state.activeSlideIndex : 0),
+              activeLessonIndex: mapEntry?.activeLessonIndex ?? (isCurrentActive ? state.activeLessonIndex : 0),
+              completed: state.completedModules.includes(moduleId),
+              updated_at: state.lastUpdatedAt,
+              assessments: state.assessments[moduleId] ? { [moduleId]: state.assessments[moduleId] } : undefined,
+              projectSpine: state.projectSpine,
+              projectSpineAnswers: state.projectSpineAnswers[moduleId] ? { [moduleId]: state.projectSpineAnswers[moduleId] } : undefined,
+              gamification: state.gamification,
+              completedLessons: state.completedLessons[moduleId] ? { [moduleId]: state.completedLessons[moduleId] } : undefined,
+              completedSlides: state.completedSlides[moduleId] ? { [moduleId]: state.completedSlides[moduleId] } : undefined
+            });
+            resolve();
+          }).catch((err) => {
+            console.error("Progress sync queue error:", err);
+            resolve();
+          });
         });
       },
 
       flushSyncProgress: async () => {
         const state = useProgressStore.getState();
         if (!state.userId) return;
+        
+        await syncQueue; // Wait for inflight syncs
+
         
         // Find all modules that the user has interacted with
         const modulesToSync = Array.from(new Set([
@@ -409,10 +454,11 @@ export const useProgressStore = create<ProgressState>()(
           ...Object.keys(state.completedSlides)
         ])).filter(Boolean);
 
-        // Sync them all concurrently
+        // Sync them all concurrently, wait for queue
         await Promise.allSettled(
           modulesToSync.map(moduleId => state.syncToDB(moduleId))
         );
+        await syncQueue;
       },
 
       resetProgress: () => set((state) => ({ 

@@ -1,0 +1,2 @@
+ALTER TABLE module_progress
+ADD COLUMN IF NOT EXISTS notes JSONB;

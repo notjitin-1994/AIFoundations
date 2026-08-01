@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProgressStore } from '@/store/progress';
+import { useNotesStore } from '@/store/notes';
 import { fetchModuleProgress } from '@/actions/sync-progress';
 
 /**
@@ -58,6 +59,7 @@ export function useSyncEngine(moduleId: string) {
           const existingMapEntry = newMap[p.module_id];
           newMap[p.module_id] = {
             activeSlideIndex: Math.max(p.active_slide_index || 0, existingMapEntry?.activeSlideIndex || 0),
+            activeLessonIndex: Math.max(p.active_lesson_index || 0, existingMapEntry?.activeLessonIndex || 0),
             totalSlidesInModule: existingMapEntry?.totalSlidesInModule || 1, // Will be updated by CanvasViewer
             completed: !!p.completed || !!existingMapEntry?.completed
           };
@@ -85,6 +87,10 @@ export function useSyncEngine(moduleId: string) {
               const remote = p.completed_slides[modId] || [];
               mergedCompletedSlides[modId] = Array.from(new Set([...local, ...remote]));
             });
+          }
+          
+          if (p.notes && Array.isArray(p.notes)) {
+             useNotesStore.getState().syncFromDB(p.notes);
           }
         });
         

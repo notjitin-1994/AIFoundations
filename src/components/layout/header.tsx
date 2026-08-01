@@ -3,6 +3,7 @@
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { useProgressStore } from "@/store/progress";
+import { useNotesStore } from "@/store/notes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { COURSE_MODULES } from "@/lib/course-data";
@@ -18,7 +19,10 @@ export function Header() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await useProgressStore.getState().flushSyncProgress();
+      await Promise.all([
+        useProgressStore.getState().flushSyncProgress(),
+        useNotesStore.getState().flushSyncNotes()
+      ]);
       await createClient().auth.signOut();
     } catch (error) {
       console.error("Logout failed:", error instanceof Error ? error.message : String(error));

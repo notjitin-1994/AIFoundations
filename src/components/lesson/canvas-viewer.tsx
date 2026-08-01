@@ -240,7 +240,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
 
     const slide = slides[currentIndex];
     if (slide && slide.lessonIndex !== undefined) {
-      setActiveLessonIndex(slide.lessonIndex);
+      setActiveLessonIndex(slide.lessonIndex, moduleId);
       // Sync URL silently
       if (typeof window !== "undefined") {
         const url = new URL(window.location.href);

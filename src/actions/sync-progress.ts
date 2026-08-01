@@ -47,6 +47,7 @@ export async function syncModuleProgress(
     if (data.gamification !== undefined) payload.gamification = data.gamification;
     if (data.completedLessons !== undefined) payload.completed_lessons = data.completedLessons;
     if (data.completedSlides !== undefined) payload.completed_slides = data.completedSlides;
+    if (data.notes !== undefined) payload.notes = data.notes;
 
     const { error } = await supabase.from("module_progress").upsert(payload, {
       onConflict: "user_id,module_id",
