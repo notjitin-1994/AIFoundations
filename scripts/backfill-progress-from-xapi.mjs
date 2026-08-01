@@ -64,6 +64,16 @@ SET completed_at = NULL
 WHERE completed = false AND completed_at IS NOT NULL;
 `;
 
+// Reconciliation (defense in depth): re-derive completed flags from the xAPI
+// audit trail (xapi 'completed' events on modules/0-6). Idempotent — only sets
+// flags that are not already true; safe under the monotonic merge RPC.
+const RECONCILE_COMPLETED_SQL = BACKFILL_COMPLETED_SQL;
+
+const CLEANUP_STRAY_MODULES_SQL = `
+DELETE FROM module_progress
+WHERE module_id NOT IN ('0','1','2','3','4','5','6','baseline');
+`;
+
 function run(sql) {
   const file = `/tmp/opencode/backfill-${Date.now()}.sql`;
   writeFileSync(file, sql);
@@ -83,10 +93,13 @@ if (dryRun) {
 ${BACKFILL_SLIDES_SQL}
 ${BACKFILL_COMPLETED_SQL}
 ${FIX_COMPLETED_AT_SQL}
+${CLEANUP_STRAY_MODULES_SQL}
 ROLLBACK;`);
 } else {
   run(BACKFILL_SLIDES_SQL);
   run(BACKFILL_COMPLETED_SQL);
+  run(RECONCILE_COMPLETED_SQL);
   run(FIX_COMPLETED_AT_SQL);
+  run(CLEANUP_STRAY_MODULES_SQL);
 }
 console.log(dryRun ? "Dry-run completed (no changes persisted)." : "Backfill applied.");
