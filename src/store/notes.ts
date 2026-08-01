@@ -1,8 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { syncModuleProgress } from '@/actions/sync-progress';
+import { createUserScopedStorage, markActiveUser } from '@/store/user-storage';
 
 let syncQueue: Promise<void> = Promise.resolve();
+
+const NOTES_STORAGE_NAME = 'aifoundations-notes';
 
 export interface Note {
   id: string;
@@ -53,7 +56,16 @@ export const useNotesStore = create<NotesState>()(
         set({ notes: [] });
       },
       clearUserStore: (newUserId) => {
+        const current = useNotesStore.getState();
+        if (current.userId === newUserId && current.notes.length > 0) {
+          // Auth events fire twice on mount (getUser + onAuthStateChange).
+          // A re-emitted event for the current user must not wipe notes that
+          // were freshly hydrated; they belong to this user's per-user key.
+          markActiveUser(NOTES_STORAGE_NAME, newUserId);
+          return;
+        }
         set({ userId: newUserId, notes: [] });
+        markActiveUser(NOTES_STORAGE_NAME, newUserId);
       },
       syncFromDB: (dbNotes) => {
         set((state) => {
@@ -104,7 +116,8 @@ export const useNotesStore = create<NotesState>()(
       }
     }),
     {
-      name: 'aifoundations-notes',
+      name: NOTES_STORAGE_NAME,
+      storage: createJSONStorage(() => createUserScopedStorage()),
       partialize: (state) => ({
         notes: state.notes,
         userId: state.userId,
