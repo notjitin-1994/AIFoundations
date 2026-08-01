@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { logProgressEvent } from '@/actions/sync-progress';
 
 export type ProjectSpineType = string | null;
 type ProjectSpine = ProjectSpineType;
@@ -107,9 +108,12 @@ export const useProgressStore = create<ProgressState>()(
       },
       isEnrolled: false,
 
-      setProjectSpine: (spine) => set({ projectSpine: spine, lastUpdatedAt: new Date().toISOString() }),
+      setProjectSpine: (spine) => {
+        set({ projectSpine: spine, lastUpdatedAt: new Date().toISOString() });
+        logProgressEvent('0', 'project_spine_selected', { spine }).catch(console.error);
+      },
       
-      saveProjectSpineAnswer: (moduleId, answerData) => 
+      saveProjectSpineAnswer: (moduleId, answerData) => {
         set((state) => ({
           projectSpineAnswers: {
             ...state.projectSpineAnswers,
@@ -120,9 +124,11 @@ export const useProgressStore = create<ProgressState>()(
             xp: state.gamification.xp + 30 // 30 XP for submitting deliverables
           },
           lastUpdatedAt: new Date().toISOString()
-        })),
+        }));
+        logProgressEvent(moduleId, 'gamification_xp_earned', { amount: 30, reason: 'project_spine_answer' }).catch(console.error);
+      },
         
-      saveAssessmentState: (moduleId, stateData) =>
+      saveAssessmentState: (moduleId, stateData) => {
         set((state) => {
           // If the assessment is newly passed, give XP
           let xpEarned = 0;
@@ -153,9 +159,11 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        logProgressEvent(moduleId, 'assessment_submitted', stateData).catch(console.error);
+      },
 
-      markModuleComplete: (moduleId) =>
+      markModuleComplete: (moduleId) => {
         set((state) => {
           if (state.completedModules.includes(moduleId)) return state;
           
@@ -210,9 +218,11 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        logProgressEvent(moduleId, 'module_completed', {}).catch(console.error);
+      },
 
-      markLessonComplete: (moduleId, lessonIndex) =>
+      markLessonComplete: (moduleId, lessonIndex) => {
         set((state) => {
           const modLessons = state.completedLessons[moduleId] || [];
           if (modLessons.includes(lessonIndex)) return state;
@@ -227,9 +237,11 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        logProgressEvent(moduleId, 'lesson_completed', { lessonIndex }).catch(console.error);
+      },
 
-      markSlideComplete: (moduleId, slideId) =>
+      markSlideComplete: (moduleId, slideId) => {
         set((state) => {
           const modSlides = state.completedSlides[moduleId] || [];
           if (modSlides.includes(slideId)) return state;
@@ -244,7 +256,9 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        logProgressEvent(moduleId, 'slide_completed', { slideId }).catch(console.error);
+      },
 
       setActiveLessonIndex: (index) => set({ activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() }),
 
@@ -268,13 +282,15 @@ export const useProgressStore = create<ProgressState>()(
 
       setModuleProgressMap: (map) => set({ moduleProgressMap: map, lastUpdatedAt: new Date().toISOString() }),
 
-      addXP: (amount) => 
+      addXP: (amount) => {
         set((state) => ({
           gamification: { ...state.gamification, xp: state.gamification.xp + amount },
           lastUpdatedAt: new Date().toISOString()
-        })),
+        }));
+        logProgressEvent('0', 'gamification_xp_earned', { amount }).catch(console.error);
+      },
 
-      awardBadge: (badgeId) => 
+      awardBadge: (badgeId) => {
         set((state) => {
           if (state.gamification.badges.includes(badgeId)) return state;
           return {
@@ -285,7 +301,9 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        logProgressEvent('0', 'badge_earned', { badgeId }).catch(console.error);
+      },
 
       awardTool: (toolId) => 
         set((state) => {

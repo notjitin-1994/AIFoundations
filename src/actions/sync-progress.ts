@@ -110,3 +110,35 @@ export async function wipeDatabaseProgress() {
     return { success: false, reason: "Internal error" };
   }
 }
+
+/**
+ * Event Sourcing: Logs discrete progress events to the progress_events table.
+ * This guarantees progress can never go backwards and provides an audit trail.
+ */
+export async function logProgressEvent(
+  moduleId: string,
+  eventType: 'slide_completed' | 'lesson_completed' | 'module_completed' | 'assessment_submitted' | 'project_spine_selected' | 'gamification_xp_earned' | 'gamification_time_spent' | 'gamification_streak_updated' | 'badge_earned',
+  eventData: any
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, reason: "Not authenticated" };
+
+    const { error } = await supabase.from("progress_events").insert({
+      user_id: user.id,
+      module_id: moduleId,
+      event_type: eventType,
+      event_data: eventData
+    });
+
+    if (error) {
+      console.error("logProgressEvent error:", error);
+      return { success: false, reason: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error("logProgressEvent exception:", err);
+    return { success: false, reason: "Internal error" };
+  }
+}
