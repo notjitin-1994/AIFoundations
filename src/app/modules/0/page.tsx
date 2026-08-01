@@ -15,6 +15,7 @@ import { Suspense } from "react";
 import { useUser } from "@/hooks/use-user";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useSyncEngine } from "@/hooks/use-sync-engine";
+import { useEnrollmentGate } from "@/hooks/use-enrollment";
 
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
@@ -846,6 +847,11 @@ const MODULE_0_SLIDES: Slide[] = [
 export default function OrientationModule() {
   const { user, isLoading: authLoading } = useUser();
   const { isSynced } = useSyncEngine("0");
+
+  const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
+  if (enrollmentLoading || !accessGranted) {
+    return null;
+  }
 
   const handleModuleComplete = () => {
     // ProjectSpineSelector handles the redirect
