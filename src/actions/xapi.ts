@@ -14,7 +14,7 @@ export async function sendXAPIStatement(
   if (!user) return { success: false, reason: "Not authenticated" };
 
   // Get user's profile (first_name, last_name, organization_id)
-  const { data: profile } = await supabase.from('profiles').select('first_name, last_name, email, organization_id').eq('id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('first_name, last_name, email, organization_id').eq('id', user.id).maybeSingle();
   const fullName = profile ? `${profile.first_name} ${profile.last_name}`.trim() : 'Learner';
 
   const statement = {

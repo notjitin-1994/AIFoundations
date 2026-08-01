@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { fetchModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
+import { mergeRemoteProgress } from "@/lib/progress-merge";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useNotesStore } from "@/store/notes";
@@ -37,6 +38,7 @@ export default function CourseDashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [restartError, setRestartError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -44,66 +46,27 @@ export default function CourseDashboardPage() {
     progress.recordLogin();
 
     if (user) {
-      fetchModuleProgress().then(dbProgress => {
-        if (dbProgress) {
-          const newMap = { ...progress.moduleProgressMap };
-          const newCompleted = [...progress.completedModules];
-          let mergedAssessments = { ...progress.assessments };
-          let mergedSpine = progress.projectSpine;
-          let mergedSpineAnswers = { ...progress.projectSpineAnswers };
-          let mergedGamification = { ...progress.gamification };
-          let mergedCompletedLessons = { ...progress.completedLessons };
-          let mergedCompletedSlides = { ...progress.completedSlides };
-
-          dbProgress.forEach((p: any) => {
-            const courseMod = COURSE_MODULES.find(m => m.id === p.module_id);
-            if (p.completed && !newCompleted.includes(p.module_id)) {
-              newCompleted.push(p.module_id);
-            }
-            const existingMapEntry = progress.moduleProgressMap[p.module_id];
-            newMap[p.module_id] = {
-              activeSlideIndex: Math.max(p.active_slide_index || 0, existingMapEntry?.activeSlideIndex || 0),
-              activeLessonIndex: Math.max(p.active_lesson_index || 0, existingMapEntry?.activeLessonIndex || 0),
-              totalSlidesInModule: courseMod?.slideCount || 1,
-              completed: !!p.completed || !!existingMapEntry?.completed
-            };
-            if (p.assessments) {
-              mergedAssessments = { ...mergedAssessments, ...p.assessments };
-            }
-            if (p.project_spine) {
-              mergedSpine = p.project_spine;
-            }
-            if (p.project_spine_answers) {
-              mergedSpineAnswers = { ...mergedSpineAnswers, ...p.project_spine_answers };
-            }
-            if (p.gamification) {
-              // Keep the one with highest XP
-              if (p.gamification.xp > mergedGamification.xp) {
-                mergedGamification = p.gamification;
-              }
-            }
-            if (p.completed_lessons) {
-              mergedCompletedLessons = { ...mergedCompletedLessons, ...p.completed_lessons };
-            }
-            if (p.completed_slides) {
-              Object.keys(p.completed_slides).forEach(modId => {
-                const local = mergedCompletedSlides[modId] || [];
-                const remote = p.completed_slides[modId] || [];
-                mergedCompletedSlides[modId] = Array.from(new Set([...local, ...remote]));
-              });
-            }
-          });
-          progress.syncFromDB({ 
-             completedModules: newCompleted,
-             moduleProgressMap: newMap,
-             assessments: mergedAssessments,
-             projectSpine: mergedSpine,
-             projectSpineAnswers: mergedSpineAnswers,
-             gamification: mergedGamification,
-             completedLessons: mergedCompletedLessons,
-             completedSlides: mergedCompletedSlides
-          });
-        }
+      fetchModuleProgress().then((dbProgress) => {
+        if (!dbProgress) return;
+        const state = useProgressStore.getState();
+        const merged = mergeRemoteProgress(
+          {
+            completedModules: state.completedModules,
+            completedLessons: state.completedLessons,
+            completedSlides: state.completedSlides,
+            moduleProgressMap: state.moduleProgressMap,
+            assessments: state.assessments,
+            projectSpine: state.projectSpine,
+            projectSpineAnswers: state.projectSpineAnswers,
+            gamification: state.gamification,
+            activeLessonIndex: state.activeLessonIndex,
+            activeSlideIndex: state.activeSlideIndex,
+            lastUpdatedAt: state.lastUpdatedAt,
+          },
+          dbProgress,
+          state.activeModuleId
+        );
+        state.syncFromDB(merged);
       });
     }
   }, [user]);
@@ -163,11 +126,17 @@ export default function CourseDashboardPage() {
   const hoursInvested = mounted ? (gamification.totalTimeSpentSeconds / 3600).toFixed(1) : "0.0";
   
   // Behavioral Badges Logic
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isPerfectionist = Object.values(progress.assessments).some(
-    (a: any) => a.graded && Object.keys(a.graded).length > 0 && 
-         Object.values(a.graded).every((g: any) => g?.correct) && 
-         (!a.incorrectAttempts || Object.values(a.incorrectAttempts).every(v => v === 0))
+    (a) => {
+      if (!a.graded || Object.keys(a.graded).length === 0) return false;
+      return (
+        Object.values(a.graded).every((g) => {
+          const graded = g as { correct?: boolean } | undefined;
+          return graded?.correct;
+        }) &&
+        (!a.incorrectAttempts || Object.values(a.incorrectAttempts).every((v) => v === 0))
+      );
+    }
   );
   const isDeepDiver = gamification.totalTimeSpentSeconds >= 3600; // >= 1 hour
   const isUnbrokenFocus = gamification.currentStreak >= 3;
@@ -182,7 +151,13 @@ export default function CourseDashboardPage() {
 
   const handleRestart = async () => {
     setIsRestarting(true);
-    await wipeDatabaseProgress();
+    setRestartError(null);
+    const result = await wipeDatabaseProgress();
+    if (!result?.success) {
+      setIsRestarting(false);
+      setRestartError(result?.reason ?? "Could not wipe progress on the server. Your progress was kept.");
+      return;
+    }
     useNotesStore.getState().clearAllNotes();
     progress.resetProgress();
     router.push("/modules/0");
@@ -287,6 +262,9 @@ export default function CourseDashboardPage() {
                 </button>
               )}
             </div>
+            {restartError && (
+              <p className="mt-3 text-sm text-destructive">{restartError}</p>
+            )}
           </section>
 
           {/* Pre-learning Expectations */}
