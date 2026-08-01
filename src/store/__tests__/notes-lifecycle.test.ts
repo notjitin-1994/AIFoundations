@@ -6,10 +6,12 @@ vi.mock('@/actions/sync-progress', () => ({
 }));
 
 import { useNotesStore } from '@/store/notes';
+import { clearMemoryStorage } from '@/store/user-storage';
 
 describe('notes store lifecycle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearMemoryStorage();
     useNotesStore.setState({ userId: null, notes: [] });
   });
 
@@ -98,4 +100,23 @@ describe('notes store lifecycle', () => {
     const { syncModuleProgress } = await import('@/actions/sync-progress');
     expect(syncModuleProgress).not.toHaveBeenCalled();
   });
+
+  it('restores per-user notes after a same-session logout/login', async () => {
+    useNotesStore.getState().clearUserStore('rehyd-n');
+    await flush();
+    useNotesStore.getState().saveNote('1', 0, 0, 'persisted note');
+    expect(useNotesStore.getState().notes.length).toBeGreaterThan(0);
+
+    useNotesStore.getState().clearUserStore(null);
+    await flush();
+    expect(useNotesStore.getState().notes).toEqual([]);
+
+    useNotesStore.getState().clearUserStore('rehyd-n');
+    await flush();
+    expect(useNotesStore.getState().notes.some((n) => n.content === 'persisted note')).toBe(true);
+  });
 });
+
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}

@@ -6,9 +6,11 @@ vi.mock('@/actions/sync-progress', () => ({
 }));
 
 import { useProgressStore } from '@/store/progress';
+import { clearMemoryStorage } from '@/store/user-storage';
 
 describe('progress store lifecycle', () => {
   beforeEach(() => {
+    clearMemoryStorage();
     useProgressStore.setState({
       userId: null,
       completedModules: [],
@@ -84,4 +86,25 @@ describe('progress store lifecycle', () => {
     expect(useProgressStore.getState().userId).toBeNull();
     expect(useProgressStore.getState().isEnrolled).toBe(false);
   });
+
+  it('restores per-user local state after a same-session logout/login', async () => {
+    useProgressStore.getState().clearUserStore('rehyd-a');
+    await flush();
+    useProgressStore.getState().markModuleComplete('0');
+    expect(useProgressStore.getState().completedModules).toContain('0');
+
+    useProgressStore.getState().clearUserStore(null);
+    await flush();
+    expect(useProgressStore.getState().userId).toBeNull();
+    expect(useProgressStore.getState().completedModules).toEqual([]);
+
+    useProgressStore.getState().clearUserStore('rehyd-a');
+    await flush();
+    expect(useProgressStore.getState().userId).toBe('rehyd-a');
+    expect(useProgressStore.getState().completedModules).toContain('0');
+  });
 });
+
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
