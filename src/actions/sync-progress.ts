@@ -29,19 +29,13 @@ export async function syncModuleProgress(
     if (!user) return { success: false, reason: "Not authenticated" };
 
     const payload: Record<string, unknown> = {
-      user_id: user.id,
       module_id: moduleId,
       updated_at: data.updated_at || new Date().toISOString(),
     };
 
-    if (data.completed !== undefined) {
-      payload.completed = data.completed;
-      if (data.completed) payload.completed_at = new Date().toISOString();
-    }
+    if (data.completed !== undefined) payload.completed = data.completed;
     if (data.activeLessonIndex !== undefined) payload.active_lesson_index = data.activeLessonIndex;
     if (data.activeSlideIndex !== undefined) payload.active_slide_index = data.activeSlideIndex;
-    
-    // Additional state fields (ensure the DB schema supports them or uses JSONB)
     if (data.assessments !== undefined) payload.assessments = data.assessments;
     if (data.projectSpine !== undefined) payload.project_spine = data.projectSpine;
     if (data.projectSpineAnswers !== undefined) payload.project_spine_answers = data.projectSpineAnswers;
@@ -50,15 +44,16 @@ export async function syncModuleProgress(
     if (data.completedSlides !== undefined) payload.completed_slides = data.completedSlides;
     if (data.notes !== undefined) payload.notes = data.notes;
 
-    const { error } = await supabase.from("module_progress").upsert(payload, {
-      onConflict: "user_id,module_id",
-    });
+    // Server-authoritative merge write path (public.merge_module_progress):
+    // the RPC atomically MERGES this payload into the row — partial payloads
+    // union arrays and never clobber existing data.
+    const { data: row, error } = await supabase.rpc("merge_module_progress", { payload });
 
     if (error) {
       console.error("syncModuleProgress error:", error);
       return { success: false, reason: error.message };
     }
-    return { success: true };
+    return { success: true, row: Array.isArray(row) ? row[0] ?? null : (row ?? null) };
   } catch (err) {
     console.error("syncModuleProgress exception:", err);
     return { success: false, reason: "Internal error" };
