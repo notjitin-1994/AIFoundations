@@ -1,8 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { syncModuleProgress, logProgressEvent } from '@/actions/sync-progress';
+import { createUserScopedStorage, markActiveUser } from '@/store/user-storage';
 
 let syncQueue: Promise<void> = Promise.resolve();
+
+const PROGRESS_STORAGE_NAME = 'aifoundations-progress';
 
 export type ProjectSpineType = string | null;
 type ProjectSpine = ProjectSpineType;
@@ -402,11 +405,11 @@ export const useProgressStore = create<ProgressState>()(
         useProgressStore.getState().syncToDB('0').catch(console.error);
       },
         
-      syncFromDB: (dbData) => 
+      syncFromDB: (dbData) =>
         set((state) => ({
           ...state,
           ...dbData,
-          lastUpdatedAt: new Date().toISOString()
+          lastUpdatedAt: dbData.lastUpdatedAt ?? state.lastUpdatedAt
         })),
 
       syncToDB: async (moduleId: string) => {
@@ -488,7 +491,20 @@ export const useProgressStore = create<ProgressState>()(
           isEnrolled: status,
           lastUpdatedAt: new Date().toISOString()
         })),
-      clearUserStore: (newUserId) =>
+      clearUserStore: (newUserId) => {
+        const current = useProgressStore.getState();
+        const hasData =
+          current.completedModules.length > 0 ||
+          Object.keys(current.completedSlides).length > 0 ||
+          Object.keys(current.moduleProgressMap).length > 0 ||
+          current.projectSpine != null;
+        if (current.userId === newUserId && hasData) {
+          // Auth events fire twice on mount (getUser + onAuthStateChange).
+          // A re-emitted event for the current user must not wipe freshly
+          // hydrated state; the data belongs to this user's per-user key.
+          markActiveUser(PROGRESS_STORAGE_NAME, newUserId);
+          return;
+        }
         set(() => ({
           userId: newUserId,
           completedModules: [],
@@ -512,10 +528,13 @@ export const useProgressStore = create<ProgressState>()(
           },
           lastUpdatedAt: new Date().toISOString(),
           isEnrolled: false
-        })),
+        }));
+        markActiveUser(PROGRESS_STORAGE_NAME, newUserId);
+      },
     }),
     {
-      name: 'aifoundations-progress', // name of the item in the storage (must be unique)
+      name: PROGRESS_STORAGE_NAME,
+      storage: createJSONStorage(() => createUserScopedStorage()),
       partialize: (state) => ({
         completedModules: state.completedModules,
         completedLessons: state.completedLessons,
