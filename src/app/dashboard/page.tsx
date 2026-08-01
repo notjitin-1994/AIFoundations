@@ -38,6 +38,7 @@ export default function CourseDashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [restartError, setRestartError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -150,7 +151,13 @@ export default function CourseDashboardPage() {
 
   const handleRestart = async () => {
     setIsRestarting(true);
-    await wipeDatabaseProgress();
+    setRestartError(null);
+    const result = await wipeDatabaseProgress();
+    if (!result?.success) {
+      setIsRestarting(false);
+      setRestartError(result?.reason ?? "Could not wipe progress on the server. Your progress was kept.");
+      return;
+    }
     useNotesStore.getState().clearAllNotes();
     progress.resetProgress();
     router.push("/modules/0");
@@ -255,6 +262,9 @@ export default function CourseDashboardPage() {
                 </button>
               )}
             </div>
+            {restartError && (
+              <p className="mt-3 text-sm text-destructive">{restartError}</p>
+            )}
           </section>
 
           {/* Pre-learning Expectations */}

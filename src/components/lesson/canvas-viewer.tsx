@@ -180,6 +180,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const [direction, setDirection] = useState(1);
   const [completedSlides, setCompletedSlides] = useState<Record<number, boolean>>({});
   const [navOverride, setNavOverride] = useState<CanvasNavOverride | null>(null);
+  const [restartError, setRestartError] = useState<string | null>(null);
   
   // Use state for interaction so we can trigger the "Begin Course" UI update
   const [hasInteracted, setHasInteracted] = useState(initialIndex > 0);
@@ -196,7 +197,12 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const timeTrackerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleRestart = async () => {
-    await wipeDatabaseProgress();
+    setRestartError(null);
+    const result = await wipeDatabaseProgress();
+    if (!result?.success) {
+      setRestartError(result?.reason ?? "Could not wipe progress on the server. Your progress was kept.");
+      return;
+    }
     useNotesStore.getState().clearAllNotes();
     resetProgress();
     router.push("/modules/0");
@@ -579,6 +585,9 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                     <AlertDialogTitle className="text-white">Restart full course?</AlertDialogTitle>
                     <AlertDialogDescription className="text-muted-foreground">
                       This will reset all your progress and knowledge check scores. This action cannot be undone.
+                      {restartError && (
+                        <span className="mt-2 block text-destructive">{restartError}</span>
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
