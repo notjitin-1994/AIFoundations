@@ -11,7 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { AuthModal } from "@/components/auth/auth-modal";
-import { fetchModuleProgress } from "@/actions/sync-progress";
+import { checkEnrollment, markEnrolled } from "@/actions/enrollment";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
@@ -20,29 +20,20 @@ export default function CourseMarketingPage() {
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
 
   useEffect(() => {
-    // Auto-enroll the test accounts
-    const isTestAccount = user?.email === "not.jitin@gmail.com" || user?.email === "jitin@glitchzerolabs.com" || user?.email === "bharat.nair.mail@gmail.com";
-    if (isTestAccount && !isEnrolled) {
-      useProgressStore.getState().setEnrolled(true);
-      router.push("/dashboard");
-      return;
-    }
+    if (!user || authLoading) return;
 
-    if (isEnrolled) {
-      router.push("/dashboard");
-      return;
-    }
-
-    // If not locally enrolled but user is logged in, check DB for any progress (implies enrollment on another device)
-    if (user && !isEnrolled) {
-      fetchModuleProgress().then((dbProgress) => {
-        if (dbProgress && dbProgress.length > 0) {
-          useProgressStore.getState().setEnrolled(true);
-          router.push("/dashboard");
-        }
-      });
-    }
-  }, [isEnrolled, router, user]);
+    let cancelled = false;
+    checkEnrollment().then((enrolled) => {
+      if (cancelled) return;
+      if (enrolled) {
+        useProgressStore.getState().setEnrolled(true);
+        router.push("/dashboard");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     gsap.fromTo(
@@ -72,10 +63,13 @@ export default function CourseMarketingPage() {
       name: "Smartslate",
       description: "AI Foundations: Concept to Application",
       image: "https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png",
-      handler: function (response: any) {
-        // Payment successful, push to dashboard
-        useProgressStore.getState().setEnrolled(true);
-        router.push("/dashboard");
+      handler: async function () {
+        // Persist the purchase to the DB, then grant access.
+        const result = await markEnrolled();
+        if (result.success) {
+          useProgressStore.getState().setEnrolled(true);
+          router.push("/dashboard");
+        }
       },
       prefill: {
         name: user.user_metadata?.first_name || "Learner",

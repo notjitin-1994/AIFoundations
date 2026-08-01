@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, getDisplayName } from "@/hooks/use-user";
+import { useEnrollmentGate } from "@/hooks/use-enrollment";
 import { requestVerification, getOrCreateCertificate, CertificateRecord } from "@/actions/certificate";
 import { useProgressStore } from "@/store/progress";
 import { AuthModal } from "@/components/auth/auth-modal";
@@ -181,6 +182,11 @@ export default function CertificatePage() {
       setDownloading(false);
     }
   };
+
+  const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
+  if (enrollmentLoading || !accessGranted) {
+    return null;
+  }
 
   if (loading || authLoading) {
     return (

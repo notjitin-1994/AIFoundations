@@ -19,6 +19,7 @@ import { computeCourseProgress } from "@/lib/progress-metrics";
 import type { CourseTotals } from "@/lib/progress-metrics";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { useEnrollmentGate } from "@/hooks/use-enrollment";
 import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
 
@@ -94,6 +95,11 @@ export default function CourseDashboardPage() {
     
     return () => ctx.revert();
   }, []);
+
+  const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
+  if (enrollmentLoading || !accessGranted) {
+    return null;
+  }
 
   const totalModules = COURSE_MODULES.length;
   const completedCount = mounted ? progress.completedModules.length : 0;
