@@ -164,8 +164,15 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
         if (index !== -1) return index;
       }
     }
+    
+    // Fallback to saved progress
+    const savedIndex = useProgressStore.getState().moduleProgressMap?.[moduleId]?.activeSlideIndex;
+    if (savedIndex !== undefined && savedIndex >= 0 && savedIndex < slides.length) {
+      return savedIndex;
+    }
+    
     return 0;
-  }, [lessonParam, slideParam, slides]);
+  }, [lessonParam, slideParam, slides, moduleId]);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [highestSeenIndex, setHighestSeenIndex] = useState(initialIndex);

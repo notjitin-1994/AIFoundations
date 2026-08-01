@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProgressStore } from '@/store/progress';
 import { syncModuleProgress, fetchModuleProgress } from '@/actions/sync-progress';
 
@@ -12,6 +12,7 @@ import { syncModuleProgress, fetchModuleProgress } from '@/actions/sync-progress
  * 3. Before Unload: Attempts a final synchronous-like push when the user leaves the tab.
  */
 export function useSyncEngine(moduleId: string) {
+  const [isSynced, setIsSynced] = useState(false);
   const { 
     lastUpdatedAt, 
     activeSlideIndex, 
@@ -66,9 +67,12 @@ export function useSyncEngine(moduleId: string) {
           newData.completedSlides = mergedCompletedSlides;
         }
         
+        
         syncFromDB(newData);
+        setIsSynced(true);
       } catch (err) {
         console.error("Initial sync failed", err);
+        setIsSynced(true);
       }
     };
     performInitialSync();
@@ -126,5 +130,7 @@ export function useSyncEngine(moduleId: string) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('visibilitychange', handleBeforeUnload);
     };
-  }, [moduleId]); // Only run when moduleId changes (page mount)
+  }, [moduleId, syncFromDB, completedModules]); // Only run when moduleId changes (page mount)
+
+  return { isSynced };
 }

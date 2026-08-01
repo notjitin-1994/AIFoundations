@@ -845,7 +845,7 @@ const MODULE_0_SLIDES: Slide[] = [
 
 export default function OrientationModule() {
   const { user, isLoading: authLoading } = useUser();
-  useSyncEngine("0");
+  const { isSynced } = useSyncEngine("0");
 
   const handleModuleComplete = () => {
     // ProjectSpineSelector handles the redirect
@@ -855,11 +855,17 @@ export default function OrientationModule() {
     <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background p-4 md:p-8 overflow-hidden">
       <AuthModal isOpen={!authLoading && !user} />
       <Suspense fallback={<div className="text-muted-foreground animate-pulse">Loading module...</div>}>
-        <CanvasViewer 
-          slides={MODULE_0_SLIDES} 
-          onComplete={handleModuleComplete}
-          moduleId="0"
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_0_SLIDES} 
+            onComplete={handleModuleComplete}
+            moduleId="0"
+          />
+        )}
       </Suspense>
     </div>
   );

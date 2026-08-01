@@ -30,7 +30,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   const { markModuleComplete, setActiveLessonIndex, setActiveSlideProgress, projectSpine } = useProgressStore();
   const { user, isLoading: authLoading } = useUser();
 
-  useSyncEngine(moduleId);
+  const { isSynced } = useSyncEngine(moduleId);
 
   // Must be at top level — Rules of Hooks. Used only when moduleId === "5".
   const m5Slides = useMemo(() => {
@@ -69,11 +69,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={MODULE_1_SLIDES} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_1_SLIDES} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
@@ -82,11 +88,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={MODULE_2_SLIDES} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_2_SLIDES} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
@@ -95,11 +107,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={MODULE_3_SLIDES} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_3_SLIDES} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
@@ -108,11 +126,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={MODULE_4_SLIDES} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_4_SLIDES} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
@@ -121,11 +145,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={m5Slides} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={m5Slides} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
@@ -134,11 +164,17 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
     return (
       <Suspense fallback={<div>Loading lesson...</div>}>
         <AuthModal isOpen={!authLoading && !user} />
-        <CanvasViewer 
-          slides={MODULE_6_SLIDES} 
-          onComplete={handleComplete} 
-          moduleId={moduleId}
-        />
+        {!isSynced ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <CanvasViewer 
+            slides={MODULE_6_SLIDES} 
+            onComplete={handleComplete} 
+            moduleId={moduleId}
+          />
+        )}
       </Suspense>
     );
   }
