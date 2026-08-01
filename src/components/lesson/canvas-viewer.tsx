@@ -147,8 +147,16 @@ function ModuleCoverCard({ moduleId }: { moduleId: string }) {
 export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: CanvasViewerProps) {
   const searchParams = useSearchParams();
   const lessonParam = searchParams ? searchParams.get("lesson") : null;
+  const slideParam = searchParams ? searchParams.get("slide") : null;
 
   const initialIndex = useMemo(() => {
+    if (slideParam !== null) {
+      const targetSlideIndex = parseInt(slideParam, 10);
+      if (!isNaN(targetSlideIndex) && targetSlideIndex >= 0 && targetSlideIndex < slides.length) {
+        return targetSlideIndex;
+      }
+    }
+    
     if (lessonParam !== null) {
       const targetLessonIndex = parseInt(lessonParam, 10);
       if (!isNaN(targetLessonIndex)) {
@@ -157,7 +165,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
       }
     }
     return 0;
-  }, [lessonParam, slides]);
+  }, [lessonParam, slideParam, slides]);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [replayCount, setReplayCount] = useState(0);
@@ -170,7 +178,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   
   const reduce = useReducedMotion();
   const router = useRouter();
-  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, markSlideComplete, completedModules, completedLessons, resetProgress } = useProgressStore();
+  const { setActiveLessonIndex, setActiveSlideProgress, markLessonComplete, markSlideComplete, completedModules, completedLessons, completedSlides: globalCompletedSlides, resetProgress } = useProgressStore();
   const narration = useNarrationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isAssetsOpen, setIsAssetsOpen] = useState(false);
@@ -376,7 +384,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     }
   };
 
-  const progressPercent = Math.round(((currentIndex + 1) / slides.length) * 100);
+  const completedCount = globalCompletedSlides?.[moduleId]?.length || 0;
+  const progressPercent = Math.round((Math.max(currentIndex + 1, completedCount) / slides.length) * 100);
 
   const slideVariants = {
     initial: (dir: number) => ({

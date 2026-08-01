@@ -190,7 +190,8 @@ export default function CourseDashboardPage() {
       }
     }
     
-    router.push(`/modules/${nextModuleId}`);
+    const targetSlide = progress.moduleProgressMap[nextModuleId]?.activeSlideIndex || 0;
+    router.push(`/modules/${nextModuleId}${targetSlide > 0 ? `?slide=${targetSlide}` : ''}`);
   };
 
   const hasStarted = mounted && (completedCount > 0 || (progress.activeModuleId !== "0" && progress.activeModuleId !== null) || progress.activeSlideIndex > 0);

@@ -83,7 +83,7 @@ const MODULES = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { completedModules, completedLessons, activeLessonIndex } = useProgressStore();
+  const { completedModules, completedLessons, activeLessonIndex, moduleProgressMap } = useProgressStore();
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
   // Auto-expand the current module when navigating and collapse others
@@ -120,6 +120,8 @@ export function Sidebar() {
             const isUnlocked = isModuleUnlocked(index);
             const isActive = pathname === mod.path || pathname === `${mod.path}/`;
             const isExpanded = expandedModules[mod.id] || false;
+            const targetSlide = moduleProgressMap[mod.id]?.activeSlideIndex || 0;
+            const moduleHref = targetSlide > 0 ? `${mod.path}?slide=${targetSlide}` : mod.path;
             
             return (
               <div key={mod.id} className="flex flex-col">
@@ -128,7 +130,7 @@ export function Sidebar() {
                     isActive ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary"
                   }`}>
                     <Link 
-                      href={mod.path} 
+                      href={moduleHref} 
                       className="flex-1 flex items-center space-x-3 px-3 py-2.5 text-sm font-medium truncate"
                     >
                       {isCompleted ? (
