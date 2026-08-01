@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { fetchModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
-import { mergeRemoteProgress } from "@/lib/progress-merge";
+import { mergeRemoteProgress, hasStartedCourse } from "@/lib/progress-merge";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useNotesStore } from "@/store/notes";
@@ -178,7 +178,16 @@ export default function CourseDashboardPage() {
     router.push(`/modules/${nextModuleId}${targetSlide > 0 ? `?slide=${targetSlide}` : ''}`);
   };
 
-  const hasStarted = mounted && (completedCount > 0 || (progress.activeModuleId !== "0" && progress.activeModuleId !== null) || progress.activeSlideIndex > 0);
+  const hasStarted = mounted && hasStartedCourse({
+    completedModules: progress.completedModules,
+    completedLessons: progress.completedLessons,
+    completedSlides: progress.completedSlides,
+    moduleProgressMap: progress.moduleProgressMap,
+    projectSpine: progress.projectSpine,
+    gamificationXp: progress.gamification?.xp ?? 0,
+    activeSlideIndex: progress.activeSlideIndex,
+    activeModuleId: progress.activeModuleId,
+  });
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>

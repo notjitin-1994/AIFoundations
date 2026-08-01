@@ -38,6 +38,30 @@ export interface LocalProgressSnapshot {
 
 export type MergedProgress = LocalProgressSnapshot;
 
+export interface CourseStartSnapshot {
+  completedModules: string[];
+  completedLessons: Record<string, number[]>;
+  completedSlides: Record<string, string[]>;
+  moduleProgressMap: Record<string, ModuleMapEntry>;
+  projectSpine: string | null;
+  gamificationXp: number;
+  activeSlideIndex: number;
+  activeModuleId: string | null;
+}
+
+export function hasStartedCourse(snapshot: CourseStartSnapshot): boolean {
+  return (
+    snapshot.completedModules.length > 0 ||
+    Object.keys(snapshot.completedLessons).length > 0 ||
+    Object.keys(snapshot.completedSlides).length > 0 ||
+    Object.keys(snapshot.moduleProgressMap).length > 0 ||
+    snapshot.projectSpine != null ||
+    snapshot.gamificationXp > 0 ||
+    snapshot.activeSlideIndex > 0 ||
+    (snapshot.activeModuleId !== '0' && snapshot.activeModuleId !== null)
+  );
+}
+
 function unionLessons(local: number[] | undefined, remote: number[] | undefined): number[] {
   const combined = [...(local ?? []), ...(remote ?? [])];
   return Array.from(new Set(combined)).sort((a, b) => a - b);

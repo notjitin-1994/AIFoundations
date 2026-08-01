@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { lwwResolve, mergeRemoteProgress } from '@/lib/progress-merge';
-import type { LocalProgressSnapshot, ModuleProgressRow } from '@/lib/progress-merge';
+import { lwwResolve, mergeRemoteProgress, hasStartedCourse } from '@/lib/progress-merge';
+import type { LocalProgressSnapshot, ModuleProgressRow, CourseStartSnapshot } from '@/lib/progress-merge';
 
 function localSnapshot(overrides: Partial<LocalProgressSnapshot> = {}): LocalProgressSnapshot {
   return {
@@ -171,5 +171,57 @@ describe('mergeRemoteProgress', () => {
 
     expect(merged.activeSlideIndex).toBe(8);
     expect(merged.activeLessonIndex).toBe(3);
+  });
+});
+
+function startSnapshot(overrides: Partial<CourseStartSnapshot> = {}): CourseStartSnapshot {
+  return {
+    completedModules: [],
+    completedLessons: {},
+    completedSlides: {},
+    moduleProgressMap: {},
+    projectSpine: null,
+    gamificationXp: 0,
+    activeSlideIndex: 0,
+    activeModuleId: '0',
+    ...overrides,
+  };
+}
+
+describe('hasStartedCourse', () => {
+  it('is false for a brand-new learner', () => {
+    expect(hasStartedCourse(startSnapshot())).toBe(false);
+  });
+
+  it('is true when any module has a progress map entry', () => {
+    expect(hasStartedCourse(startSnapshot({ moduleProgressMap: { '0': { activeSlideIndex: 3, activeLessonIndex: 0, totalSlidesInModule: 9, completed: false } } }))).toBe(true);
+  });
+
+  it('is true when a project spine was selected', () => {
+    expect(hasStartedCourse(startSnapshot({ projectSpine: 'research-companion' }))).toBe(true);
+  });
+
+  it('is true when any XP was earned', () => {
+    expect(hasStartedCourse(startSnapshot({ gamificationXp: 5 }))).toBe(true);
+  });
+
+  it('is true when slides were completed', () => {
+    expect(hasStartedCourse(startSnapshot({ completedSlides: { '0': ['m0-1'] } }))).toBe(true);
+  });
+
+  it('is true when lessons were completed', () => {
+    expect(hasStartedCourse(startSnapshot({ completedLessons: { '1': [0] } }))).toBe(true);
+  });
+
+  it('is true when a module was completed', () => {
+    expect(hasStartedCourse(startSnapshot({ completedModules: ['1'] }))).toBe(true);
+  });
+
+  it('is true when the learner moved past the first slide', () => {
+    expect(hasStartedCourse(startSnapshot({ activeSlideIndex: 1 }))).toBe(true);
+  });
+
+  it('is true when the active module is not the default', () => {
+    expect(hasStartedCourse(startSnapshot({ activeModuleId: '1' }))).toBe(true);
   });
 });
