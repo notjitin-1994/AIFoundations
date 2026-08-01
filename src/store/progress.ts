@@ -71,9 +71,9 @@ interface ProgressState {
   markModuleComplete: (moduleId: string) => void;
   markLessonComplete: (moduleId: string, lessonIndex: number) => void;
   markSlideComplete: (moduleId: string, slideId: string) => void;
-  setActiveLessonIndex: (index: number) => void;
+  setActiveLessonIndex: (index: number, moduleId?: string) => void;
   setActiveSlideProgress: (slideIndex: number, totalSlides: number, moduleId?: string) => void;
-  setModuleProgressMap: (map: Record<string, { activeSlideIndex: number, totalSlidesInModule: number, completed: boolean }>) => void;
+  setModuleProgressMap: (map: Record<string, { activeSlideIndex: number, activeLessonIndex: number, totalSlidesInModule: number, completed: boolean }>) => void;
   
   // Gamification Actions
   addXP: (amount: number) => void;

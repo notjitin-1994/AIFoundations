@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "react/no-unescaped-entities": "off",
       "react-hooks/set-state-in-effect": "off"
