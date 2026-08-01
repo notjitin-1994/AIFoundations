@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware';
 import { syncModuleProgress, logProgressEvent } from '@/actions/sync-progress';
 
 let syncQueue: Promise<void> = Promise.resolve();
-import { logProgressEvent, syncModuleProgress } from '@/actions/sync-progress';
 
 export type ProjectSpineType = string | null;
 type ProjectSpine = ProjectSpineType;
