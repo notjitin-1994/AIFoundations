@@ -63,6 +63,7 @@ export default function CourseDashboardPage() {
             const existingMapEntry = progress.moduleProgressMap[p.module_id];
             newMap[p.module_id] = {
               activeSlideIndex: Math.max(p.active_slide_index || 0, existingMapEntry?.activeSlideIndex || 0),
+              activeLessonIndex: Math.max(p.active_lesson_index || 0, existingMapEntry?.activeLessonIndex || 0),
               totalSlidesInModule: courseMod?.slideCount || 1,
               completed: !!p.completed || !!existingMapEntry?.completed
             };
