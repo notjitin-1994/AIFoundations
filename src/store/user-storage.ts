@@ -31,11 +31,13 @@ class MemoryStorage implements Storage {
   }
 }
 
+const memoryStorage: Storage = new MemoryStorage();
+
 function defaultStorage(): Storage {
   if (typeof localStorage !== 'undefined') {
     return localStorage;
   }
-  return new MemoryStorage();
+  return memoryStorage;
 }
 
 function perUserKey(baseName: string, userId: string | null): string {
@@ -66,6 +68,14 @@ export function markActiveUser(baseName: string, userId: string | null, storage:
   } catch (err) {
     console.error(`[user-storage] failed to persist active-user marker for "${baseName}":`, err);
   }
+}
+
+export function clearMemoryStorage(): void {
+  memoryStorage.clear();
+}
+
+export function readStoredState(baseName: string, userId: string | null, storage: Storage = defaultStorage()): string | null {
+  return storage.getItem(perUserKey(baseName, userId));
 }
 
 function migrateLegacyPayload(storage: Storage, baseName: string): string | null {

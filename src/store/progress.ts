@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { syncModuleProgress, logProgressEvent } from '@/actions/sync-progress';
-import { createUserScopedStorage, markActiveUser } from '@/store/user-storage';
+import { createUserScopedStorage, markActiveUser, readStoredState } from '@/store/user-storage';
 
 let syncQueue: Promise<void> = Promise.resolve();
 
@@ -505,6 +505,22 @@ export const useProgressStore = create<ProgressState>()(
           markActiveUser(PROGRESS_STORAGE_NAME, newUserId);
           return;
         }
+        markActiveUser(PROGRESS_STORAGE_NAME, newUserId);
+        // Synchronously re-read the target user's per-user key so a same-session
+        // logout/login restores local data instead of orphaning it; fall back to
+        // a fresh canvas only when that user has no stored state.
+        const stored = readStoredState(PROGRESS_STORAGE_NAME, newUserId);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored) as { state?: Partial<ProgressState> };
+            if (parsed.state && parsed.state.userId === newUserId) {
+              set((state) => ({ ...state, ...parsed.state }));
+              return;
+            }
+          } catch (err) {
+            console.error("Failed to restore per-user progress state:", err);
+          }
+        }
         set(() => ({
           userId: newUserId,
           completedModules: [],
@@ -529,7 +545,6 @@ export const useProgressStore = create<ProgressState>()(
           lastUpdatedAt: new Date().toISOString(),
           isEnrolled: false
         }));
-        markActiveUser(PROGRESS_STORAGE_NAME, newUserId);
       },
     }),
     {

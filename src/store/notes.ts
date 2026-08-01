@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { syncModuleProgress } from '@/actions/sync-progress';
-import { createUserScopedStorage, markActiveUser } from '@/store/user-storage';
+import { createUserScopedStorage, markActiveUser, readStoredState } from '@/store/user-storage';
 
 let syncQueue: Promise<void> = Promise.resolve();
 
@@ -64,8 +64,20 @@ export const useNotesStore = create<NotesState>()(
           markActiveUser(NOTES_STORAGE_NAME, newUserId);
           return;
         }
-        set({ userId: newUserId, notes: [] });
         markActiveUser(NOTES_STORAGE_NAME, newUserId);
+        const stored = readStoredState(NOTES_STORAGE_NAME, newUserId);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored) as { state?: { userId?: string | null; notes?: Note[] } };
+            if (parsed.state && parsed.state.userId === newUserId) {
+              set({ userId: newUserId, notes: parsed.state.notes ?? [] });
+              return;
+            }
+          } catch (err) {
+            console.error("Failed to restore per-user notes state:", err);
+          }
+        }
+        set({ userId: newUserId, notes: [] });
       },
       syncFromDB: (dbNotes) => {
         set((state) => {
