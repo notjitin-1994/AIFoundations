@@ -18,6 +18,7 @@ export function Header() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      await useProgressStore.getState().flushSyncProgress();
       await createClient().auth.signOut();
     } catch (error) {
       console.error("Logout failed:", error instanceof Error ? error.message : String(error));

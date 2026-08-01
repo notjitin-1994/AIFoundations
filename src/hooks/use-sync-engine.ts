@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProgressStore } from '@/store/progress';
-import { syncModuleProgress, fetchModuleProgress } from '@/actions/sync-progress';
+import { fetchModuleProgress } from '@/actions/sync-progress';
 
 /**
  * useSyncEngine implements a Last-Write-Wins (LWW) local-first persistence strategy.
@@ -15,8 +15,6 @@ export function useSyncEngine(moduleId: string) {
   const [isSynced, setIsSynced] = useState(false);
   const { 
     lastUpdatedAt, 
-    activeSlideIndex, 
-    activeLessonIndex, 
     completedModules, 
     syncFromDB 
   } = useProgressStore();
@@ -38,11 +36,11 @@ export function useSyncEngine(moduleId: string) {
         const dbProgress = await fetchModuleProgress();
         if (cancelled || !dbProgress) return;
 
-        const modProgress = dbProgress.find((p: any) => p.module_id === moduleId);
+        const modProgress = dbProgress.find((p: Record<string, unknown>) => p.module_id === moduleId);
         if (!modProgress) return;
 
         // DB is the absolute source of truth
-        const newData: any = {};
+        const newData: Record<string, unknown> = {};
         if (modProgress.completed && !completedModules.includes(moduleId)) {
           newData.completedModules = [...completedModules, moduleId];
         }
@@ -77,58 +75,8 @@ export function useSyncEngine(moduleId: string) {
     };
     performInitialSync();
 
-    // Subscribe to all changes in the store to sync them to the DB
-    let debounceTimer: NodeJS.Timeout;
-    const unsubscribe = useProgressStore.subscribe((state, prevState) => {
-      if (state.lastUpdatedAt !== prevState.lastUpdatedAt) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          syncModuleProgress(moduleId, {
-            activeSlideIndex: state.activeSlideIndex,
-            activeLessonIndex: state.activeLessonIndex,
-            completed: state.completedModules.includes(moduleId),
-            updated_at: state.lastUpdatedAt,
-            assessments: state.assessments,
-            projectSpine: state.projectSpine,
-            projectSpineAnswers: state.projectSpineAnswers,
-            gamification: state.gamification,
-            completedLessons: state.completedLessons,
-            completedSlides: state.completedSlides
-          }).catch(() => {});
-        }, 1000); // 1s debounce
-      }
-    });
-
-    // Setup beforeunload sync
-    const handleBeforeUnload = () => {
-      syncModuleProgress(moduleId, {
-        activeSlideIndex: useProgressStore.getState().activeSlideIndex,
-        activeLessonIndex: useProgressStore.getState().activeLessonIndex,
-        completed: useProgressStore.getState().completedModules.includes(moduleId),
-        updated_at: lastUpdatedAtRef.current,
-        assessments: useProgressStore.getState().assessments,
-        projectSpine: useProgressStore.getState().projectSpine,
-        projectSpineAnswers: useProgressStore.getState().projectSpineAnswers,
-        gamification: useProgressStore.getState().gamification,
-        completedLessons: useProgressStore.getState().completedLessons,
-        completedSlides: useProgressStore.getState().completedSlides
-      }).catch(() => {});
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        handleBeforeUnload();
-      }
-    });
-
     return () => {
       cancelled = true;
-      clearTimeout(debounceTimer);
-      handleBeforeUnload(); // Sync immediately on unmount (client-side navigation)
-      unsubscribe();
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('visibilitychange', handleBeforeUnload);
     };
   }, [moduleId, syncFromDB, completedModules]); // Only run when moduleId changes (page mount)
 

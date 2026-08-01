@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { logProgressEvent } from '@/actions/sync-progress';
+import { logProgressEvent, syncModuleProgress } from '@/actions/sync-progress';
 
 export type ProjectSpineType = string | null;
 type ProjectSpine = ProjectSpineType;
@@ -77,6 +77,8 @@ interface ProgressState {
 
   // Hydrates local state from DB if DB is newer
   syncFromDB: (dbData: Partial<ProgressState>) => void;
+  syncToDB: (moduleId: string) => Promise<void>;
+  flushSyncProgress: () => Promise<void>;
   resetProgress: () => void;
   setEnrolled: (status: boolean) => void;
   clearUserStore: (newUserId: string | null) => void;
@@ -111,6 +113,7 @@ export const useProgressStore = create<ProgressState>()(
       setProjectSpine: (spine) => {
         set({ projectSpine: spine, lastUpdatedAt: new Date().toISOString() });
         logProgressEvent('0', 'project_spine_selected', { spine }).catch(console.error);
+        useProgressStore.getState().syncToDB('0').catch(console.error);
       },
       
       saveProjectSpineAnswer: (moduleId, answerData) => {
@@ -126,6 +129,7 @@ export const useProgressStore = create<ProgressState>()(
           lastUpdatedAt: new Date().toISOString()
         }));
         logProgressEvent(moduleId, 'gamification_xp_earned', { amount: 30, reason: 'project_spine_answer' }).catch(console.error);
+        useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
         
       saveAssessmentState: (moduleId, stateData) => {
@@ -160,7 +164,8 @@ export const useProgressStore = create<ProgressState>()(
             lastUpdatedAt: new Date().toISOString()
           };
         });
-        logProgressEvent(moduleId, 'assessment_submitted', stateData).catch(console.error);
+        logProgressEvent(moduleId, 'assessment_submitted', { stateData }).catch(console.error);
+        useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
 
       markModuleComplete: (moduleId) => {
@@ -219,7 +224,9 @@ export const useProgressStore = create<ProgressState>()(
             lastUpdatedAt: new Date().toISOString()
           };
         });
+        
         logProgressEvent(moduleId, 'module_completed', {}).catch(console.error);
+        useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
 
       markLessonComplete: (moduleId, lessonIndex) => {
@@ -239,6 +246,7 @@ export const useProgressStore = create<ProgressState>()(
           };
         });
         logProgressEvent(moduleId, 'lesson_completed', { lessonIndex }).catch(console.error);
+        useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
 
       markSlideComplete: (moduleId, slideId) => {
@@ -258,11 +266,12 @@ export const useProgressStore = create<ProgressState>()(
           };
         });
         logProgressEvent(moduleId, 'slide_completed', { slideId }).catch(console.error);
+        useProgressStore.getState().syncToDB(moduleId).catch(console.error);
       },
 
       setActiveLessonIndex: (index) => set({ activeLessonIndex: index, lastUpdatedAt: new Date().toISOString() }),
 
-      setActiveSlideProgress: (slideIndex, totalSlides, moduleId) => 
+      setActiveSlideProgress: (slideIndex, totalSlides, moduleId) => {
         set((state) => ({ 
           activeSlideIndex: slideIndex, 
           totalSlidesInModule: totalSlides,
@@ -278,7 +287,9 @@ export const useProgressStore = create<ProgressState>()(
             }
           } : {}),
           lastUpdatedAt: new Date().toISOString()
-        })),
+        }));
+        useProgressStore.getState().syncToDB(moduleId || '0').catch(console.error);
+      },
 
       setModuleProgressMap: (map) => set({ moduleProgressMap: map, lastUpdatedAt: new Date().toISOString() }),
 
@@ -288,6 +299,7 @@ export const useProgressStore = create<ProgressState>()(
           lastUpdatedAt: new Date().toISOString()
         }));
         logProgressEvent('0', 'gamification_xp_earned', { amount }).catch(console.error);
+        useProgressStore.getState().syncToDB('0').catch(console.error);
       },
 
       awardBadge: (badgeId) => {
@@ -303,9 +315,10 @@ export const useProgressStore = create<ProgressState>()(
           };
         });
         logProgressEvent('0', 'badge_earned', { badgeId }).catch(console.error);
+        useProgressStore.getState().syncToDB('0').catch(console.error);
       },
 
-      awardTool: (toolId) => 
+      awardTool: (toolId) => {
         set((state) => {
           if (state.gamification.toolsMastered.includes(toolId)) return state;
           return {
@@ -316,15 +329,19 @@ export const useProgressStore = create<ProgressState>()(
             },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        useProgressStore.getState().syncToDB('0').catch(console.error);
+      },
 
-      updateTimeSpent: (seconds) => 
+      updateTimeSpent: (seconds) => {
         set((state) => ({
           gamification: { ...state.gamification, totalTimeSpentSeconds: state.gamification.totalTimeSpentSeconds + seconds },
           lastUpdatedAt: new Date().toISOString()
-        })),
+        }));
+        useProgressStore.getState().syncToDB('0').catch(console.error);
+      },
 
-      recordLogin: () => 
+      recordLogin: () => {
         set((state) => {
           const today = new Date().toISOString().split('T')[0];
           const lastDate = state.gamification.lastLoginDate;
@@ -351,13 +368,52 @@ export const useProgressStore = create<ProgressState>()(
             gamification: { ...state.gamification, lastLoginDate: today, currentStreak: newStreak },
             lastUpdatedAt: new Date().toISOString()
           };
-        }),
+        });
+        useProgressStore.getState().syncToDB('0').catch(console.error);
+      },
         
       syncFromDB: (dbData) => 
         set((state) => ({
           ...state,
           ...dbData,
+          lastUpdatedAt: new Date().toISOString()
         })),
+
+      syncToDB: async (moduleId: string) => {
+        const state = useProgressStore.getState();
+        if (!state.userId) return; // Only sync if logged in
+
+        await syncModuleProgress(moduleId, {
+          activeSlideIndex: state.activeSlideIndex,
+          activeLessonIndex: state.activeLessonIndex,
+          completed: state.completedModules.includes(moduleId),
+          updated_at: state.lastUpdatedAt,
+          assessments: state.assessments,
+          projectSpine: state.projectSpine,
+          projectSpineAnswers: state.projectSpineAnswers,
+          gamification: state.gamification,
+          completedLessons: state.completedLessons,
+          completedSlides: state.completedSlides
+        });
+      },
+
+      flushSyncProgress: async () => {
+        const state = useProgressStore.getState();
+        if (!state.userId) return;
+        
+        // Find all modules that the user has interacted with
+        const modulesToSync = Array.from(new Set([
+          state.activeModuleId,
+          ...state.completedModules,
+          ...Object.keys(state.moduleProgressMap),
+          ...Object.keys(state.completedSlides)
+        ])).filter(Boolean);
+
+        // Sync them all concurrently
+        await Promise.allSettled(
+          modulesToSync.map(moduleId => state.syncToDB(moduleId))
+        );
+      },
 
       resetProgress: () => set((state) => ({ 
         completedModules: [], 

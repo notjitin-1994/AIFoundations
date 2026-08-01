@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { Loader2, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useProgressStore } from "@/store/progress";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +30,7 @@ export function MarketingNavbar() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      await useProgressStore.getState().flushSyncProgress();
       await createClient().auth.signOut();
     } catch (error) {
       console.error("Logout failed:", error);
