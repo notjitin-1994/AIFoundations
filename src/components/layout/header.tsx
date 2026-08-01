@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useProgressStore } from "@/store/progress";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { COURSE_MODULES } from "@/lib/course-data";
 
 export function Header() {
   const router = useRouter();
   const { user, isLoading } = useUser();
-  const { completedModules, activeSlideIndex, totalSlidesInModule, activeModuleId } = useProgressStore();
+  const { completedModules, activeSlideIndex, totalSlidesInModule, activeModuleId, moduleProgressMap, completedSlides } = useProgressStore();
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -38,18 +39,29 @@ export function Header() {
     }
   }, [user]);
 
-  const totalModules = 7;
+  let progressPercent = 0;
+  if (mounted) {
+    let globalCompleted = 0;
+    let globalTotal = 0;
 
-  // Base progress from fully completed modules
-  const baseProgress = (completedModules.length / totalModules) * 100;
+    COURSE_MODULES.forEach(mod => {
+      const mapEntry = moduleProgressMap?.[mod.id];
+      const completedCount = completedSlides?.[mod.id]?.length || 0;
+      const totalForMod = mapEntry?.totalSlidesInModule || mod.slideCount || 1;
+      
+      globalTotal += totalForMod;
 
-  // Granular progress from current module's active slide ONLY if it's not already completed
-  const isCurrentModuleCompleted = mounted && completedModules.includes(activeModuleId);
-  const currentModuleProgress = isCurrentModuleCompleted
-    ? 0
-    : (activeSlideIndex / Math.max(1, totalSlidesInModule)) * (100 / totalModules);
+      if (completedModules.includes(mod.id) || mapEntry?.completed) {
+        globalCompleted += totalForMod;
+      } else if (mapEntry || completedCount > 0 || activeModuleId === mod.id) {
+        const fallbackIndex = activeModuleId === mod.id ? (activeSlideIndex || 0) : (mapEntry?.activeSlideIndex || 0);
+        const count = Math.max(completedCount, fallbackIndex);
+        globalCompleted += count;
+      }
+    });
 
-  const progressPercent = mounted ? Math.round(Math.min(100, baseProgress + currentModuleProgress)) : 0;
+    progressPercent = globalTotal > 0 ? Math.round((globalCompleted / globalTotal) * 100) : 0;
+  }
 
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">

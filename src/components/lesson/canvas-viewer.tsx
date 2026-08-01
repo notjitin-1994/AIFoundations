@@ -387,10 +387,6 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
     }
   };
 
-  const completedCount = globalCompletedSlides?.[moduleId]?.length || 0;
-  // Progress is driven by the maximum of: the highest index they've seen + 1, OR the number of slides they've actually marked complete
-  const progressPercent = Math.round((Math.max(highestSeenIndex + 1, completedCount) / slides.length) * 100);
-
   const slideVariants = {
     initial: (dir: number) => ({
       opacity: 0,
