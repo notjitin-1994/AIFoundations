@@ -80,7 +80,9 @@ export async function fetchModuleProgress() {
       console.error("fetchModuleProgress error:", error);
       return null;
     }
-    return data;
+    // Next.js Server Actions require strictly serializable plain objects.
+    // Supabase responses sometimes contain prototypes that cause 'Server Components render' errors.
+    return data ? JSON.parse(JSON.stringify(data)) : null;
   } catch (err) {
     console.error("fetchModuleProgress exception:", err);
     return null;
