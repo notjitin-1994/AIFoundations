@@ -20,6 +20,7 @@ export async function syncModuleProgress(
     gamification?: any;
     completedLessons?: any;
     completedSlides?: any;
+    notes?: any;
   }
 ) {
   try {
