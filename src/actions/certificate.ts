@@ -1,9 +1,10 @@
 "use server";
 
-// import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { COURSE_SLUG } from "@/lib/course-slug";
 
 export interface CertificateRecord {
-  id: string; // The cryptographic hash
+  id: string; // The stable UUID identity — minted once, never deleted
   userId: string;
   baselineScore: number;
   finalScore: number;
@@ -17,56 +18,65 @@ export async function requestVerification(certId: string) {
   // In a real application, this would mark the certificate for instructor review
   // or trigger an LLM-based verification of the final capstone project.
   console.log(`Verification requested for ${certId}`);
-  
+
   // Simulated delay for realism
   await new Promise(resolve => setTimeout(resolve, 2000));
-  
+
   return { success: true };
 }
 
 /**
- * Generates a verifiable cryptographic hash based on the certificate data.
+ * Fetches or mints the learner's certificate record. The row is created once
+ * (stable UUID identity) and survives course restarts — the wipe deletes
+ * progress data but never certificates. Re-completion refreshes the payload
+ * while the UUID and issued_at stay constant.
  */
-export async function generateCertificateHash(
-  userId: string,
-  baselineScore: number,
-  finalScore: number,
-  projectSpine: string
-) {
-  // We use a salt (in a real app this should be a private environment variable)
-  const salt = process.env.CERT_SECRET_SALT || "concept2app-secret-salt-2026";
-  
-  // Combine all the critical data points that must not be forged
-  const dataString = `${userId}:${baselineScore}:${finalScore}:${projectSpine}:${salt}`;
-  
-  // Generate a SHA-256 hash using Web Crypto
-  const encoder = new TextEncoder();
-  const data = encoder.encode(dataString);
-  const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
-  // Return a readable short string (first 16 chars)
-  return `cert-${hash.substring(0, 16)}`;
-}
+export async function getOrCreateCertificateRecord(input: {
+  payload: Omit<CertificateRecord, "id" | "issuedAt">;
+}): Promise<{ certificate: CertificateRecord | null; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { certificate: null, error: "Not authenticated" };
 
-/**
- * This function handles fetching or creating a certificate for a user.
- * It simulates storing the verified record in Supabase.
- */
-export async function getOrCreateCertificate(certData: Omit<CertificateRecord, "id" | "issuedAt">) {
-  const hashId = await generateCertificateHash(
-    certData.userId, 
-    certData.baselineScore, 
-    certData.finalScore, 
-    certData.projectSpine
-  );
+    const { data: course } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("slug", COURSE_SLUG)
+      .maybeSingle();
+    if (!course) return { certificate: null, error: "Course not found" };
 
-  const newRecord: CertificateRecord = {
-    ...certData,
-    id: hashId,
-    issuedAt: new Date().toISOString(),
-  };
+    const { data: existing } = await supabase
+      .from("certificates")
+      .select("id, issued_at")
+      .eq("user_id", user.id)
+      .eq("course_id", course.id)
+      .maybeSingle();
 
-  return newRecord;
+    if (existing) {
+      const { error } = await supabase
+        .from("certificates")
+        .update({ payload: input.payload, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) {
+        console.error("getOrCreateCertificateRecord update error:", error.message);
+        return { certificate: null, error: error.message };
+      }
+      return { certificate: { id: existing.id, issuedAt: existing.issued_at, ...input.payload } };
+    }
+
+    const { data: created, error } = await supabase
+      .from("certificates")
+      .insert({ user_id: user.id, course_id: course.id, payload: input.payload })
+      .select("id, issued_at")
+      .single();
+    if (error || !created) {
+      console.error("getOrCreateCertificateRecord insert error:", error?.message ?? "no row");
+      return { certificate: null, error: error?.message ?? "Could not create certificate" };
+    }
+    return { certificate: { id: created.id, issuedAt: created.issued_at, ...input.payload } };
+  } catch (err) {
+    console.error("getOrCreateCertificateRecord exception:", err instanceof Error ? err.message : String(err));
+    return { certificate: null, error: "Internal error" };
+  }
 }
