@@ -12,12 +12,14 @@ import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
-import { checkEnrollment, markEnrolled } from "@/actions/enrollment";
+import { checkEnrollment } from "@/actions/enrollment";
+import { createCheckoutOrder, verifyAndEnroll } from "@/actions/payments";
 
 export default function CourseMarketingPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
   const [enrollmentState, setEnrollmentState] = useState<"checking" | "resolved">("checking");
 
@@ -55,32 +57,54 @@ export default function CourseMarketingPage() {
     );
   }, []);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!user) {
       router.push("/signup?intent=enroll");
       return;
     }
 
+    setPaymentError(null);
+
     if (typeof window === "undefined" || !(window as any).Razorpay) {
       console.error("Razorpay SDK not loaded");
       return;
     }
-    
+
+    // Create the order server-side first: the amount is locked at creation and
+    // the key secret never reaches the browser.
+    const { orderId, error } = await createCheckoutOrder();
+    if (!orderId) {
+      setPaymentError(error || "Checkout is temporarily unavailable. Please try again.");
+      return;
+    }
+
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!keyId) {
+      setPaymentError("Payment is not configured.");
+      return;
+    }
+
     setIsProcessing(true);
 
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_THqR3iuokmLPhQ", // fallback to literal key just in case
-      amount: "2999900", // 29999 INR in paise
-      currency: "INR",
+      key: keyId,
+      order_id: orderId,
       name: "Smartslate",
       description: "AI Foundations: Concept to Application",
       image: "https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png",
-      handler: async function () {
-        // Persist the purchase to the DB, then grant access.
-        const result = await markEnrolled();
+      handler: async function (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) {
+        // Enrollment is granted only after the server verifies the payment signature.
+        const result = await verifyAndEnroll(
+          response.razorpay_order_id,
+          response.razorpay_payment_id,
+          response.razorpay_signature
+        );
         if (result.success) {
           useProgressStore.getState().setEnrolled(true);
           router.push("/dashboard");
+        } else {
+          setPaymentError(result.reason || "Payment could not be verified. Contact support.");
+          setIsProcessing(false);
         }
       },
       prefill: {
@@ -160,6 +184,9 @@ export default function CourseMarketingPage() {
               </button>
             </div>
             <p className="animate-fade font-sans text-xs text-muted-foreground mt-4 text-center sm:text-left">30-day money-back guarantee. No questions asked.</p>
+            {paymentError && (
+              <p className="animate-fade font-sans text-sm text-destructive mt-3" role="alert">{paymentError}</p>
+            )}
           </div>
 
           <div className="animate-fade relative z-10">

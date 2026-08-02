@@ -17,9 +17,6 @@ const lato = Lato({
 export const metadata: Metadata = {
   title: "AI Foundations: Concept to Application",
   description: "A comprehensive AI literacy course for non-technical professionals.",
-  icons: {
-    icon: "/logo-swirl.png",
-  },
 };
 
 export default function RootLayout({
