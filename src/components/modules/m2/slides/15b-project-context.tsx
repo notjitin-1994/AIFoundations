@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { useProgressStore } from "@/store/progress";
 import { useLRS } from "@/hooks/use-lrs";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
+import { PROJECT_SPINES } from "@/lib/course-data";
 import {
   CheckSquare, Copy, Check, Folder, FileText, ArrowRight, ArrowLeft, ChevronRight,
   Sparkles, PartyPopper, CircleAlert, FolderTree, BookOpen, PencilLine,
@@ -64,6 +65,10 @@ type Step = "learn" | "build" | "verify";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
+// Appended to every spine prompt so the generated initiation document
+// explicitly covers the three awareness layers the harness needs.
+const CONTEXT_DOC_OUTPUT = `\n\n# OUTPUT REQUIREMENTS\nThe document you generate is the project's canonical context and initiation file. Save it as AI_CONTEXT.md inside the project's docs/ folder. Structure it with these labeled sections: PROJECT BRIEF (what we are building and why, in 2-3 sentences), DOMAIN CONTEXT (who it serves and the domain rules that shape every decision), TECH STACK, UI/UX DESIGN SYSTEM, DOMAIN-SPECIFIC CONSTRAINTS. Keep each section concrete enough that a developer who knows nothing about this project could start building from it.`;
+
 export function ProjectContextSlide({ onComplete }: { onComplete?: () => void }) {
   const { projectSpine, projectSpineAnswers, saveProjectSpineAnswer } = useProgressStore();
   const { track } = useLRS();
@@ -77,6 +82,7 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
 
   const spineKey = projectSpine ?? "bi_dashboard";
   const config = PROJECT_CONTEXT_PROMPTS[spineKey] ?? PROJECT_CONTEXT_PROMPTS.bi_dashboard;
+  const promptForLlm = config.prompt + CONTEXT_DOC_OUTPUT;
 
   useEffect(() => {
     if (!reduce) {
@@ -98,7 +104,7 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
   }, [completed, setNavOverride, onComplete]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(config.prompt);
+    navigator.clipboard.writeText(promptForLlm);
     setCopied(true);
     track(
       "http://adlnet.gov/expapi/verbs/interacted",
@@ -181,13 +187,13 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
             >
               <p className="text-xs md:text-sm text-muted-foreground max-w-3xl">
                 <Sparkles className="w-3.5 h-3.5 inline mr-1 text-primary" />
-                An <code className="text-primary">AI_CONTEXT.md</code> file tells your coding agent your tech stack, design system, and domain rules — so it never makes a bad architecture choice on its own.
+                Your harness can only build what it fully understands. Before a single line of code it needs three layers of awareness — and they all live in your project&apos;s <code className="text-primary">docs/</code> folder.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { icon: BookOpen, title: "Tech Stack", desc: "Frameworks, libraries, and versions the agent must stay inside." },
-                  { icon: PencilLine, title: "UI/UX Design System", desc: "Tokens, components, and accessibility rules the UI must follow." },
-                  { icon: FolderTree, title: "Domain Constraints", desc: "Hard rules specific to your project — security, formats, workflows." },
+                  { icon: BookOpen, title: "What it's building", desc: "The product brief: what the project is, who it serves, and why it exists." },
+                  { icon: FolderTree, title: "The domain", desc: "The domain it operates in — the concepts and rules that shape every decision." },
+                  { icon: PencilLine, title: "How it's done", desc: "The tech knowledge: stack, design system, and the hard boundaries it must stay inside." },
                 ].map((c) => (
                   <div key={c.title} className="p-4 rounded-2xl border bg-card/40 backdrop-blur-xl border-white/10">
                     <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2.5">
@@ -197,6 +203,23 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
                     <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* The 12 project templates */}
+              <div className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">The 12 project templates</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(PROJECT_SPINES).map(([key, name]) => (
+                    <span
+                      key={key}
+                      className={`px-2 py-1 rounded-full text-[10px] font-semibold ${
+                        key === spineKey ? "bg-primary/15 border border-primary/30 text-primary" : "bg-white/5 border border-white/10 text-muted-foreground"
+                      }`}
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
               </div>
               <div className="flex justify-end">
                 <button
@@ -273,7 +296,7 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
                   </button>
                 </div>
                 <div className="p-4 max-h-48 overflow-y-auto text-[13px] font-mono text-foreground/80 leading-relaxed whitespace-pre-wrap select-all">
-                  {config.prompt}
+                  {promptForLlm}
                 </div>
               </div>
 
@@ -322,9 +345,9 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
 
               <div className="space-y-2">
                 {[
-                  "Your project folder exists on your computer",
-                  "A docs subfolder exists inside it",
-                  "AI_CONTEXT.md is saved inside docs/ with your full tech stack, design system, and domain constraints",
+                  "Your project folder exists, with a docs/ subfolder inside it",
+                  "AI_CONTEXT.md is saved in docs/ and covers WHAT you're building (project brief), the DOMAIN it serves, and HOW it's done (tech stack, design system, constraints)",
+                  "Read it back once — would a developer who knows nothing about your project understand all three layers?",
                 ].map((check, i) => (
                   <div key={i} className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3">
                     <CheckSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
