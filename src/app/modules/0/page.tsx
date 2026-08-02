@@ -29,59 +29,6 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { setNavOverride } = useCanvasNav();
   const hasInitialized = useRef(false);
 
-  useEffect(() => {
-    if (projectSpine && !selectedPillar && !hasInitialized.current) {
-      const pillar = Object.keys(PROJECTS).find(p => PROJECTS[p].some(proj => proj.id === projectSpine));
-      if (pillar) {
-        setSelectedPillar(pillar);
-      }
-      hasInitialized.current = true;
-    }
-  }, [projectSpine, selectedPillar]);
-
-  useEffect(() => {
-    let nextLabel = "Select Project & Continue";
-    if (isSubmitting) {
-      nextLabel = "Saving...";
-    } else if (selectedSpine && selectedPillar) {
-      const project = PROJECTS[selectedPillar]?.find(p => p.id === selectedSpine);
-      nextLabel = project ? `Select ${project.title} & Continue` : "Submit & Continue";
-    } else if (selectedPillar) {
-      const pillar = PILLARS.find(p => p.id === selectedPillar);
-      nextLabel = pillar ? `Select ${pillar.title} & Continue` : "Submit & Continue";
-    }
-
-    setNavOverride({
-      nextLabel,
-      nextDisabled: !selectedSpine || isSubmitting,
-      onNext: async (handleNext) => {
-        if (!selectedSpine) return;
-        setIsSubmitting(true);
-        setProjectSpine(selectedSpine);
-        markModuleComplete("0");
-        track(
-          "http://activitystrea.ms/schema/1.0/choose",
-          "selected_template",
-          `http://smartslate.com/activities/templates/${selectedSpine}`,
-          `Project Template: ${selectedSpine}`,
-          `Learner selected the ${selectedSpine} project spine.`,
-          { moduleId: "0", slideId: "project-selector" }
-        );
-        track(
-          "http://adlnet.gov/expapi/verbs/completed",
-          "completed",
-          "http://smartslate.com/activities/modules/0",
-          "Module 0",
-          "Learner completed Module 0.",
-          { moduleId: "0", slideId: "project-selector", result: { completion: true } }
-        );
-        onComplete();
-        setTimeout(() => { router.push('/modules/1'); }, 1500);
-      }
-    });
-    return () => setNavOverride(null);
-  }, [selectedSpine, selectedPillar, isSubmitting, setNavOverride, setProjectSpine, markModuleComplete, onComplete, router, track]);
-
   const PILLARS = [
     {
       id: 'webapp',
@@ -135,6 +82,61 @@ function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
       { id: 'fiction_world_copilot', title: 'Creative World-Building Co-Pilot', description: 'A drafting assistant that references a persistent lore bible to ensure character voices and story logic remain perfectly consistent.' }
     ]
   };
+
+  useEffect(() => {
+    if (projectSpine && !selectedPillar && !hasInitialized.current) {
+      const pillar = Object.keys(PROJECTS).find(p => PROJECTS[p].some(proj => proj.id === projectSpine));
+      if (pillar) {
+        setSelectedPillar(pillar);
+      }
+      hasInitialized.current = true;
+    }
+  }, [projectSpine, selectedPillar]);
+
+  useEffect(() => {
+    let nextLabel = "Select Project & Continue";
+    if (isSubmitting) {
+      nextLabel = "Saving...";
+    } else if (selectedSpine && selectedPillar) {
+      const project = PROJECTS[selectedPillar]?.find(p => p.id === selectedSpine);
+      nextLabel = project ? `Select ${project.title} & Continue` : "Submit & Continue";
+    } else if (selectedPillar) {
+      const pillar = PILLARS.find(p => p.id === selectedPillar);
+      nextLabel = pillar ? `Select ${pillar.title} & Continue` : "Submit & Continue";
+    }
+
+    setNavOverride({
+      nextLabel,
+      nextDisabled: !selectedSpine || isSubmitting,
+      onNext: async (handleNext) => {
+        if (!selectedSpine) return;
+        setIsSubmitting(true);
+        setProjectSpine(selectedSpine);
+        markModuleComplete("0");
+        track(
+          "http://activitystrea.ms/schema/1.0/choose",
+          "selected_template",
+          `http://smartslate.com/activities/templates/${selectedSpine}`,
+          `Project Template: ${selectedSpine}`,
+          `Learner selected the ${selectedSpine} project spine.`,
+          { moduleId: "0", slideId: "project-selector" }
+        );
+        track(
+          "http://adlnet.gov/expapi/verbs/completed",
+          "completed",
+          "http://smartslate.com/activities/modules/0",
+          "Module 0",
+          "Learner completed Module 0.",
+          { moduleId: "0", slideId: "project-selector", result: { completion: true } }
+        );
+        onComplete();
+        setTimeout(() => { router.push('/modules/1'); }, 1500);
+      }
+    });
+    return () => setNavOverride(null);
+  }, [selectedSpine, selectedPillar, isSubmitting, setNavOverride, setProjectSpine, markModuleComplete, onComplete, router, track]);
+
+
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden relative">
@@ -859,21 +861,17 @@ export default function OrientationModule() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full flex flex-col items-center justify-center bg-background p-4 md:p-8 overflow-hidden">
+    <Suspense fallback={<EnrollmentCheckScreen label="Loading module..." />}>
       <AuthModal isOpen={!authLoading && !user} />
-      <Suspense fallback={<div className="text-muted-foreground animate-pulse">Loading module...</div>}>
-        {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
-        ) : (
-          <CanvasViewer 
-            slides={MODULE_0_SLIDES} 
-            onComplete={handleModuleComplete}
-            moduleId="0"
-          />
-        )}
-      </Suspense>
-    </div>
+      {!isSynced ? (
+        <EnrollmentCheckScreen label="Syncing progress..." />
+      ) : (
+        <CanvasViewer 
+          slides={MODULE_0_SLIDES} 
+          onComplete={handleModuleComplete}
+          moduleId="0"
+        />
+      )}
+    </Suspense>
   );
 }

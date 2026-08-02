@@ -207,10 +207,10 @@ export default function CertificatePage() {
 
   if (loading || authLoading) {
     return (
-      <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-background">
+      <>
         <AuthModal isOpen={!authLoading && !user} />
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+        <EnrollmentCheckScreen label="Retrieving your credential..." />
+      </>
     );
   }
 
