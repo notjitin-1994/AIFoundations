@@ -21,6 +21,7 @@ The final \`AGENTS.md\` output MUST be formatted as a single, copyable Markdown 
 - **API Keys & Secrets:** The definitive checklist of environment variables needed.
 - **Agentic Skills:** The specialized skills (e.g., 'frontend-design-taste', 'database-migration') the agent must invoke.
 - **Hard Boundaries & Rules:** Strict development rules (e.g., no placeholder code, strict TypeScript, design constraints).
+- **Documentation Governance:** The agent must check the project's documentation folder at the start of every task, must keep that documentation updated and clear by recording every step performed and every change made, and must always stick to the contents of the documentation and respect its boundaries — never improvising past what the documentation defines.
 
 Remember: Start by asking me about my project!`;
 
