@@ -20,8 +20,10 @@ import type { CourseTotals } from "@/lib/progress-metrics";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
+import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 import { useNotesStore } from "@/store/notes";
-import { COURSE_MODULES, PROJECT_SPINES } from "@/lib/course-data";
+import { COURSE_MODULES } from "@/lib/course-data";
+import { ModuleTracker } from "@/components/dashboard/module-tracker";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -98,7 +100,7 @@ export default function CourseDashboardPage() {
 
   const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
   if (enrollmentLoading || !accessGranted) {
-    return null;
+    return <EnrollmentCheckScreen />;
   }
 
   const totalModules = COURSE_MODULES.length;
@@ -185,7 +187,7 @@ export default function CourseDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-zinc-100 font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden" ref={containerRef}>
       <AuthModal isOpen={!authLoading && !user} />
       <MarketingNavbar />
 
@@ -210,51 +212,51 @@ export default function CourseDashboardPage() {
             </div>
             
             <div className="dashboard-fade grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
+              <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mb-1">
                   <Target className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-3xl font-bold font-heading">{progressPercent}%</p>
-                <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Completion</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Completion</p>
               </div>
 
-              <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
+              <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mb-1">
                   <Flame className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-3xl font-bold font-heading">{gamification.currentStreak}</p>
-                <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Day Streak</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Day Streak</p>
               </div>
 
-              <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
+              <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mb-1">
                   <Star className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-3xl font-bold font-heading">{gamification.xp}</p>
-                <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Total XP</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total XP</p>
               </div>
 
-              <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
+              <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-2 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mb-1">
                   <Clock className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-3xl font-bold font-heading">{hoursInvested}h</p>
-                <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Time Invested</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Time Invested</p>
               </div>
             </div>
 
             {/* Action Buttons Below Tiles */}
             <div className="dashboard-fade flex flex-wrap items-center gap-4 pt-2">
-              <button onClick={handleContinue} className="px-8 py-3 rounded-full bg-primary text-zinc-950 font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(167,218,219,0.3)]">
+              <button onClick={handleContinue} className="px-8 py-3 rounded-full bg-secondary text-white font-bold text-sm hover:bg-secondary/90 transition-all flex items-center gap-2 shadow-xl shadow-secondary/20 active:scale-95">
                 <Play className="w-4 h-4 fill-current" />
                 {!hasStarted ? "Start Course" : "Continue Course"}
               </button>
               {hasStarted && (
-                <button onClick={handleRestart} disabled={isRestarting} className="px-6 py-3 rounded-full bg-zinc-800 text-white font-medium text-sm hover:bg-zinc-700 transition-all flex items-center gap-2">
+                <button onClick={handleRestart} disabled={isRestarting} className="px-6 py-3 rounded-full bg-card/60 border border-white/10 text-foreground font-medium text-sm hover:bg-card/80 transition-all flex items-center gap-2">
                   <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
                   {isRestarting ? "Restarting..." : "Restart Course"}
                 </button>
@@ -272,7 +274,7 @@ export default function CourseDashboardPage() {
           </section>
 
           {/* Pre-learning Expectations */}
-          <section className="dashboard-fade bg-gradient-to-br from-zinc-900 to-zinc-900/40 border border-zinc-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
+          <section className="dashboard-fade bg-gradient-to-br from-card to-card/40 border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
             
             <div className="relative z-10">
@@ -280,185 +282,67 @@ export default function CourseDashboardPage() {
                 <Brain className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl font-bold font-heading">The Baseline</h2>
               </div>
-              <p className="text-zinc-400 max-w-2xl text-pretty mb-8 leading-relaxed">
+              <p className="text-muted-foreground max-w-2xl text-pretty mb-8 leading-relaxed">
                 You don't need to write production code to start, but you need the mental models. If these concepts are new to you, we recommend spending 30 minutes with an AI assistant asking for "explain like I'm 5" breakdowns before you dive in.
               </p>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Code className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">Frontend Basics</h4>
-                    <p className="text-xs text-zinc-500">How browsers render the DOM and basic component mental models.</p>
+                    <p className="text-xs text-muted-foreground">How browsers render the DOM and basic component mental models.</p>
                   </div>
                 </div>
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Server className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">Backend & APIs</h4>
-                    <p className="text-xs text-zinc-500">Handling stateless requests, JSON payloads, and RESTful routing.</p>
+                    <p className="text-xs text-muted-foreground">Handling stateless requests, JSON payloads, and RESTful routing.</p>
                   </div>
                 </div>
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Database className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">Data Stores</h4>
-                    <p className="text-xs text-zinc-500">Relational SQL vs document-based NoSQL persistence models.</p>
+                    <p className="text-xs text-muted-foreground">Relational SQL vs document-based NoSQL persistence models.</p>
                   </div>
                 </div>
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Cpu className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">LLM Fundamentals</h4>
-                    <p className="text-xs text-zinc-500">Tokens, context windows, and probabilistic text generation.</p>
+                    <p className="text-xs text-muted-foreground">Tokens, context windows, and probabilistic text generation.</p>
                   </div>
                 </div>
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Network className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">AI Harnesses</h4>
-                    <p className="text-xs text-zinc-500">Orchestrating agents, ReAct loops, and managing RAG pipelines.</p>
+                    <p className="text-xs text-muted-foreground">Orchestrating agents, ReAct loops, and managing RAG pipelines.</p>
                   </div>
                 </div>
-                <div className="bg-zinc-950/50 p-4 rounded-xl border border-white/5 flex gap-4">
+                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
                   <Wrench className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <h4 className="font-bold text-sm mb-1">Tool Calling & MCP</h4>
-                    <p className="text-xs text-zinc-500">Connecting LLMs to real-world actions via the Model Context Protocol.</p>
+                    <p className="text-xs text-muted-foreground">Connecting LLMs to real-world actions via the Model Context Protocol.</p>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Module Tracker */}
-          <section className="space-y-10 dashboard-fade">
-            <div className="flex items-center gap-4">
-              <h2 className="text-3xl font-bold font-heading tracking-tight">Your Journey</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-            </div>
-            
-            <div className="relative pl-2 md:pl-4">
-              {/* Continuous vertical timeline track */}
-              <div className="absolute left-[35px] md:left-[43px] top-6 bottom-12 w-px bg-white/5" />
-              
-              {/* Active timeline progress fill */}
-              <div 
-                className="absolute left-[35px] md:left-[43px] top-6 w-px bg-gradient-to-b from-primary to-primary shadow-[0_0_15px_rgba(167,218,219,0.5)] transition-all duration-1000 ease-out z-0"
-                style={{ height: mounted ? `${Math.min(100, Math.max(0, totalFraction / (totalModules - 1) * 100))}%` : '0%' }}
-              />
-
-              <div className="space-y-0">
-                {COURSE_MODULES.map((mod, idx) => {
-                  const isComplete = progress.completedModules.includes(mod.id);
-                  const isLocked = idx > 0 && !progress.completedModules.includes(COURSE_MODULES[idx - 1].id) && !isComplete;
-                  const isActive = mounted && !isComplete && !isLocked;
-                  const assessment = progress.assessments[mod.id];
-                  
-                  const mapEntry = progress.moduleProgressMap?.[mod.id];
-                  const completedSlidesCount = progress.completedSlides?.[mod.id]?.length || 0;
-                  const totalForMod = mapEntry?.totalSlidesInModule || mod.slideCount || 1;
-                  const fallbackIndex = progress.activeModuleId === mod.id ? (progress.activeSlideIndex || 0) : (mapEntry?.activeSlideIndex || 0);
-
-                  return (
-                    <div 
-                      key={mod.id} 
-                      className={`module-row relative flex gap-6 md:gap-10 py-8 transition-all duration-500 group ${
-                        isActive ? "opacity-100" : isLocked ? "opacity-30" : "opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      {/* Left: Timeline Node */}
-                      <div className="relative z-10 shrink-0 mt-1">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center font-heading font-bold text-lg transition-all duration-700 ease-out border ${
-                          isComplete ? "bg-primary text-zinc-950 border-primary shadow-[0_0_25px_rgba(167,218,219,0.3)]" :
-                          isActive ? "bg-zinc-950 border-2 border-primary text-primary shadow-[0_0_20px_rgba(167,218,219,0.2)] scale-110" :
-                          "bg-zinc-950 border-white/10 text-zinc-600"
-                        }`}>
-                          {isComplete ? <CheckCircle2 className="w-6 h-6" /> : isLocked ? <Lock className="w-5 h-5" /> : mod.id}
-                        </div>
-                        {/* Glow effect for active node */}
-                        {isActive && (
-                          <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl -z-10 animate-pulse" />
-                        )}
-                      </div>
-
-                      {/* Right: Module Content */}
-                      <div className={`flex-1 min-w-0 transition-all duration-500 ease-out ${isActive ? 'translate-x-2' : 'group-hover:translate-x-1'}`}>
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
-                          <div>
-                            <p className={`text-[10px] md:text-xs font-mono mb-2 tracking-[0.2em] uppercase transition-colors ${isActive ? 'text-primary' : 'text-zinc-500'}`}>
-                              MODULE {mod.id}
-                            </p>
-                            <h3 className={`text-2xl md:text-3xl font-bold font-heading text-pretty transition-colors ${isActive ? 'text-white' : 'text-zinc-300'}`}>
-                              {mod.title}
-                            </h3>
-                          </div>
-                          {!isLocked && (
-                            <Link href={`/modules/${mod.id}`} className="shrink-0 mt-2 sm:mt-0">
-                              <button className={`group/btn relative overflow-hidden px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
-                                isActive ? "bg-primary text-zinc-950 hover:bg-teal-400 hover:shadow-[0_0_20px_rgba(167,218,219,0.4)] hover:scale-105" : "bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
-                              }`}>
-                                {isComplete ? (
-                                  <>Review <RotateCcw className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:-rotate-90" /></>
-                                ) : (
-                                  <>Continue <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" /></>
-                                )}
-                              </button>
-                            </Link>
-                          )}
-                        </div>
-                        <p className={`text-sm md:text-base leading-relaxed max-w-2xl mb-6 transition-colors ${isActive ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                          {mod.overview}
-                        </p>
-
-                        {/* Module Meta Data / Tags */}
-                        <div className="flex flex-wrap gap-2.5">
-                          {mod.id === "0" && progress.projectSpine && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md">
-                              <Database className="w-3.5 h-3.5" />
-                              Project Foundation: {PROJECT_SPINES[progress.projectSpine] || progress.projectSpine}
-                            </div>
-                          )}
-                          
-                          {/* Module Deliverables */}
-                          {mod.id === "1" && progress.projectSpineAnswers?.["1"] && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Target className="w-3.5 h-3.5" />
-                              System Prompt Designed
-                            </div>
-                          )}
-                          {mod.id === "2" && progress.projectSpineAnswers?.["2"] && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Beaker className="w-3.5 h-3.5" />
-                              RAG Architecture Designed
-                            </div>
-                          )}
-                          {mod.id === "3" && progress.projectSpineAnswers?.["3"] && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Wrench className="w-3.5 h-3.5" />
-                              Toolbelt & MCP Registered
-                            </div>
-                          )}
-                          {mod.id === "4" && progress.projectSpineAnswers?.["4"] && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Network className="w-3.5 h-3.5" />
-                              Agentic Loop Created
-                            </div>
-                          )}
-                          {mod.id === "5" && progress.projectSpineAnswers?.["5"] && (
-                            <div className="px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary flex items-center gap-1.5 backdrop-blur-md shadow-sm">
-                              <Sparkles className="w-3.5 h-3.5" />
-                              Capstone Submitted
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+          <ModuleTracker
+            completedModules={progress.completedModules}
+            activeModuleId={progress.activeModuleId}
+            projectSpine={progress.projectSpine}
+            projectSpineAnswers={progress.projectSpineAnswers}
+            totalFraction={totalFraction}
+            totalModules={totalModules}
+            completedCount={completedCount}
+            mounted={mounted}
+          />
 
         </div>
 
@@ -470,12 +354,12 @@ export default function CourseDashboardPage() {
               <Trophy className="w-6 h-6 text-primary" /> Achievements
             </h2>
             
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 space-y-8">
+            <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 space-y-8">
               
               {/* Skill Constellation / Behavioral Badges */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Skill Constellation</h3>
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Skill Constellation</h3>
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-primary/60">{
                       gamification.badges.length + (isPerfectionist?1:0) + (isDeepDiver?1:0) + (isUnbrokenFocus?1:0)

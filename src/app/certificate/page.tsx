@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
+import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 import { requestVerification, getOrCreateCertificate, CertificateRecord } from "@/actions/certificate";
 import { useProgressStore } from "@/store/progress";
 import { AuthModal } from "@/components/auth/auth-modal";
@@ -185,7 +186,7 @@ export default function CertificatePage() {
 
   const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
   if (enrollmentLoading || !accessGranted) {
-    return null;
+    return <EnrollmentCheckScreen label="Preparing your certificate" />;
   }
 
   if (loading || authLoading) {

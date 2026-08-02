@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 import { checkEnrollment, markEnrolled } from "@/actions/enrollment";
 
 export default function CourseMarketingPage() {
@@ -18,9 +19,18 @@ export default function CourseMarketingPage() {
   const { user, isLoading: authLoading } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const isEnrolled = useProgressStore((state) => state.isEnrolled);
+  const [enrollmentState, setEnrollmentState] = useState<"checking" | "resolved">("checking");
 
+  // Resolve the enrollment decision before any marketing content renders:
+  // logged-in users see the EnrollmentCheckScreen until we know whether to show
+  // the marketing page (unpaid) or redirect to the dashboard (paid). No flash,
+  // no "refresh without cause" — one clean destination after the check.
   useEffect(() => {
-    if (!user || authLoading) return;
+    if (authLoading) return;
+    if (!user) {
+      setEnrollmentState("resolved");
+      return;
+    }
 
     let cancelled = false;
     checkEnrollment().then((enrolled) => {
@@ -28,6 +38,8 @@ export default function CourseMarketingPage() {
       if (enrolled) {
         useProgressStore.getState().setEnrolled(true);
         router.push("/dashboard");
+      } else {
+        setEnrollmentState("resolved");
       }
     });
     return () => {
@@ -103,6 +115,11 @@ export default function CourseMarketingPage() {
       }
     }
   }, [user, isEnrolled, isProcessing]);
+
+  const gatePending = authLoading || (!!user && enrollmentState === "checking");
+  if (gatePending) {
+    return <EnrollmentCheckScreen label="Verifying your enrollment" />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
