@@ -70,7 +70,7 @@ export function ModuleTracker({
             const ChapterIcon = MODULE_ICONS[mod.id] ?? Compass;
 
             const nodeClasses = isComplete
-              ? "bg-primary text-background border-primary shadow-[0_0_25px_rgba(167,218,219,0.3)]"
+              ? "bg-primary text-background border-primary"
               : isActive
               ? "bg-card/70 border-2 border-primary text-primary shadow-[0_0_20px_rgba(167,218,219,0.25)]"
               : "bg-card/60 border border-white/10 text-muted-foreground/50";
@@ -86,7 +86,7 @@ export function ModuleTracker({
                 key={mod.id}
                 aria-current={isCurrent ? "step" : undefined}
                 className={`module-row relative flex gap-6 md:gap-10 py-5 md:py-6 transition-all duration-500 group ${
-                  isActive ? "opacity-100" : isLocked ? "opacity-60 hover:opacity-90" : "opacity-90 hover:opacity-100"
+                  isActive || isComplete ? "opacity-100" : "opacity-60 hover:opacity-90"
                 }`}
               >
                 {/* Left: Timeline Node */}
