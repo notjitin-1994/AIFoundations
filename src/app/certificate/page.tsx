@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
 import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
-import { requestVerification, getOrCreateCertificate, CertificateRecord } from "@/actions/certificate";
+import { requestVerification, getOrCreateCertificateRecord, CertificateRecord } from "@/actions/certificate";
 import { useProgressStore } from "@/store/progress";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { Loader2, ShieldCheck, ShieldAlert, Share2, Download, ExternalLink, Trophy, Target, History, Sparkles, User, Briefcase, Activity, CheckCircle2, Award, Hexagon, Fingerprint, Lock } from "lucide-react";
@@ -23,7 +23,7 @@ interface RealtimeCertData extends CertificateRecord {
 export default function CertificatePage() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
-  const { projectSpine, assessments, completedModules } = useProgressStore();
+  const { projectSpine, assessments, completedModules, gamification } = useProgressStore();
   const [certData, setCertData] = useState<RealtimeCertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
@@ -41,6 +41,15 @@ export default function CertificatePage() {
 
     async function generateCert() {
       try {
+        // The certificate only becomes visible once the course is complete.
+        // Restarting wipes completion, so this locks the credential again even
+        // though the underlying record (stable UUID) is never deleted.
+        const isCourseComplete = completedModules.includes("6") || gamification.badges.includes("certified");
+        if (!isCourseComplete) {
+          setLoading(false);
+          return;
+        }
+
         // Calculate real-time data from local state
         const spineDisplay = projectSpine 
           ? projectSpine.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -90,21 +99,28 @@ export default function CertificatePage() {
         
         const userId = user?.id || "guest";
 
-        // Fetch cryptographic record
-        const certRecord = await getOrCreateCertificate({
-          userId,
-          baselineScore,
-          finalScore,
-          moduleScores: moduleScores.length > 0 ? moduleScores : [
-            { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
-            { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
-            { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
-            { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
-            { moduleId: "6", moduleName: "The Horizon", score: 100 },
-          ],
-          isVerified: false,
-          projectSpine: spineDisplay
+        // Fetch the persisted credential (stable UUID, minted once)
+        const { certificate: certRecord } = await getOrCreateCertificateRecord({
+          payload: {
+            userId,
+            baselineScore,
+            finalScore,
+            moduleScores: moduleScores.length > 0 ? moduleScores : [
+              { moduleId: "1", moduleName: "AI Fundamentals", score: 100 },
+              { moduleId: "2", moduleName: "The LLM Brain", score: 90 },
+              { moduleId: "3", moduleName: "The Toolbelt", score: 85 },
+              { moduleId: "4", moduleName: "The Assembly Line", score: 95 },
+              { moduleId: "6", moduleName: "The Horizon", score: 100 },
+            ],
+            isVerified: false,
+            projectSpine: spineDisplay
+          }
         });
+
+        if (!certRecord) {
+          setLoading(false);
+          return;
+        }
 
         const studentName = getDisplayName(user);
         
@@ -202,8 +218,13 @@ export default function CertificatePage() {
     return (
       <div className="flex flex-col h-[calc(100vh-64px)] items-center justify-center p-8 text-center bg-background">
         <AuthModal isOpen={!authLoading && !user} />
-        <h2 className="text-2xl font-bold text-white mb-2">No Credential Found</h2>
-        <p className="text-zinc-400">Complete the course modules and the final assessment to earn your credential.</p>
+        <div className="w-16 h-16 rounded-full bg-card/40 backdrop-blur-xl border border-white/10 flex items-center justify-center mb-5 shadow-2xl">
+          <Lock className="w-7 h-7 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Your credential is locked</h2>
+        <p className="text-zinc-400 max-w-md">
+          Complete all course modules and pass the final assessment to unlock your verified certificate. Your previously issued credential is safe and will be restored the moment you finish again.
+        </p>
       </div>
     );
   }

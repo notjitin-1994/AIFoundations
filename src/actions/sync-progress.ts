@@ -94,14 +94,16 @@ export async function wipeDatabaseProgress() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, reason: "Not authenticated" };
 
-    const { error } = await supabase
-      .from("module_progress")
-      .delete()
-      .eq("user_id", user.id);
+    const [{ error }, { error: eventsError }] = await Promise.all([
+      supabase.from("module_progress").delete().eq("user_id", user.id),
+      // Full reset: clear the xAPI audit trail too so stale events can never
+      // resurrect wiped progress. Certificates are deliberately untouched.
+      supabase.from("progress_events").delete().eq("user_id", user.id),
+    ]);
 
-    if (error) {
-      console.error("wipeDatabaseProgress error:", error);
-      return { success: false, reason: error.message };
+    if (error || eventsError) {
+      console.error("wipeDatabaseProgress error:", error?.message ?? eventsError?.message);
+      return { success: false, reason: error?.message ?? eventsError?.message ?? "Could not wipe progress" };
     }
     return { success: true };
   } catch (err) {
