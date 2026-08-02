@@ -1,8 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-
-const COURSE_SLUG = "aifoundations-concept2application";
+import { COURSE_SLUG } from "@/lib/course-slug";
 
 export async function checkEnrollment(): Promise<boolean> {
   try {
