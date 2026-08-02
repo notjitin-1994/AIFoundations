@@ -22,6 +22,7 @@ import { ProjectLLMSlide } from "./slides/14-project-llm";
 import { ProjectHarnessSlide } from "./slides/15-project-harness";
 import { ProjectCheckpointSlide } from "./slides/16-project-checkpoint";
 import { ProjectContextSlide } from "./slides/15b-project-context";
+import { DocPasteSlide } from "./slides/16-doc-paste";
 import { AssessmentRunner } from "@/components/lesson/assessment-runner";
 
 export const MODULE_2_SLIDES: Slide[] = [
@@ -267,6 +268,66 @@ export const MODULE_2_SLIDES: Slide[] = [
     hasCustomAudio: false,
     narrationText: "Now it's time to set up your project environment. You will create a new folder, a docs folder, and generate a comprehensive AI Context document using an LLM. This document will ensure your agent writes code that exactly matches your architectural rules.",
     component: (mark) => <ProjectContextSlide onComplete={mark} />
+  },
+  {
+    id: "m2-doc-product",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/PRODUCT.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="productMd" fileName="docs/PRODUCT.md" title="Paste your PRODUCT.md" description="What we're building and why — the product brief, who it serves, goals and non-goals." onComplete={mark} />
+  },
+  {
+    id: "m2-doc-domain",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/DOMAIN.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="domainMd" fileName="docs/DOMAIN.md" title="Paste your DOMAIN.md" description="The domain: key concepts, glossary, and the rules that shape every decision." onComplete={mark} />
+  },
+  {
+    id: "m2-doc-architecture",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/ARCHITECTURE.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="architectureMd" fileName="docs/ARCHITECTURE.md" title="Paste your ARCHITECTURE.md" description="How it's built: the stack, components, data flow, and how the pieces fit." onComplete={mark} />
+  },
+  {
+    id: "m2-doc-design",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/DESIGN.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="designMd" fileName="docs/DESIGN.md" title="Paste your DESIGN.md" description="The UI/UX design system: tokens, components, and accessibility rules." onComplete={mark} />
+  },
+  {
+    id: "m2-doc-constraints",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/CONSTRAINTS.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="constraintsMd" fileName="docs/CONSTRAINTS.md" title="Paste your CONSTRAINTS.md" description="The hard boundaries: security, formats, workflows, and non-negotiables." onComplete={mark} />
+  },
+  {
+    id: "m2-doc-decisions",
+    type: "interactive",
+    lessonIndex: 4,
+    fullWidth: true,
+    requireCompletion: true,
+    hasCustomAudio: false,
+    narrationText: "Paste the generated docs/DECISIONS.md content into the editor to save it to your project.",
+    component: (mark) => <DocPasteSlide docKey="decisionsMd" fileName="docs/DECISIONS.md" title="Paste your DECISIONS.md" description="The decision log your agent appends to as it works." onComplete={mark} />
   },
   {
     id: "m2-project-checkpoint",
