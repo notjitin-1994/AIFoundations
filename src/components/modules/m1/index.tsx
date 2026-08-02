@@ -10,7 +10,6 @@ import { audioUrl, imageUrl } from "@/lib/media";
 import { Slide, useCanvasNav } from "@/components/lesson/canvas-viewer";
 import { KnowledgeCheck, type KnowledgeCheckQuestion } from "@/components/lesson/knowledge-check";
 import { Button } from "@/components/ui/button";
-import dynamic from "next/dynamic";
 import {
   BrainCircuit, Cpu, ShieldAlert, Sparkles, MessageSquare,
   Database, Layers, CheckCircle2, ChevronRight, XCircle,
@@ -20,8 +19,6 @@ import {
   Users, Binary, Eye, Lock, X, MousePointerClick,
   Bot, Copy, Lightbulb
 } from "lucide-react";
-
-const ReactPlayer = dynamic(() => import("react-player"), { ssr: false }) as any;
 
 // 1. Title Slide
 function TitleSlide() {
@@ -197,7 +194,7 @@ function TitleSlide() {
 
 // 2. Video Slide
 function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }) {
-  const { isPlaying, isFinished, seekTime, isMuted } = useNarrationStore();
+  const { isPlaying, isFinished, seekTime } = useNarrationStore();
   const { track } = useLRS();
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -207,9 +204,23 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
   const ctaRef = useRef<HTMLDivElement>(null);
   
   const [isWatched, setIsWatched] = useState(false);
+  const launchedRef = useRef(false);
 
   // Extract YouTube ID for embed URL
   const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
+
+  const handleVideoStart = () => {
+    if (launchedRef.current) return;
+    launchedRef.current = true;
+    track(
+      "http://adlnet.gov/expapi/verbs/launched",
+      "launched",
+      "http://smartslate.com/activities/module-1/video/what-is-generative-ai",
+      "What is Generative AI?",
+      "Learner launched the Module 1 Generative AI primer video.",
+      { moduleId: "1", slideId: "m1-video-whatis" }
+    );
+  };
 
   useEffect(() => {
     const timeline = gsap.timeline({ paused: true });
@@ -249,25 +260,13 @@ function VideoSlide({ url, onComplete }: { url: string; onComplete: () => void }
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Left Column - Video */}
         <div className="order-2 lg:order-1">
-           <div ref={videoRef} className="opacity-0 w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black relative">
-              <ReactPlayer
-                url={`https://www.youtube.com/watch?v=${videoId}`}
-                width="100%"
-                height="100%"
-                muted={isMuted}
-                playing={false}
-                controls={true}
-                className="absolute inset-0"
-                onStart={() => {
-                  track(
-                    "http://adlnet.gov/expapi/verbs/launched",
-                    "launched",
-                    "http://smartslate.com/activities/module-1/video/what-is-generative-ai",
-                    "What is Generative AI?",
-                    "Learner launched the Module 1 Generative AI primer video.",
-                    { moduleId: "1", slideId: "m1-video-whatis" }
-                  );
-                }}
+           <div ref={videoRef} className="opacity-0 w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black relative" onPointerDown={handleVideoStart}>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}
+                title="Introduction to Generative AI"
+                className="absolute inset-0 w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
               />
            </div>
         </div>

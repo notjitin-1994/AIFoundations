@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useUser, getDisplayName } from "@/hooks/use-user";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, ChevronDown, User, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useProgressStore } from "@/store/progress";
 import { useNotesStore } from "@/store/notes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export function MarketingNavbar() {
   const { user, isLoading } = useUser();
@@ -68,18 +71,40 @@ export function MarketingNavbar() {
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           ) : user ? (
-            <div className="flex items-center space-x-3 bg-white/5 pr-4 pl-1 py-1 rounded-full border border-white/10">
-              <Link href="/dashboard" className="flex items-center space-x-2 group">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20 group-hover:border-primary/50 transition-colors">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    getDisplayName(user).charAt(0)
-                  )}
-                </div>
-                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mr-2">{getDisplayName(user)}</span>
-              </Link>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      getDisplayName(user).charAt(0)
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-foreground max-w-[140px] truncate">{getDisplayName(user)}</span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 bg-card/95 backdrop-blur-xl border border-white/10">
+                <DropdownMenuLabel className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium text-foreground">{getDisplayName(user)}</span>
+                  <span className="text-xs font-normal text-muted-foreground truncate">{user.email}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem asChild>
+                  <Link href="https://orbit.smartslate.io/" className="flex items-center gap-2 cursor-pointer">
+                    <User className="w-4 h-4" /> Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="w-4 h-4" /> {isLoggingOut ? "Signing out..." : "Sign out"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link
               href="/login"

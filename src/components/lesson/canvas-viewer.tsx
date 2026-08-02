@@ -426,7 +426,10 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
   const rawNextLabel = navOverride?.nextLabel || (currentIndex === slides.length - 1 ? "Complete Module" : "");
   const displayNextLabel = rawNextLabel.toLowerCase() === "continue" ? "" : rawNextLabel;
 
-  const isNavDisabled = slides[currentIndex]?.requireCompletion && !completedSlides[currentIndex] && !isAlreadyCompleted;
+  // TEMPORARY DEV UNLOCK: forward navigation is enabled on every slide regardless
+  // of requireCompletion. Stopgap while a standardized progression model is
+  // designed; remove when the standardized gating lands.
+  const isNavDisabled = false;
   
   let nextDisabled = navOverride?.nextDisabled !== undefined ? navOverride.nextDisabled : isNavDisabled;
 
