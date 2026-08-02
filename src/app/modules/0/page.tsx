@@ -16,6 +16,7 @@ import { useUser } from "@/hooks/use-user";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useSyncEngine } from "@/hooks/use-sync-engine";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
+import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 
 function ProjectSpineSelector({ onComplete }: { onComplete: () => void }) {
   const { projectSpine, setProjectSpine, markModuleComplete } = useProgressStore();
@@ -850,7 +851,7 @@ export default function OrientationModule() {
 
   const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
   if (enrollmentLoading || !accessGranted) {
-    return null;
+    return <EnrollmentCheckScreen label="Preparing your course" />;
   }
 
   const handleModuleComplete = () => {

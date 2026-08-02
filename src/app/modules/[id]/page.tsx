@@ -18,6 +18,7 @@ import { CanvasViewer } from "@/components/lesson/canvas-viewer";
 import { useUser } from "@/hooks/use-user";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
+import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 
 // Mock lesson content for now
 const LESSONS: Record<string, any> = {
@@ -48,7 +49,7 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   const { isEnrolled: accessGranted, isLoading: enrollmentLoading } = useEnrollmentGate();
   if (enrollmentLoading || !accessGranted) {
-    return null;
+    return <EnrollmentCheckScreen label="Preparing your lesson" />;
   }
 
   const handleComplete = async () => {
