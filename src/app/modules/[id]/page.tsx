@@ -20,8 +20,14 @@ import { AuthModal } from "@/components/auth/auth-modal";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
 import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 
+type Lesson = {
+  title: string;
+  content: string;
+  videoUrl?: string;
+};
+
 // Mock lesson content for now
-const LESSONS: Record<string, any> = {
+const LESSONS: Record<string, Lesson> = {
   // Module 2 is now built out natively
 };
 
@@ -74,12 +80,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "1") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={MODULE_1_SLIDES} 
@@ -93,12 +97,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "2") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={MODULE_2_SLIDES} 
@@ -112,12 +114,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "3") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={MODULE_3_SLIDES} 
@@ -131,12 +131,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "4") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={MODULE_4_SLIDES} 
@@ -150,12 +148,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "5") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={m5Slides} 
@@ -169,12 +165,10 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (moduleId === "6") {
     return (
-      <Suspense fallback={<div>Loading lesson...</div>}>
+      <Suspense fallback={<EnrollmentCheckScreen label="Loading lesson..." />}>
         <AuthModal isOpen={!authLoading && !user} />
         {!isSynced ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <EnrollmentCheckScreen label="Syncing progress..." />
         ) : (
           <CanvasViewer 
             slides={MODULE_6_SLIDES} 
