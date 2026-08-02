@@ -2274,6 +2274,52 @@ function Module1Quiz({ onComplete, isCompleted }: { onComplete?: () => void; isC
   );
 }
 
+// Shared meta-prompt blueprint — the learner copies this into any LLM to
+// co-build their project spine's system prompt (Phase 1 brainstorm, then
+// Phase 2 structured build). Same text for every spine by design.
+const META_PROMPT_BLUEPRINT = `You are an elite Prompt Engineer and a patient brainstorming partner. You are speaking to a complete beginner with no coding background — never use jargon without explaining it in one plain sentence first.
+
+Your job, in two phases
+
+Phase 1 — Brainstorm (do this first, do not skip): Ask me questions, one small batch at a time, about the six areas below. For each question:
+
+- Explain the industry-standard approach in 1-2 plain sentences (no jargon, or jargon immediately defined).
+- Give me 3-4 simple, concrete options I can just pick from (I can also say "none of these, let me explain").
+- Wait for my answer before moving to the next batch.
+
+Cover these six areas (ask 1-3 questions per area, adapt based on my answers):
+
+- Target user — who is being onboarded, and how comfortable are they with tech/apps?
+- Brand voice & tone — formal vs. casual, playful vs. serious, how it should "sound."
+- Data to collect — the exact fields/answers the AI must extract by the end (name, goals, role, preferences, etc.), and which are required vs. optional.
+- Conversation shape — is this one message, a fixed number of turns, or open-ended until data is collected? What happens if the user goes off-topic or refuses to answer?
+- Guardrails — topics it must never discuss, things it must never promise, what to do if it doesn't know something.
+- Success signal — how do we know onboarding is "done" (e.g., a specific JSON object, a handoff phrase, a summary message)?
+
+Phase 2 — Build the final prompt (only after I've answered Phase 1): Using my answers, write a production-ready system prompt with these labeled sections:
+
+ROLE — who the AI is, in character terms a non-coder would recognize (e.g., "a friendly onboarding guide," not "an LLM agent").
+TASK — the concrete job, step by step.
+CONTEXT — the brand, the user, and why this onboarding matters.
+CONSTRAINTS — hard rules: tone limits, forbidden topics, required data fields, turn limits, escalation/fallback behavior.
+CONVERSATION FLOW — a short numbered outline of how the dialogue should progress.
+FEW-SHOT EXAMPLES — 2-3 short sample exchanges showing an ideal user turn and an ideal AI turn, including one example of the AI handling a user who gives a vague or off-topic answer.
+OUTPUT FORMAT — exactly how/where the collected data should be captured (e.g., a JSON block at the end, a specific closing message).
+
+Then finish with:
+
+- Recommended temperature (0.0-1.0) with a one-sentence reason a non-coder can understand (e.g., "lower = more consistent and on-script, higher = more varied and human-sounding").
+- Top 3 hallucination risks specific to this prompt (e.g., inventing data the user never gave, promising features that don't exist, mis-extracting data into the wrong field) and one mitigation per risk.
+
+Rules for you throughout
+
+- Never skip straight to Phase 2 — always brainstorm first.
+- Keep every explanation short; I will ask if I want more depth.
+- If my answers conflict or leave a gap, flag it plainly and ask one follow-up rather than guessing.
+- Don't use the words "leverage," "utilize," "synergy," or similar filler.
+
+Begin Phase 1 now with the first batch of questions.`;
+
 // Project Application — Apply Module 1 knowledge to the learner's chosen project spine
 const PROJECT_PROMPTS: Record<string, {
   spineName: string;
@@ -2299,7 +2345,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Code generation requires deterministic, precise syntax. High temperature will introduce syntax errors or invalid SQL commands.",
     hallucinationRisk: "The model might hallucinate column names that don't exist in the schema, or inject unsafe SQL operations.",
     modelPrompt: "Role: You are a strict SQL data analyst.\nTask: Convert the user's natural language question into a valid PostgreSQL query.\nContext: The database schema includes a 'sales_data' table with columns: id, revenue, date.\nConstraints: Output ONLY the SQL query. Do not include markdown formatting or explanations.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Dynamic BI Dashboard application.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. My specific database schema and SQL dialect.\n2. The exact tables and joins the LLM should have access to.\n3. Any specific formatting rules for the SQL output.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Please include few-shot examples in the final prompt. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   dynamic_onboarding: {
     spineName: "Conversational Onboarding",
@@ -2312,7 +2358,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Conversational AI needs to feel natural and adaptive, but not so creative that it forgets the onboarding steps.",
     hallucinationRisk: "The model might give incorrect technical advice about the platform or promise features that don't exist.",
     modelPrompt: "Role: You are an empathetic and helpful onboarding guide.\nTask: Guide the user step-by-step to complete their profile setup.\nContext: The user is a non-technical beginner who feels overwhelmed by new software.\nConstraints: Only ask for one piece of information at a time. Keep responses under 2 sentences.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Conversational Onboarding AI.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The target user demographic and their technical skill level.\n2. The tone and voice of the brand.\n3. The exact data points the AI needs to collect.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Please include few-shot examples of ideal back-and-forth interactions. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   hitl_control_center: {
     spineName: "Human-in-the-Loop Control Center",
@@ -2325,7 +2371,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Decision-support requires high factual reliability. You want the model to analyze the text safely without inventing new context.",
     hallucinationRisk: "The model may misinterpret the severity of the ticket or recommend actions outside the company's policy.",
     modelPrompt: "Role: You are a highly analytical triage assistant.\nTask: Summarize the customer's issue and provide 3 actionable resolution options.\nContext: The human agent has only 30 seconds to review this ticket before approving an action.\nConstraints: Format as a bulleted list. Limit summary to 1 sentence.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Human-in-the-Loop Control Center agent.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The types of customer tickets being processed.\n2. The company's exact escalation and approval policies.\n3. The required format for the human agent's dashboard summary.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Please include few-shot examples of a flagged ticket and the expected summary output. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   os_assistant: {
     spineName: "OS-Level Workflow Assistant",
@@ -2338,7 +2384,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Data extraction into strict formats like JSON requires zero creativity. High temperature breaks JSON parsing.",
     hallucinationRisk: "The model might break the JSON schema formatting or hallucinate tasks that were implied but not explicitly stated.",
     modelPrompt: "Role: You are a precise data extraction engine.\nTask: Extract all explicitly requested tasks from the email.\nContext: The email is from a manager to a direct report, outlining the week's priorities.\nConstraints: Output must be valid JSON matching the schema [{ task: string, deadline: string }].",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for an OS-Level Desktop Workflow Assistant.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The exact JSON schema required for the data extraction.\n2. The types of unstructured emails/documents being parsed.\n3. How edge cases should be handled.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples of raw emails mapped to strict JSON output. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   edge_health_coach: {
     spineName: "Edge-AI Health Coach",
@@ -2351,7 +2397,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Coaching requires empathy and varied encouragement, but the underlying analysis must remain grounded in the data.",
     hallucinationRisk: "The model might cross the line into diagnosing a medical condition or suggesting scientifically unproven remedies.",
     modelPrompt: "Role: You are a supportive, science-based health coach.\nTask: Analyze the provided sleep metrics and suggest one micro-habit.\nContext: The user only slept 4 hours and works a high-stress corporate job.\nConstraints: Do not provide medical advice. Keep the suggestion under 50 words.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for an Edge-AI Personal Health & Fitness Coach.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The specific biometric data points available.\n2. The coaching methodology or philosophy to adopt.\n3. The exact boundaries to avoid giving unlicensed medical advice.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples of data inputs and empathetic coaching responses. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   internal_rag_agent: {
     spineName: "Enterprise Knowledge Navigator",
@@ -2364,7 +2410,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "RAG applications require the model to strictly adhere to the retrieved text. Creativity here leads to legal liabilities.",
     hallucinationRisk: "The model may answer using its pre-trained knowledge instead of the provided private context, giving outdated or wrong policy info.",
     modelPrompt: "Role: You are a strict, policy-adherent HR assistant.\nTask: Answer the user's question using ONLY the provided policy excerpts.\nContext: The user is an employee asking about parental leave policies.\nConstraints: If the answer is not in the context, reply 'I do not know.' Include a citation like [Doc 1].",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for an Enterprise Knowledge Navigator.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The types of internal documents in the repository.\n2. The required citation format for grounding the answers.\n3. The exact fallback phrase if the answer is not found.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples demonstrating strict adherence to provided context blocks. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   synthetic_podcast_generator: {
     spineName: "Synthetic Podcast Generator",
@@ -2377,7 +2423,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Sales copy requires engaging, varied hooks. A higher temperature allows the model to find creative angles between the prospect's data and your product.",
     hallucinationRisk: "The model might make inappropriate assumptions about the prospect's personal life or exaggerate the product's capabilities.",
     modelPrompt: "Role: You are an elite B2B sales copywriter.\nTask: Write a 2-sentence hook that connects our SaaS product to the prospect's recent career milestone.\nContext: The prospect just became VP of Marketing. Our product is an AI video platform.\nConstraints: Do not sound overly familiar or use jargon. Max 40 words.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Synthetic Podcast Generator.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The specific personalities and names of the two podcast hosts.\n2. The target audience and preferred level of jargon/complexity.\n3. The desired length of the generated script and any formatting tags required for TTS.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include a few-shot example of a source text transformed into engaging host dialogue. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   viral_clip_engine: {
     spineName: "Longform-to-Viral Clip Engine",
@@ -2390,7 +2436,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Identifying 'viral' potential requires the model to understand nuance, emotion, and contrarian angles, which benefits from high temperature.",
     hallucinationRisk: "The model might select out-of-context clickbait that misrepresents the speaker, or slightly alter the quoted text.",
     modelPrompt: "Role: You are a viral social media producer.\nTask: Identify the 150-word segment that has the highest emotional hook or contrarian insight.\nContext: The transcript is a dry, 2-hour B2B marketing podcast.\nConstraints: Output the exact start and end quotes. Explain why it will perform well in 1 sentence.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Longform-to-Viral Clip Engine.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The target social media platform (TikTok, Reels, Shorts).\n2. The preferred structure of a 'viral hook' in this niche.\n3. The exact constraints on output length and formatting.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples showing a boring transcript section versus the selected viral clip. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   global_localization: {
     spineName: "Zero-Touch Localization Engine",
@@ -2403,7 +2449,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Translation with strict timing constraints requires high precision and focus on the literal structural constraints over creative phrasing.",
     hallucinationRisk: "The model might prioritize literal translation over cultural nuance, resulting in awkward phrasing that technically fits the syllable count.",
     modelPrompt: "Role: You are an expert localization specialist.\nTask: Translate the English script to Spanish.\nContext: The audio will be used to generate a lip-synced synthetic avatar.\nConstraints: The Spanish translation must have the exact same syllable count as the English original.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Zero-Touch Global Localization Engine.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The target language and specific regional dialect.\n2. The exact timing or syllable count constraints required for lip-syncing.\n3. The tone of the original script and any cultural nuances to preserve or adapt.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples demonstrating translation with strict syllable matching. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   multichannel_repurposing: {
     spineName: "Omnichannel Content Repurposer",
@@ -2416,7 +2462,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Ghostwriting requires capturing a unique 'voice'. High temperature prevents the output from sounding like generic corporate AI slop.",
     hallucinationRisk: "The model might introduce arguments or opinions that the creator didn't actually state in the raw voice memo.",
     modelPrompt: "Role: You are a ghostwriter for a thought leader.\nTask: Transform this messy voice memo transcript into a 5-slide LinkedIn carousel outline.\nContext: The creator is known for bold, contrarian takes on startup culture.\nConstraints: Each slide must have a hook, a supporting point, and be under 30 words.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for an Omnichannel Content Repurposer.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The specific brand voice and tone of the creator.\n2. The target platforms and their structural constraints.\n3. The types of raw inputs that will be provided.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples showing a messy voice memo transformed into a structured output. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   academic_literature_reviewer: {
     spineName: "Academic Research Synthesizer",
@@ -2429,7 +2475,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Academic synthesis requires rigorous adherence to the source text. There is zero room for creative interpretation of methodologies.",
     hallucinationRisk: "The model might fabricate p-values, sample sizes, or invent study limitations that were not explicitly stated.",
     modelPrompt: "Role: You are a postdoctoral research assistant.\nTask: Compare the data collection methods of these 3 papers.\nContext: The target audience is a peer-review panel looking for methodological flaws.\nConstraints: Format as a markdown table. Only include facts explicitly stated in the text.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for an Academic Research Synthesizer.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The specific academic field and target audience of the synthesis.\n2. The exact methodological parameters or findings to extract from the PDFs.\n3. The required format for the final output.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples showing strict adherence to extracting only facts explicitly stated in the source text. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   },
   fiction_world_copilot: {
     spineName: "Creative World-Building Co-Pilot",
@@ -2442,7 +2488,7 @@ const PROJECT_PROMPTS: Record<string, {
     tempReason: "Creative writing requires generating novel ideas, subtext, and varied sentence structures. High temperature prevents predictable clichés.",
     hallucinationRisk: "The model might make a character act completely out of character or introduce magic/technology that contradicts the established world rules.",
     modelPrompt: "Role: You are a Hugo-award winning fantasy author.\nTask: Draft a tense dialogue exchange between Character A and Character B.\nContext: Character A is secretly a traitor, and Character B is highly suspicious but lacks proof.\nConstraints: Do not resolve the tension. End the scene on a cliffhanger.",
-    metaPrompt: "I want you to act as an elite Prompt Engineer. I am a beginner with minimal to no coding experience, and I need your help writing the ultimate user prompt for a Creative World-Building Co-Pilot.\n\nBefore we write the prompt, let's initiate a brainstorming session. Please ask me 3-5 clarifying questions about:\n1. The core rules, magic systems, or lore of the fantasy/sci-fi world.\n2. The specific characters involved, their motivations, and unique voices.\n3. The desired tone and pacing of the scene being drafted.\n\nFor each question, briefly explain the industry-standard implementations and best practices, then give me a few simple options to choose from.\n\nWait for my answers. Once we have brainstormed and I have made my choices, generate a production-ready prompt using the 'Role, Task, Context, Constraints' framework. Include few-shot examples demonstrating how the AI should reference the 'lore bible' when generating dialogue. Finally, please recommend the ideal temperature setting for this prompt and outline its primary hallucination risks."
+    metaPrompt: META_PROMPT_BLUEPRINT,
   }
 };
 
