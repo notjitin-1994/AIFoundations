@@ -3,9 +3,8 @@ import { gsap } from "gsap";
 import { useProgressStore } from "@/store/progress";
 import { useLRS } from "@/hooks/use-lrs";
 import { useCanvasNav } from "@/components/lesson/canvas-viewer";
-import { PROJECT_SPINES } from "@/lib/course-data";
 import {
-  CheckSquare, Copy, Check, Folder, FileText, ArrowRight, ArrowLeft, ChevronRight,
+  CheckSquare, Copy, Check, Folder, FileText, ArrowRight, ArrowLeft,
   Sparkles, PartyPopper, CircleAlert, FolderTree, BookOpen, PencilLine,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
@@ -65,9 +64,32 @@ type Step = "learn" | "build" | "verify";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-// Appended to every spine prompt so the generated initiation document
-// explicitly covers the three awareness layers the harness needs.
-const CONTEXT_DOC_OUTPUT = `\n\n# OUTPUT REQUIREMENTS\nThe document you generate is the project's canonical context and initiation file. Save it as AI_CONTEXT.md inside the project's docs/ folder. Structure it with these labeled sections: PROJECT BRIEF (what we are building and why, in 2-3 sentences), DOMAIN CONTEXT (who it serves and the domain rules that shape every decision), TECH STACK, UI/UX DESIGN SYSTEM, DOMAIN-SPECIFIC CONSTRAINTS. Keep each section concrete enough that a developer who knows nothing about this project could start building from it.`;
+// Appended to every spine prompt: drive brainstorm + research, then produce the
+// multi-file documentation scaffold (one file per requirement) as separate
+// code blocks the learner saves verbatim.
+const SCAFFOLD_REQUIREMENTS = `\n\n# SCAFFOLDING REQUIREMENTS — BRAINSTORM, RESEARCH, CREATE
+1. BRAINSTORM: lead a short Q&A with me (never skip it) to pin down what the product is, the domain it serves, the stack, the design rules, and the hard constraints.
+2. RESEARCH: before writing anything, research the internet extensively for industry-standard practices in this exact domain and stack — architecture patterns, libraries, security, and accessibility.
+3. CREATE: produce the documentation scaffold as SEPARATE, labeled Markdown code blocks — one file per block, ready to save verbatim:
+   - AGENTS.md (project root) — agent orientation: what the project is (2-3 sentences), where the documentation lives, non-obvious constraints, and first steps. Keep it short — pointers, not an encyclopedia.
+   - docs/PRODUCT.md — what we are building and why, who it serves, goals and non-goals.
+   - docs/DOMAIN.md — the domain: key concepts, glossary, and the domain rules that shape every decision.
+   - docs/ARCHITECTURE.md — how it is built: stack with versions, components, data flow, how the pieces fit.
+   - docs/DESIGN.md — the UI/UX design system: tokens, components, accessibility rules.
+   - docs/CONSTRAINTS.md — hard boundaries: security, formats, workflows, non-negotiables.
+   - docs/DECISIONS.md — a decision log the agent must append to whenever it makes a significant choice (what was decided, why, alternatives considered).
+Keep every file concrete enough that a developer who knows nothing about this project could start building from it.`;
+
+// The scaffold the learner produces — one file per requirement.
+const SCAFFOLD_FILES = [
+  { file: "AGENTS.md", purpose: "agent orientation & pointers" },
+  { file: "docs/PRODUCT.md", purpose: "what we're building & why" },
+  { file: "docs/DOMAIN.md", purpose: "the domain, concepts & rules" },
+  { file: "docs/ARCHITECTURE.md", purpose: "stack, components, data flow" },
+  { file: "docs/DESIGN.md", purpose: "UI/UX design system" },
+  { file: "docs/CONSTRAINTS.md", purpose: "hard boundaries" },
+  { file: "docs/DECISIONS.md", purpose: "decision log" },
+];
 
 export function ProjectContextSlide({ onComplete }: { onComplete?: () => void }) {
   const { projectSpine, projectSpineAnswers, saveProjectSpineAnswer } = useProgressStore();
@@ -82,12 +104,12 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
 
   const spineKey = projectSpine ?? "bi_dashboard";
   const config = PROJECT_CONTEXT_PROMPTS[spineKey] ?? PROJECT_CONTEXT_PROMPTS.bi_dashboard;
-  const promptForLlm = config.prompt + CONTEXT_DOC_OUTPUT;
+  const promptForLlm = config.prompt + SCAFFOLD_REQUIREMENTS;
 
   useEffect(() => {
     if (!reduce) {
-      gsap.fromTo(".cc-head", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" });
-      gsap.fromTo(".cc-step", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: "power3.out", delay: 0.2 });
+      gsap.fromTo(".cc-head", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" });
+      gsap.fromTo(".cc-step", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.06, ease: "power3.out", delay: 0.15 });
     }
   }, [reduce, step]);
 
@@ -110,7 +132,7 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
       "http://adlnet.gov/expapi/verbs/interacted",
       "interacted",
       `http://smartslate.com/activities/module-2/project-context/${spineKey}/copy`,
-      "Copy AI Context prompt"
+      "Copy scaffold prompt"
     );
     setTimeout(() => setCopied(false), 2000);
   };
@@ -136,36 +158,36 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
   const stepIndex = STEP_LABELS.findIndex((s) => s.key === step);
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden min-h-0 p-4 md:p-6 lg:py-7 max-w-5xl mx-auto relative">
-      <div className="absolute top-[15%] right-1/2 translate-x-1/2 w-[380px] h-[380px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="w-full h-full flex flex-col overflow-hidden min-h-0 p-3 md:p-5 max-w-5xl mx-auto relative">
+      <div className="absolute top-[12%] right-1/2 translate-x-1/2 w-[340px] h-[340px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
-      <div className="cc-head text-center mb-4 relative z-10 shrink-0">
-        <div className="inline-flex items-center justify-center p-2.5 bg-primary/10 rounded-2xl border border-primary/20 mb-3">
-          <FileText className="w-5 h-5 text-primary" />
+      <div className="cc-head text-center mb-2 md:mb-3 relative z-10 shrink-0">
+        <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-xl border border-primary/20 mb-2">
+          <FileText className="w-4 h-4 text-primary" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground tracking-tight">
+        <h2 className="text-xl md:text-2xl font-heading font-bold text-foreground tracking-tight">
           Building Your AI Context
         </h2>
-        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-          AI agents generate better code when they know your architecture. Create your project&apos;s canonical <code className="text-primary">AI_CONTEXT.md</code> — right in this step.
+        <p className="text-[11px] md:text-sm text-muted-foreground max-w-2xl mx-auto">
+          Scaffold the documentation your harness needs — before a line of code.
         </p>
       </div>
 
       {/* Step indicator */}
-      <div className="cc-step flex items-center justify-center gap-2 md:gap-3 mb-4 shrink-0 relative z-10">
+      <div className="cc-step flex items-center justify-center gap-2 mb-2 md:mb-3 shrink-0 relative z-10">
         {STEP_LABELS.map((s, i) => {
           const isDone = i < stepIndex || (s.key === "verify" && completed);
           const isActive = i === stepIndex;
           return (
-            <div key={s.key} className="flex items-center gap-2 md:gap-3">
-              {i > 0 && <div className={`w-6 md:w-10 h-px ${i <= stepIndex ? "bg-primary/50" : "bg-white/10"}`} />}
+            <div key={s.key} className="flex items-center gap-2">
+              {i > 0 && <div className={`w-5 md:w-8 h-px ${i <= stepIndex ? "bg-primary/50" : "bg-white/10"}`} />}
               <div
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] md:text-xs font-bold transition-colors ${
                   isDone || isActive ? "bg-primary/10 border border-primary/20 text-primary" : "bg-white/5 border border-white/10 text-muted-foreground/60"
                 }`}
               >
-                {isDone ? <CheckSquare className="w-3.5 h-3.5" /> : <span className="font-mono">{i + 1}</span>}
+                {isDone ? <CheckSquare className="w-3 h-3" /> : <span className="font-mono">{i + 1}</span>}
                 {s.label}
               </div>
             </div>
@@ -173,60 +195,52 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
         })}
       </div>
 
-      {/* Body */}
-      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto">
+      {/* Body — fits the canvas, no scrolling */}
+      <div className="relative z-10 flex-1 min-h-0 overflow-hidden">
         <AnimatePresence mode="wait">
           {step === "learn" && (
             <motion.div
               key="learn"
-              initial={reduce ? false : { opacity: 0, y: 14 }}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: EASE_OUT }}
-              className="space-y-4"
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: reduce ? 0 : 0.25, ease: EASE_OUT }}
+              className="flex flex-col gap-2.5 h-full"
             >
-              <p className="text-xs md:text-sm text-muted-foreground max-w-3xl">
-                <Sparkles className="w-3.5 h-3.5 inline mr-1 text-primary" />
-                Your harness can only build what it fully understands. Before a single line of code it needs three layers of awareness — and they all live in your project&apos;s <code className="text-primary">docs/</code> folder.
+              <p className="text-[11px] md:text-sm text-muted-foreground max-w-3xl">
+                <Sparkles className="w-3 h-3 inline mr-1 text-primary" />
+                A harness can only build what it fully understands. It needs <strong className="text-foreground">what</strong> it's building, the <strong className="text-foreground">domain</strong>, and <strong className="text-foreground">how</strong> it's done — each as its own file in <code className="text-primary">docs/</code>.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+              <div className="flex flex-wrap gap-1.5">
                 {[
-                  { icon: BookOpen, title: "What it's building", desc: "The product brief: what the project is, who it serves, and why it exists." },
-                  { icon: FolderTree, title: "The domain", desc: "The domain it operates in — the concepts and rules that shape every decision." },
-                  { icon: PencilLine, title: "How it's done", desc: "The tech knowledge: stack, design system, and the hard boundaries it must stay inside." },
+                  { icon: BookOpen, label: "What it's building" },
+                  { icon: FolderTree, label: "The domain" },
+                  { icon: PencilLine, label: "How it's done" },
                 ].map((c) => (
-                  <div key={c.title} className="p-4 rounded-2xl border bg-card/40 backdrop-blur-xl border-white/10">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2.5">
-                      <c.icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <h3 className="font-bold text-foreground text-sm mb-1">{c.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
-                  </div>
+                  <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full bg-card/40 backdrop-blur-xl border border-white/10 px-2.5 py-1 text-[10px] md:text-[11px] font-semibold text-foreground/80">
+                    <c.icon className="w-3 h-3 text-primary" />
+                    {c.label}
+                  </span>
                 ))}
               </div>
 
-              {/* The 12 project templates */}
-              <div className="rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">The 12 project templates</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(PROJECT_SPINES).map(([key, name]) => (
-                    <span
-                      key={key}
-                      className={`px-2 py-1 rounded-full text-[10px] font-semibold ${
-                        key === spineKey ? "bg-primary/15 border border-primary/30 text-primary" : "bg-white/5 border border-white/10 text-muted-foreground"
-                      }`}
-                    >
-                      {name}
-                    </span>
-                  ))}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-xl px-3 py-2 flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 shrink-0">
+                  <Folder className="w-3.5 h-3.5 text-primary" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-primary/70">Your project</p>
+                  <p className="text-xs md:text-sm font-bold text-foreground truncate">{config.title}</p>
                 </div>
               </div>
-              <div className="flex justify-end">
+
+              <div className="mt-auto flex justify-end">
                 <button
                   onClick={() => setStep("build")}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-secondary text-white text-xs md:text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
                 >
-                  Start building <ArrowRight className="w-4 h-4" />
+                  Start building <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </motion.div>
@@ -235,82 +249,67 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
           {step === "build" && (
             <motion.div
               key="build"
-              initial={reduce ? false : { opacity: 0, y: 14 }}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: EASE_OUT }}
-              className="space-y-4"
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: reduce ? 0 : 0.25, ease: EASE_OUT }}
+              className="flex flex-col gap-2.5 h-full"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <Folder className="w-5 h-5 text-primary" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <Folder className="w-4 h-4 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-foreground text-base">Set up the folder, then generate the document</h3>
-                    <p className="text-xs text-muted-foreground">Create the structure and have a real conversation with an LLM.</p>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-foreground text-xs md:text-sm">Build the documentation scaffold</h3>
+                    <p className="text-[10px] md:text-[11px] text-muted-foreground">Project folder with a docs/ subfolder, then the seven files.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setStep("learn")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                  <ArrowLeft className="w-3 h-3" /> Back
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-4 rounded-2xl border bg-card/40 backdrop-blur-xl border-white/10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono">1</span>
-                    <h4 className="font-bold text-foreground text-sm">Create the project folder</h4>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">An empty folder on your computer for your capstone project.</p>
+              {/* Scaffold file chips — one file per requirement */}
+              <div className="rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl p-2.5">
+                <div className="flex flex-wrap gap-1.5">
+                  {SCAFFOLD_FILES.map((f) => (
+                    <span key={f.file} className="inline-flex items-center gap-1 rounded-md bg-white/[0.04] border border-white/[0.08] px-2 py-0.5">
+                      <FileText className="w-2.5 h-2.5 text-primary shrink-0" />
+                      <span className="text-[9px] md:text-[10px] font-mono text-foreground/80 font-semibold">{f.file}</span>
+                    </span>
+                  ))}
                 </div>
-                <div className="p-4 rounded-2xl border bg-card/40 backdrop-blur-xl border-white/10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono">2</span>
-                    <h4 className="font-bold text-foreground text-sm">Create a docs subfolder</h4>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Inside the project folder, create a subfolder named <code className="text-primary">docs</code>.</p>
-                </div>
+                <p className="text-[10px] md:text-[11px] text-muted-foreground mt-1.5 leading-snug">
+                  Each file covers one requirement — AGENTS.md at the project root points into docs/.
+                </p>
               </div>
 
-              {/* LLM prompt panel */}
-              <div className="rounded-2xl border border-white/10 bg-background/80 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-white/[0.02]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex gap-1.5 shrink-0">
-                      <div className="w-2.5 h-2.5 rounded-full bg-rose-500/50" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-                    </div>
-                    <span className="text-[10px] font-mono text-muted-foreground/60 uppercase tracking-wider truncate">prompt · {config.title}</span>
-                  </div>
-                  <button
-                    onClick={handleCopy}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors shrink-0"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? "Copied" : "Copy prompt"}
-                  </button>
-                </div>
-                <div className="p-4 max-h-48 overflow-y-auto text-[13px] font-mono text-foreground/80 leading-relaxed whitespace-pre-wrap select-all">
-                  {promptForLlm}
-                </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <button
+                  onClick={handleCopy}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-secondary text-white text-xs font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? "Prompt copied" : "Copy scaffold prompt"}
+                </button>
+                <p className="text-[10px] md:text-[11px] text-muted-foreground">
+                  The prompt makes the LLM brainstorm with you, research your domain, and generate all seven files as separate code blocks.
+                </p>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Paste the prompt into any LLM (ChatGPT, Claude, or Gemini). Answer its clarifying questions, then keep it going until it produces your <code className="text-primary">AI_CONTEXT.md</code>.
-              </p>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">Save the generated file as <code className="text-primary">AI_CONTEXT.md</code> in your <code className="text-primary">docs</code> folder when you&apos;re done.</p>
+              <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <p className="text-[10px] md:text-[11px] text-muted-foreground">
+                  Save each code block to its file — AGENTS.md at the project root, the rest in docs/.
+                </p>
                 <button
                   onClick={() => setStep("verify")}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-secondary text-white text-xs md:text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
                 >
-                  I&apos;ve generated it <ArrowRight className="w-4 h-4" />
+                  I&apos;ve created the scaffold <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </motion.div>
@@ -319,75 +318,70 @@ export function ProjectContextSlide({ onComplete }: { onComplete?: () => void })
           {step === "verify" && (
             <motion.div
               key="verify"
-              initial={reduce ? false : { opacity: 0, y: 14 }}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: EASE_OUT }}
-              className="space-y-4"
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: reduce ? 0 : 0.25, ease: EASE_OUT }}
+              className="flex flex-col gap-2.5 h-full"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <CheckSquare className="w-5 h-5 text-primary" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <CheckSquare className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground text-base">Verify your context document</h3>
-                    <p className="text-xs text-muted-foreground">Confirm the file is in place before moving on.</p>
+                    <h3 className="font-bold text-foreground text-xs md:text-sm">Verify your scaffold</h3>
+                    <p className="text-[10px] md:text-[11px] text-muted-foreground">Confirm every file is in place before moving on.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setStep("build")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                  <ArrowLeft className="w-3 h-3" /> Back
                 </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                 {[
-                  "Your project folder exists, with a docs/ subfolder inside it",
-                  "AI_CONTEXT.md is saved in docs/ and covers WHAT you're building (project brief), the DOMAIN it serves, and HOW it's done (tech stack, design system, constraints)",
-                  "Read it back once — would a developer who knows nothing about your project understand all three layers?",
+                  "AGENTS.md sits at your project root, pointing into docs/",
+                  "docs/ holds PRODUCT, DOMAIN, ARCHITECTURE, DESIGN, CONSTRAINTS and DECISIONS",
+                  "Read each file back — would a fresh developer understand what, domain, and how?",
                 ].map((check, i) => (
-                  <div key={i} className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3">
-                    <CheckSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-sm text-foreground/90 leading-relaxed">{check}</p>
+                  <div key={i} className="flex items-start gap-1.5 rounded-lg border border-white/10 bg-card/40 backdrop-blur-xl px-2.5 py-2">
+                    <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                    <p className="text-[10px] md:text-[11px] text-foreground/90 leading-snug">{check}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-start gap-2 text-xs text-muted-foreground bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-2.5">
-                <CircleAlert className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <span>Your agent will read <code className="text-primary">AI_CONTEXT.md</code> on every task from here on. If a decision is still fuzzy, go back and refine it before continuing.</span>
+              <div className="flex items-start gap-1.5 text-[10px] md:text-[11px] text-muted-foreground bg-amber-500/5 border border-amber-500/20 rounded-lg px-2.5 py-1.5">
+                <CircleAlert className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                <span>Your harness will read these files on every task. Update DECISIONS.md as you make choices — the documentation is the source of truth.</span>
               </div>
 
               {completed ? (
                 <motion.div
-                  initial={reduce ? false : { opacity: 0, y: 8 }}
+                  initial={reduce ? false : { opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3"
+                  className="flex items-center gap-2.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2"
                 >
-                  <PartyPopper className="w-5 h-5 text-primary shrink-0" />
+                  <PartyPopper className="w-4 h-4 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-foreground">AI context documented</p>
-                    <p className="text-xs text-muted-foreground">Your agent now knows your architecture — continue when ready.</p>
+                    <p className="text-xs md:text-sm font-bold text-foreground">Context scaffolded</p>
+                    <p className="text-[10px] md:text-[11px] text-muted-foreground">Your harness now knows what, domain, and how — continue when ready.</p>
                   </div>
                 </motion.div>
               ) : (
-                <button
-                  onClick={handleComplete}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
-                >
-                  <CheckSquare className="w-4 h-4" /> Mark step complete
-                </button>
+                <div className="mt-auto">
+                  <button
+                    onClick={handleComplete}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white text-xs md:text-sm font-bold hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:scale-95"
+                  >
+                    <CheckSquare className="w-4 h-4" /> Mark step complete
+                  </button>
+                </div>
               )}
-
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <ChevronRight className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span>
-                  Not sure what to include? Ask the LLM to explain each section it generates — you are the architect, it is the typist.
-                </span>
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
