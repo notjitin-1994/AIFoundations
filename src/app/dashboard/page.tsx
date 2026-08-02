@@ -9,14 +9,15 @@ import { MarketingNavbar } from "@/components/layout/marketing-nav";
 import { MarketingFooter } from "@/components/layout/marketing-footer";
 import { 
   Trophy, Flame, Clock, Target, Star, Brain, Code, 
-  Database, Server, Shield, ArrowRight, CheckCircle2, Lock, Play, RotateCcw, Beaker, Wrench, Network, Cpu, X, Download,
-  Sparkles, Activity, Zap, GraduationCap, ChevronLeft, ChevronRight
+  Database, Server, Shield, ArrowRight, Lock, Play, RotateCcw, Wrench, Network, Cpu, X, Download,
+  Sparkles, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useUser, getDisplayName } from "@/hooks/use-user";
 import { fetchModuleProgress, wipeDatabaseProgress } from "@/actions/sync-progress";
 import { mergeRemoteProgress, hasStartedCourse } from "@/lib/progress-merge";
 import { computeCourseProgress } from "@/lib/progress-metrics";
 import type { CourseTotals } from "@/lib/progress-metrics";
+import { BADGE_CATALOG, getUnlockedBadges, countUnlockedBadges, type BadgeEligibilityState } from "@/lib/gamification";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { useEnrollmentGate } from "@/hooks/use-enrollment";
@@ -122,24 +123,19 @@ export default function CourseDashboardPage() {
 
   const hoursInvested = mounted ? (gamification.totalTimeSpentSeconds / 3600).toFixed(1) : "0.0";
   
-  // Behavioral Badges Logic
-  const isPerfectionist = Object.values(progress.assessments).some(
-    (a) => {
-      if (!a.graded || Object.keys(a.graded).length === 0) return false;
-      return (
-        Object.values(a.graded).every((g) => {
-          const graded = g as { correct?: boolean } | undefined;
-          return graded?.correct;
-        }) &&
-        (!a.incorrectAttempts || Object.values(a.incorrectAttempts).every((v) => v === 0))
-      );
-    }
-  );
-  const isDeepDiver = gamification.totalTimeSpentSeconds >= 3600; // >= 1 hour
-  const isUnbrokenFocus = gamification.currentStreak >= 3;
+  // Skill Constellation — single source of truth in src/lib/gamification.ts
+  const eligibility: BadgeEligibilityState = {
+    completedModules: progress.completedModules,
+    projectSpine: progress.projectSpine,
+    projectSpineAnswers: progress.projectSpineAnswers,
+    assessments: progress.assessments,
+    gamification,
+  };
+  const unlockedBadgeCount = countUnlockedBadges(eligibility);
+  const unlockedBadgeIds = new Set(getUnlockedBadges(eligibility).map((b) => b.id));
 
   // Dynamic Learner Rank
-  const badgesCount = gamification.badges.length;
+  const badgesCount = unlockedBadgeCount;
   const xp = gamification.xp;
   let learnerRank = "AI Initiate";
   if (xp >= 2000 && badgesCount >= 5) learnerRank = "Master AI Engineer";
@@ -361,9 +357,7 @@ export default function CourseDashboardPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Skill Constellation</h3>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-primary/60">{
-                      gamification.badges.length + (isPerfectionist?1:0) + (isDeepDiver?1:0) + (isUnbrokenFocus?1:0)
-                    } / 20 Unlocked</span>
+                    <span className="text-xs font-mono text-primary/60">{unlockedBadgeCount} / 20 Unlocked</span>
                     
                     {/* Pagination Controls */}
                     <div className="flex items-center gap-1 bg-zinc-950/50 rounded-full border border-white/5 p-0.5">
@@ -390,31 +384,8 @@ export default function CourseDashboardPage() {
                 </div>
                 
                 <div className="grid grid-cols-5 gap-2 md:gap-3">
-                  {[
-                    // Page 1: The Core Journey (10 Badges)
-                    { id: 'first-steps', name: 'First Steps', icon: Star, unlocked: gamification.badges.includes('first-steps') || progress.completedModules.includes('0'), tier: 'bronze', tooltip: 'Complete Module 0: Orientation' },
-                    { id: 'illusionist', name: 'Illusionist', icon: Brain, unlocked: progress.completedModules.includes('1'), tier: 'bronze', tooltip: 'Complete Module 1: The Intelligence Illusion' },
-                    { id: 'memory-architect', name: 'Memory', icon: Database, unlocked: progress.completedModules.includes('2'), tier: 'bronze', tooltip: 'Complete Module 2: The Goldfish Problem' },
-                    { id: 'toolbelt', name: 'Toolbelt', icon: Wrench, unlocked: progress.completedModules.includes('3'), tier: 'silver', tooltip: 'Complete Module 3: The Toolbelt' },
-                    { id: 'loop-engineer', name: 'Loop Eng', icon: Network, unlocked: progress.completedModules.includes('4'), tier: 'gold', tooltip: 'Complete Module 4: The Engine Room' },
-                    { id: 'master-assembly', name: 'Assembly', icon: Cpu, unlocked: progress.completedModules.includes('5'), tier: 'diamond', tooltip: 'Complete Module 5: The Assembly Line' },
-                    { id: 'certified', name: 'Certified', icon: Trophy, unlocked: gamification.badges.includes('certified') || progress.completedModules.includes('6'), tier: 'obsidian', tooltip: 'Pass the Final Assessment in Module 6' },
-                    { id: 'strategist', name: 'Strategist', icon: Target, unlocked: !!progress.projectSpine, tier: 'bronze', tooltip: 'Select a Project Spine' },
-                    { id: 'sys-designer', name: 'Designer', icon: Code, unlocked: !!progress.projectSpineAnswers?.["1"], tier: 'bronze', tooltip: 'Draft the System Prompt in Module 1' },
-                    { id: 'knowledge-weaver', name: 'Weaver', icon: Beaker, unlocked: !!progress.projectSpineAnswers?.["2"], tier: 'silver', tooltip: 'Design the RAG Architecture in Module 2' },
-                    
-                    // Page 2: Mastery & Exploration (10 Badges)
-                    { id: 'protocol-pioneer', name: 'Protocol', icon: Server, unlocked: !!progress.projectSpineAnswers?.["3"], tier: 'silver', tooltip: 'Register Tools & MCPs in Module 3' },
-                    { id: 'auto-architect', name: 'Automation', icon: Network, unlocked: !!progress.projectSpineAnswers?.["4"], tier: 'gold', tooltip: 'Orchestrate the Agentic Loop in Module 4' },
-                    { id: 'capstone', name: 'Capstone', icon: Sparkles, unlocked: !!progress.projectSpineAnswers?.["5"], tier: 'diamond', tooltip: 'Submit the Final Capstone in Module 5' },
-                    { id: 'perfectionist', name: 'Flawless', icon: CheckCircle2, unlocked: isPerfectionist, tier: 'obsidian', tooltip: 'Score 100% on a module assessment on the first attempt' },
-                    { id: 'deep-diver', name: 'Deep Diver', icon: Activity, unlocked: isDeepDiver, tier: 'gold', tooltip: 'Invest over 1 hour of active learning time' },
-                    { id: 'unbroken-focus', name: 'Focus', icon: Flame, unlocked: isUnbrokenFocus, tier: 'diamond', tooltip: 'Maintain a 3+ day active learning streak' },
-                    { id: 'relentless', name: 'Relentless', icon: Flame, unlocked: (gamification.currentStreak || 0) >= 7, tier: 'obsidian', tooltip: 'Maintain a 7+ day active learning streak' },
-                    { id: 'xp-hunter', name: 'XP Hunter', icon: Zap, unlocked: (gamification.xp || 0) >= 1000, tier: 'silver', tooltip: 'Accumulate 1,000 Total XP' },
-                    { id: 'polymath', name: 'Polymath', icon: GraduationCap, unlocked: (gamification.xp || 0) >= 5000, tier: 'diamond', tooltip: 'Accumulate 5,000 Total XP' },
-                    { id: 'tool-collector', name: 'Collector', icon: Wrench, unlocked: (gamification.toolsMastered?.length || 0) >= 5, tier: 'gold', tooltip: 'Master 5+ distinct AI frameworks/tools' }
-                  ].slice(badgePage * 10, (badgePage * 10) + 10).map(badge => {
+                  {BADGE_CATALOG.slice(badgePage * 10, (badgePage * 10) + 10).map(badge => {
+                    const unlocked = unlockedBadgeIds.has(badge.id);
                     const tierColors: Record<string, string> = {
                       bronze: "from-orange-900/30 to-amber-700/10 border-orange-500/30 text-orange-400",
                       silver: "from-zinc-400/20 to-zinc-600/10 border-zinc-400/40 text-zinc-300",
@@ -426,26 +397,26 @@ export default function CourseDashboardPage() {
                     return (
                       <div key={badge.id} className="group relative flex flex-col items-center">
                         <div className={`w-[48px] h-[48px] md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl overflow-hidden relative ${
-                          badge.unlocked 
+                          unlocked 
                             ? `bg-gradient-to-br border hover:scale-110 hover:-translate-y-2 z-10 ${tierColors[badge.tier || 'bronze']}` 
                             : "bg-zinc-950/80 border border-white/5 text-zinc-800 grayscale"
                         }`}>
-                          {badge.unlocked && (
+                          {unlocked && (
                             <>
                               <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 translate-x-[-150%] translate-y-[150%] group-hover:translate-x-[150%] group-hover:translate-y-[-150%] transition-transform duration-1000 ease-in-out" />
                               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)] transition-opacity duration-300" />
                             </>
                           )}
-                          <badge.icon className={`w-5 h-5 md:w-6 md:h-6 relative z-10 transition-opacity duration-500 ${!badge.unlocked ? 'opacity-10 group-hover:opacity-30' : ''}`} strokeWidth={badge.unlocked ? 2 : 1.5} />
+                          <badge.icon className={`w-5 h-5 md:w-6 md:h-6 relative z-10 transition-opacity duration-500 ${!unlocked ? 'opacity-10 group-hover:opacity-30' : ''}`} strokeWidth={unlocked ? 2 : 1.5} />
                         </div>
-                        <p className={`text-[9px] md:text-[10px] font-bold mt-2 text-center tracking-wider transition-colors duration-300 w-full truncate px-0.5 ${badge.unlocked ? 'text-zinc-200' : 'text-zinc-700 select-none'}`}>
-                          {badge.unlocked ? badge.name : "Locked"}
+                        <p className={`text-[9px] md:text-[10px] font-bold mt-2 text-center tracking-wider transition-colors duration-300 w-full truncate px-0.5 ${unlocked ? 'text-zinc-200' : 'text-zinc-700 select-none'}`}>
+                          {unlocked ? badge.name : "Locked"}
                         </p>
                         
                         {/* Glassmorphism Tooltip */}
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[150px] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
                           <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-2.5 text-[10px] text-zinc-300 text-center shadow-2xl relative">
-                            {badge.unlocked ? (badge.tooltip || `Unlocked ${badge.name}`) : (badge.tooltip || "Complete requirements to unlock")}
+                            {unlocked ? (badge.tooltip || `Unlocked ${badge.name}`) : (badge.tooltip || "Complete requirements to unlock")}
                             <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900/95" />
                           </div>
                         </div>

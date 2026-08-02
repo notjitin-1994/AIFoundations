@@ -6,9 +6,14 @@ import { useProgressStore } from "@/store/progress";
 import { useNotesStore } from "@/store/notes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ChevronDown, User, LogOut } from "lucide-react";
 import { COURSE_MODULES } from "@/lib/course-data";
 import { computeCourseProgress } from "@/lib/progress-metrics";
 import type { CourseTotals } from "@/lib/progress-metrics";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const router = useRouter();
@@ -88,23 +93,40 @@ export function Header() {
         {isLoading ? (
           <div className="w-8 h-8 rounded-full bg-accent animate-pulse" />
         ) : (
-          <div className="flex items-center space-x-3">
-            <span className="text-sm font-medium text-foreground">{getDisplayName(user)}</span>
-            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                getDisplayName(user).charAt(0)
-              )}
-            </div>
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoggingOut ? "Logging out..." : "Log out"}
-            </button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/30 bg-primary/20">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    getDisplayName(user).charAt(0)
+                  )}
+                </div>
+                <span className="text-sm font-medium text-foreground max-w-[140px] truncate">{getDisplayName(user)}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60 bg-card/95 backdrop-blur-xl border border-white/10">
+              <DropdownMenuLabel className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium text-foreground">{getDisplayName(user)}</span>
+                <span className="text-xs font-normal text-muted-foreground truncate">{user?.email}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem asChild>
+                <Link href="https://orbit.smartslate.io/" className="flex items-center gap-2 cursor-pointer">
+                  <User className="w-4 h-4" /> Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                disabled={isLoggingOut}
+                className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4" /> {isLoggingOut ? "Signing out..." : "Sign out"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     </header>
