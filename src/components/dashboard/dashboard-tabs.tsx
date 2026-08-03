@@ -5,8 +5,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ModuleTracker } from "@/components/dashboard/module-tracker";
 import { fetchPromptTemplates, PromptTemplate } from "@/actions/resources";
 import { COURSE_NOTES } from "@/lib/course-notes";
-import { Copy, Check, Wrench, Boxes, Server, ExternalLink, Library, BookOpen } from "lucide-react";
+import { Copy, Check, Wrench, Boxes, Server, ExternalLink, Library, BookOpen, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 interface DashboardTabsProps {
   completedModules: string[];
@@ -31,6 +32,7 @@ export function DashboardTabs({
 }: DashboardTabsProps) {
   const [prompts, setPrompts] = useState<PromptTemplate[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(true);
+  const [notesPage, setNotesPage] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -170,15 +172,21 @@ export function DashboardTabs({
             <h2 className="text-2xl font-bold font-heading">Course Notes</h2>
           </div>
           
-          <div className="space-y-16">
-            {Object.entries(
-              COURSE_NOTES.reduce((acc, note) => {
-                if (!acc[note.moduleId]) acc[note.moduleId] = {};
-                if (!acc[note.moduleId][note.lessonIndex]) acc[note.moduleId][note.lessonIndex] = [];
-                acc[note.moduleId][note.lessonIndex].push(note);
-                return acc;
-              }, {} as Record<string, Record<string, typeof COURSE_NOTES>>)
-            ).map(([moduleId, lessons]) => {
+          <div className="space-y-8">
+            {(() => {
+              const groupedNotes = Object.entries(
+                COURSE_NOTES.reduce((acc, note) => {
+                  if (!acc[note.moduleId]) acc[note.moduleId] = {};
+                  if (!acc[note.moduleId][note.lessonIndex]) acc[note.moduleId][note.lessonIndex] = [];
+                  acc[note.moduleId][note.lessonIndex].push(note);
+                  return acc;
+                }, {} as Record<string, Record<string, typeof COURSE_NOTES>>)
+              ).sort((a, b) => parseInt(a[0]) - parseInt(b[0])); // Sort by module ID
+
+              const itemsPerPage = 1; // 1 Module per page
+              const totalPages = Math.ceil(groupedNotes.length / itemsPerPage);
+              const paginatedModules = groupedNotes.slice((notesPage - 1) * itemsPerPage, notesPage * itemsPerPage);
+
               const moduleNames: Record<string, string> = {
                 "1": "The Intelligence Illusion",
                 "2": "The Goldfish Problem",
@@ -188,48 +196,83 @@ export function DashboardTabs({
               };
               
               return (
-                <div key={moduleId} className="space-y-6 relative">
-                  {/* Module Header */}
-                  <div className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur-md py-4 border-b border-primary/20 -mx-4 md:-mx-8 px-4 md:px-8 shadow-sm">
-                    <h3 className="text-xl font-heading font-bold text-white flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm shadow-[0_0_15px_rgba(167,218,219,0.3)]">
-                        M{moduleId}
-                      </div>
-                      {moduleNames[moduleId] || `Module ${moduleId}`}
-                    </h3>
-                  </div>
-
-                  {/* Lessons */}
-                  {Object.entries(lessons).map(([lessonIndex, slides]) => (
-                    <div key={lessonIndex} className="pl-4 md:pl-10 border-l border-white/10 space-y-4 pt-2 pb-6">
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-6">
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 -ml-[21px] md:-ml-[45px] shadow-[0_0_0_4px_rgba(39,39,42,0.5)]" />
-                        Lesson {parseInt(lessonIndex) + 1}
-                      </h4>
-                      
-                      <div className="grid grid-cols-1 gap-4">
-                        {slides.map(note => (
-                          <div 
-                            key={note.id} 
-                            className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-all duration-300 group hover:shadow-[0_0_20px_rgba(167,218,219,0.05)]"
-                          >
-                            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
-                              <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded">
-                                Slide {note.slideIndex + 1}
-                              </span>
-                              {note.title && <span className="text-sm font-bold text-zinc-300">{note.title}</span>}
+                <>
+                  <Accordion type="multiple" className="space-y-6" defaultValue={paginatedModules.map(m => `module-${m[0]}`)}>
+                    {paginatedModules.map(([moduleId, lessons]) => (
+                      <AccordionItem key={moduleId} value={`module-${moduleId}`} className="border-none bg-zinc-950/40 rounded-2xl overflow-hidden border border-white/5">
+                        <AccordionTrigger className="px-6 py-4 hover:bg-white/5 hover:no-underline transition-colors group">
+                          <div className="flex items-center gap-4 text-left">
+                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm shadow-[0_0_15px_rgba(167,218,219,0.3)] shrink-0">
+                              M{moduleId}
                             </div>
-                            <div className="prose prose-sm prose-invert prose-p:leading-relaxed prose-p:text-zinc-400 prose-headings:text-zinc-200 prose-strong:text-zinc-300 prose-li:text-zinc-400 prose-a:text-primary max-w-none">
-                              <ReactMarkdown>{note.content}</ReactMarkdown>
-                            </div>
+                            <h3 className="text-xl font-heading font-bold text-white group-hover:text-primary transition-colors">
+                              {moduleNames[moduleId] || `Module ${moduleId}`}
+                            </h3>
                           </div>
-                        ))}
-                      </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 md:px-8 pb-6 pt-2">
+                          <Accordion type="multiple" className="space-y-4" defaultValue={Object.keys(lessons).map(l => `lesson-${l}`)}>
+                            {Object.entries(lessons).map(([lessonIndex, slides]) => (
+                              <AccordionItem key={lessonIndex} value={`lesson-${lessonIndex}`} className="border-none">
+                                <AccordionTrigger className="hover:no-underline py-2 group">
+                                  <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-zinc-200 transition-colors">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 shadow-[0_0_0_4px_rgba(39,39,42,0.5)] group-hover:bg-primary transition-colors" />
+                                    Lesson {parseInt(lessonIndex) + 1}
+                                  </h4>
+                                </AccordionTrigger>
+                                <AccordionContent className="pl-6 md:pl-10 border-l border-white/10 mt-4 space-y-4">
+                                  <div className="grid grid-cols-1 gap-4">
+                                    {slides.map(note => (
+                                      <div 
+                                        key={note.id} 
+                                        className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(167,218,219,0.05)]"
+                                      >
+                                        <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-white/5">
+                                          <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded shrink-0">
+                                            Slide {note.slideIndex + 1}
+                                          </span>
+                                          {note.title && <span className="text-sm font-bold text-zinc-300">{note.title}</span>}
+                                        </div>
+                                        <div className="prose prose-sm prose-invert prose-p:leading-relaxed prose-p:text-zinc-400 prose-headings:text-zinc-200 prose-strong:text-zinc-300 prose-li:text-zinc-400 prose-a:text-primary max-w-none">
+                                          <ReactMarkdown>{note.content}</ReactMarkdown>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-6 border-t border-white/10 mt-8">
+                      <button
+                        onClick={() => setNotesPage(p => Math.max(1, p - 1))}
+                        disabled={notesPage === 1}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-zinc-900 text-sm font-medium transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Previous Module
+                      </button>
+                      <span className="text-sm font-medium text-zinc-400">
+                        Module {notesPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setNotesPage(p => Math.min(totalPages, p + 1))}
+                        disabled={notesPage === totalPages}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-zinc-900 text-sm font-medium transition-colors"
+                      >
+                        Next Module <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               );
-            })}
+            })()}
           </div>
         </div>
       </TabsContent>

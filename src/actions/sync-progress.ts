@@ -93,15 +93,16 @@ export async function wipeDatabaseProgress() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, reason: "Not authenticated" };
 
-    const [{ error }, { error: eventsError }, { error: certsError }] = await Promise.all([
+    const [{ error }, { error: eventsError }, { error: certsError }, { error: assessmentsError }] = await Promise.all([
       supabase.from("module_progress").delete().eq("user_id", user.id),
       supabase.from("progress_events").delete().eq("user_id", user.id),
       supabase.from("certificates").delete().eq("user_id", user.id),
+      supabase.from("assessment_results").delete().eq("user_id", user.id),
     ]);
 
-    if (error || eventsError || certsError) {
-      console.error("wipeDatabaseProgress error:", error?.message ?? eventsError?.message ?? certsError?.message);
-      return { success: false, reason: error?.message ?? eventsError?.message ?? certsError?.message ?? "Could not wipe progress" };
+    if (error || eventsError || certsError || assessmentsError) {
+      console.error("wipeDatabaseProgress error:", error?.message ?? eventsError?.message ?? certsError?.message ?? assessmentsError?.message);
+      return { success: false, reason: error?.message ?? eventsError?.message ?? certsError?.message ?? assessmentsError?.message ?? "Could not wipe progress" };
     }
     return { success: true };
   } catch (err) {
