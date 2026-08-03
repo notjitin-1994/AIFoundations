@@ -85,8 +85,7 @@ export async function fetchModuleProgress() {
 }
 
 /**
- * Wipes the learner's module progress from the database.
- * Certificate data is stored in the 'certificates' table and is unaffected.
+ * Wipes the learner's module progress, events, and certificate from the database.
  */
 export async function wipeDatabaseProgress() {
   try {
@@ -94,16 +93,15 @@ export async function wipeDatabaseProgress() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, reason: "Not authenticated" };
 
-    const [{ error }, { error: eventsError }] = await Promise.all([
+    const [{ error }, { error: eventsError }, { error: certsError }] = await Promise.all([
       supabase.from("module_progress").delete().eq("user_id", user.id),
-      // Full reset: clear the xAPI audit trail too so stale events can never
-      // resurrect wiped progress. Certificates are deliberately untouched.
       supabase.from("progress_events").delete().eq("user_id", user.id),
+      supabase.from("certificates").delete().eq("user_id", user.id),
     ]);
 
-    if (error || eventsError) {
-      console.error("wipeDatabaseProgress error:", error?.message ?? eventsError?.message);
-      return { success: false, reason: error?.message ?? eventsError?.message ?? "Could not wipe progress" };
+    if (error || eventsError || certsError) {
+      console.error("wipeDatabaseProgress error:", error?.message ?? eventsError?.message ?? certsError?.message);
+      return { success: false, reason: error?.message ?? eventsError?.message ?? certsError?.message ?? "Could not wipe progress" };
     }
     return { success: true };
   } catch (err) {

@@ -164,24 +164,72 @@ export function DashboardTabs({
       </TabsContent>
 
       <TabsContent value="notes" className="focus:outline-none">
-        <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-10">
-          <div className="flex items-center gap-3 mb-8">
+        <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-8">
+          <div className="flex items-center gap-3 mb-10">
             <BookOpen className="w-6 h-6 text-primary" />
             <h2 className="text-2xl font-bold font-heading">Course Notes</h2>
           </div>
-          <div className="space-y-12">
-            {COURSE_NOTES.map((note, idx) => (
-              <div key={idx} className="pb-12 border-b border-white/10 last:border-0 last:pb-0">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-                    M{note.moduleId} • S{note.slideIndex + 1}
-                  </span>
+          
+          <div className="space-y-16">
+            {Object.entries(
+              COURSE_NOTES.reduce((acc, note) => {
+                if (!acc[note.moduleId]) acc[note.moduleId] = {};
+                if (!acc[note.moduleId][note.lessonIndex]) acc[note.moduleId][note.lessonIndex] = [];
+                acc[note.moduleId][note.lessonIndex].push(note);
+                return acc;
+              }, {} as Record<string, Record<string, typeof COURSE_NOTES>>)
+            ).map(([moduleId, lessons]) => {
+              const moduleNames: Record<string, string> = {
+                "1": "The Intelligence Illusion",
+                "2": "The Goldfish Problem",
+                "3": "The Toolbelt",
+                "4": "The Engine Room",
+                "6": "Operationalizing AI"
+              };
+              
+              return (
+                <div key={moduleId} className="space-y-6 relative">
+                  {/* Module Header */}
+                  <div className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur-md py-4 border-b border-primary/20 -mx-4 md:-mx-8 px-4 md:px-8 shadow-sm">
+                    <h3 className="text-xl font-heading font-bold text-white flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm shadow-[0_0_15px_rgba(167,218,219,0.3)]">
+                        M{moduleId}
+                      </div>
+                      {moduleNames[moduleId] || `Module ${moduleId}`}
+                    </h3>
+                  </div>
+
+                  {/* Lessons */}
+                  {Object.entries(lessons).map(([lessonIndex, slides]) => (
+                    <div key={lessonIndex} className="pl-4 md:pl-10 border-l border-white/10 space-y-4 pt-2 pb-6">
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-6">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 -ml-[21px] md:-ml-[45px] shadow-[0_0_0_4px_rgba(39,39,42,0.5)]" />
+                        Lesson {parseInt(lessonIndex) + 1}
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 gap-4">
+                        {slides.map(note => (
+                          <div 
+                            key={note.id} 
+                            className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-all duration-300 group hover:shadow-[0_0_20px_rgba(167,218,219,0.05)]"
+                          >
+                            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
+                              <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded">
+                                Slide {note.slideIndex + 1}
+                              </span>
+                              {note.title && <span className="text-sm font-bold text-zinc-300">{note.title}</span>}
+                            </div>
+                            <div className="prose prose-sm prose-invert prose-p:leading-relaxed prose-p:text-zinc-400 prose-headings:text-zinc-200 prose-strong:text-zinc-300 prose-li:text-zinc-400 prose-a:text-primary max-w-none">
+                              <ReactMarkdown>{note.content}</ReactMarkdown>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="prose prose-invert prose-p:text-muted-foreground prose-headings:text-foreground prose-a:text-primary max-w-none">
-                  <ReactMarkdown>{note.content}</ReactMarkdown>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </TabsContent>
