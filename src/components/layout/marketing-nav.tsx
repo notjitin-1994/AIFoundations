@@ -42,8 +42,9 @@ export function MarketingNavbar() {
     } catch (error) {
       console.error("Logout failed:", error);
     }
-    router.push("/login");
-    router.refresh();
+    // Full refresh to the Orbit landing page so the signed-out session is
+    // discarded on the server and the next page load is clean.
+    window.location.href = "https://orbit.smartslate.io/";
   };
 
   return (

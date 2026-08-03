@@ -34,8 +34,9 @@ export function Header() {
     } catch (error) {
       console.error("Logout failed:", error instanceof Error ? error.message : String(error));
     }
-    router.push("/login");
-    router.refresh();
+    // Full refresh to the Orbit landing page so the signed-out session is
+    // discarded on the server and the next page load is clean.
+    window.location.href = "https://orbit.smartslate.io/";
   };
 
   // Prevent hydration mismatch for zustand local storage values
