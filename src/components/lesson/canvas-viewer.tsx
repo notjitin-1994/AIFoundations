@@ -651,10 +651,11 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
               <button
                 id="tour-play"
                 onClick={() => {
-                  if (!hasInteracted) setHasInteracted(true);
-                  
                   if (narration.isFinished) {
-                    setReplayCount(c => c + 1);
+                    if (!isAssessment) {
+                      setReplayCount(c => c + 1);
+                    }
+                    narration.reset();
                     if (audioRef.current) {
                       audioRef.current.currentTime = 0;
                       audioRef.current.play().catch(e => console.warn("Replay error:", e));
@@ -665,9 +666,10 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                     if (audioRef.current) audioRef.current.pause();
                   } else {
                     if (currentIndex === 0 && !hasInteracted) {
-                       // First launch
+                       setHasInteracted(true);
                        narration.play(slides[currentIndex].id, 5000);
                     } else {
+                       if (!hasInteracted) setHasInteracted(true);
                        narration.resume();
                     }
                     if (audioRef.current && !slides[currentIndex].hasCustomAudio) {
@@ -678,15 +680,15 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                 className={`flex items-center justify-center h-10 rounded-full transition-all active:scale-95 ${
                   !hasInteracted && currentIndex === 0 
                     ? "px-4 space-x-2 bg-primary text-primary-foreground hover:bg-primary/90" 
-                    : narration.isFinished
+                    : narration.isFinished && !isAssessment
                       ? "px-4 space-x-2 bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 font-semibold"
                       : narration.isPlaying 
                         ? "w-10 bg-primary/10 hover:bg-primary/20 text-primary" 
                         : "w-10 bg-primary text-primary-foreground hover:bg-primary/90"
                 }`}
-                aria-label={narration.isFinished ? "Replay Slide" : narration.isPlaying ? "Pause Narration" : "Play Narration"}
+                aria-label={narration.isFinished && !isAssessment ? "Replay Slide" : narration.isPlaying ? "Pause Narration" : "Play Narration"}
               >
-                {narration.isFinished ? (
+                {narration.isFinished && !isAssessment ? (
                   <>
                     <RotateCcw className="w-[18px] h-[18px] md:mr-1.5" strokeWidth={2.5} />
                     <span className="hidden md:inline font-semibold text-[15px] pr-1 tracking-wide">Replay</span>
