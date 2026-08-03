@@ -24,7 +24,7 @@ import { useEnrollmentGate } from "@/hooks/use-enrollment";
 import { EnrollmentCheckScreen } from "@/components/auth/enrollment-check";
 import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES } from "@/lib/course-data";
-import { ModuleTracker } from "@/components/dashboard/module-tracker";
+import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { BadgeGrid } from "@/components/dashboard/badge-grid";
 import { BaselineCards } from "@/components/dashboard/baseline-cards";
 
@@ -136,14 +136,6 @@ export default function CourseDashboardPage() {
   const unlockedBadgeCount = countUnlockedBadges(eligibility);
   const unlockedBadgeIds = new Set(getUnlockedBadges(eligibility).map((b) => b.id));
 
-  // Dynamic Learner Rank
-  const badgesCount = unlockedBadgeCount;
-  const xp = gamification.xp;
-  let learnerRank = "AI Initiate";
-  if (xp >= 2000 && badgesCount >= 5) learnerRank = "Master AI Engineer";
-  else if (xp >= 1000 && badgesCount >= 3) learnerRank = "Advanced AI Architect";
-  else if (xp >= 500) learnerRank = "AI Builder";
-
   const handleRestart = async () => {
     setIsRestarting(true);
     setRestartError(null);
@@ -197,16 +189,10 @@ export default function CourseDashboardPage() {
           {/* Welcome & Stats Hero */}
           <section className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 dashboard-fade">
-              <div>
-                <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight mb-2">
-                  {!hasStarted && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
-                  <span className="text-primary">{getDisplayName(user) || "Engineer"}</span>
-                </h1>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="text-sm font-bold tracking-wider uppercase">{learnerRank}</span>
-                </div>
-              </div>
+              <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight mb-2">
+                {!hasStarted && gamification.xp === 0 ? "Welcome" : "Welcome back"},{" "}
+                <span className="text-primary">{getDisplayName(user) || "Engineer"}</span>
+              </h1>
             </div>
             
             <div className="dashboard-fade grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -288,7 +274,7 @@ export default function CourseDashboardPage() {
             </div>
           </section>
 
-          <ModuleTracker
+          <DashboardTabs
             completedModules={progress.completedModules}
             activeModuleId={progress.activeModuleId}
             projectSpine={progress.projectSpine}

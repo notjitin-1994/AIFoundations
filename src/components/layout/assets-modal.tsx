@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, BookA, PenLine, FileText } from "lucide-react";
 import { useProgressStore } from "@/store/progress";
 import { useNotesStore } from "@/store/notes";
+import { getCourseNote } from "@/lib/course-notes";
+import ReactMarkdown from "react-markdown";
 
 const GLOSSARY_TERMS = [
   { term: "Artificial Intelligence (AI)", definition: "The broad concept of machines carrying out tasks in a way we consider 'smart', based on pattern recognition rather than sentient consciousness." },
@@ -24,7 +26,7 @@ const GLOSSARY_TERMS = [
 ];
 
 export function AssetsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'glossary' | 'notes'>('glossary');
+  const [activeTab, setActiveTab] = useState<'glossary' | 'notes' | 'course-notes'>('glossary');
   const { activeModuleId, activeLessonIndex, activeSlideIndex } = useProgressStore();
   const { getNote, saveNote, notes } = useNotesStore();
   
@@ -117,6 +119,17 @@ export function AssetsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                   <PenLine className="w-4 h-4" />
                   My Notes
                 </button>
+                <button
+                  onClick={() => setActiveTab('course-notes')}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all shrink-0 ${
+                    activeTab === 'course-notes' 
+                      ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm' 
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Course Notes
+                </button>
               </nav>
             </div>
 
@@ -154,7 +167,28 @@ export function AssetsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                 </motion.div>
               )}
 
-              {/* Notes Content */}
+              {/* Course Notes Content */}
+              {activeTab === 'course-notes' && (
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className="flex-1 overflow-y-auto p-6 md:p-10"
+                >
+                  <div className="max-w-3xl mx-auto">
+                    <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">Course Notes</h1>
+                    <p className="text-muted-foreground mb-8">Official instruction notes for this section.</p>
+                    
+                    <div className="prose prose-invert prose-p:text-muted-foreground prose-headings:text-foreground prose-a:text-primary max-w-none">
+                      <ReactMarkdown>
+                        {getCourseNote(activeModuleId || "unknown", activeLessonIndex, activeSlideIndex)}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* My Notes Content */}
               {activeTab === 'notes' && (
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
