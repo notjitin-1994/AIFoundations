@@ -95,19 +95,21 @@ function CopyPrompt({ prompt }: { prompt: string }) {
   };
 
   return (
-    <div className="mt-8">
-      <h5 className="text-xs font-bold uppercase tracking-widest text-primary/80 mb-3">Learning Brainstorm Prompt</h5>
+    <div className="w-full">
       <div className="relative group">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/30 to-indigo-500/30 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
-        <div className="relative bg-black/40 border border-white/10 rounded-xl p-5 flex flex-col gap-4">
-          <p className="text-sm text-white/70 italic font-mono leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all duration-300">"{prompt}"</p>
-          <button 
-            onClick={handleCopy}
-            className="self-end flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs px-4 py-2 rounded-lg transition-colors active:scale-95"
-          >
-            {copied ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            {copied ? "Copied to Clipboard" : "Copy Prompt"}
-          </button>
+        <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/30 to-indigo-500/30 rounded-2xl blur opacity-30 group-hover:opacity-70 transition duration-500" />
+        <div className="relative bg-[#051124]/90 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+          <div className="flex justify-between items-center mb-1">
+             <h5 className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/50">Learning Brainstorm Prompt</h5>
+             <button 
+              onClick={handleCopy}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[11px] px-3 py-1.5 rounded-lg transition-all active:scale-95 uppercase tracking-wider font-bold"
+             >
+               {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 opacity-70" />}
+               {copied ? "Copied" : "Copy"}
+             </button>
+          </div>
+          <p className="text-[15px] text-white/80 italic font-mono leading-relaxed group-hover:text-white transition-colors duration-300">"{prompt}"</p>
         </div>
       </div>
     </div>
@@ -119,7 +121,7 @@ export function BaselineCards() {
 
   return (
     <>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {BASELINE_ITEMS.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -129,17 +131,17 @@ export function BaselineCards() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05, ease: [0.23, 1, 0.32, 1] }}
-              className="bg-card/60 p-5 rounded-xl border border-white/5 flex gap-4 text-left group hover:bg-card/80 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(167,218,219,0.05)] transition-all active:scale-[0.98]"
+              className="bg-card/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 flex flex-col gap-4 text-left group hover:bg-card/80 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(167,218,219,0.08)] transition-all duration-500 active:scale-[0.98]"
             >
-              <div className="shrink-0 pt-0.5">
-                <Icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+              <div className="shrink-0 mb-2">
+                <Icon className="w-6 h-6 text-primary group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500" />
               </div>
-              <div className="flex-1 flex flex-col justify-start">
-                <h4 className="font-bold text-sm mb-1.5 group-hover:text-primary transition-colors flex justify-between items-start">
-                  <span className="leading-tight">{item.title}</span>
-                  <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
+              <div className="flex flex-col justify-start">
+                <h4 className="font-bold text-base mb-2 group-hover:text-primary transition-colors flex justify-between items-start">
+                  <span className="leading-tight pr-4">{item.title}</span>
+                  <ArrowRight className="w-4 h-4 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 shrink-0 mt-0.5 text-primary" />
                 </h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.shortDesc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.shortDesc}</p>
               </div>
             </motion.button>
           );
@@ -147,55 +149,70 @@ export function BaselineCards() {
       </div>
 
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-        <DialogContent showCloseButton={false} className="sm:max-w-xl bg-[#020C1B] border-white/10 shadow-2xl overflow-hidden p-0 gap-0">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/10 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
+        <DialogContent showCloseButton={false} className="sm:max-w-4xl bg-[#020C1B] border-white/10 shadow-2xl overflow-hidden p-0 gap-0 rounded-2xl max-h-[calc(100vh-4rem)]">
+          {/* Subtle glow layers inside the modal */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/3 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none translate-y-1/3 -translate-x-1/3" />
           
           <AnimatePresence mode="wait">
             {selectedItem && (
               <motion.div 
                 key={selectedItem.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                className="relative z-10 p-6 md:p-8"
+                initial={{ opacity: 0, scale: 0.98, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -15 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className="relative z-10 p-6 md:p-10 lg:p-12 max-h-[calc(100vh-4rem)] overflow-y-auto w-full"
               >
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 transition-colors text-white/50 hover:text-white"
+                  className="absolute top-6 right-6 md:top-8 md:right-8 p-2.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors text-white/50 hover:text-white z-50 group"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
                 </button>
 
-                <DialogHeader className="mb-6 text-left pr-8">
-                  <div className="mb-5">
-                    <selectedItem.icon className="w-8 h-8 text-primary" />
+                <div className="grid lg:grid-cols-[1fr_400px] gap-10 lg:gap-14">
+                  {/* Left Column: Context & Prompt */}
+                  <div className="flex flex-col">
+                    <DialogHeader className="text-left pr-8 lg:pr-0">
+                      <div className="mb-6 inline-flex p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
+                        <selectedItem.icon className="w-8 h-8 text-primary drop-shadow-[0_0_10px_rgba(167,218,219,0.5)]" />
+                      </div>
+                      <DialogTitle className="text-3xl md:text-4xl font-heading font-bold text-white tracking-tight">{selectedItem.title}</DialogTitle>
+                      <DialogDescription className="text-lg text-white/70 mt-5 leading-relaxed font-light">
+                        {selectedItem.overview}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="mt-10 lg:mt-auto pt-4">
+                      <CopyPrompt prompt={selectedItem.prompt} />
+                    </div>
                   </div>
-                  <DialogTitle className="text-2xl font-heading font-bold text-white">{selectedItem.title}</DialogTitle>
-                  <DialogDescription className="text-base text-white/70 mt-3 leading-relaxed">
-                    {selectedItem.overview}
-                  </DialogDescription>
-                </DialogHeader>
 
-                <div className="space-y-4 pt-2">
-                  <h5 className="text-xs font-bold uppercase tracking-widest text-primary/80">Core Prerequisites</h5>
-                  <ul className="space-y-3">
-                    {selectedItem.prerequisites.map((req, i) => (
-                      <motion.li 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 + i * 0.05, duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                        key={i} 
-                        className="flex gap-3 text-sm text-white/80 bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner"
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0 shadow-[0_0_8px_rgba(167,218,219,0.8)]" />
-                        <span className="leading-relaxed">{req}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
+                  {/* Right Column: Prerequisites */}
+                  <div className="flex flex-col gap-6 lg:pt-4">
+                    <h5 className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary/80 flex items-center gap-4">
+                      <span className="w-10 h-[1px] bg-primary/30" />
+                      Core Prerequisites
+                    </h5>
+                    <ul className="space-y-4">
+                      {selectedItem.prerequisites.map((req, i) => (
+                        <motion.li 
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 + i * 0.08, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                          key={i} 
+                          className="group/item flex gap-4 text-sm text-white/80 bg-white/[0.02] hover:bg-white/[0.05] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:scale-110 group-hover/item:bg-primary/20 transition-all duration-300">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(167,218,219,1)]" />
+                          </div>
+                          <span className="leading-relaxed font-medium">{req}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-
-                <CopyPrompt prompt={selectedItem.prompt} />
               </motion.div>
             )}
           </AnimatePresence>
