@@ -26,6 +26,7 @@ import { useNotesStore } from "@/store/notes";
 import { COURSE_MODULES } from "@/lib/course-data";
 import { ModuleTracker } from "@/components/dashboard/module-tracker";
 import { BadgeGrid } from "@/components/dashboard/badge-grid";
+import { BaselineCards } from "@/components/dashboard/baseline-cards";
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -283,50 +284,7 @@ export default function CourseDashboardPage() {
                 You don't need to write production code to start, but you need the mental models. If these concepts are new to you, we recommend spending 30 minutes with an AI assistant asking for "explain like I'm 5" breakdowns before you dive in.
               </p>
               
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Code className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">Frontend Basics</h4>
-                    <p className="text-xs text-muted-foreground">How browsers render the DOM and basic component mental models.</p>
-                  </div>
-                </div>
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Server className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">Backend & APIs</h4>
-                    <p className="text-xs text-muted-foreground">Handling stateless requests, JSON payloads, and RESTful routing.</p>
-                  </div>
-                </div>
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Database className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">Data Stores</h4>
-                    <p className="text-xs text-muted-foreground">Relational SQL vs document-based NoSQL persistence models.</p>
-                  </div>
-                </div>
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Cpu className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">LLM Fundamentals</h4>
-                    <p className="text-xs text-muted-foreground">Tokens, context windows, and probabilistic text generation.</p>
-                  </div>
-                </div>
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Network className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">AI Harnesses</h4>
-                    <p className="text-xs text-muted-foreground">Orchestrating agents, ReAct loops, and managing RAG pipelines.</p>
-                  </div>
-                </div>
-                <div className="bg-card/60 p-4 rounded-xl border border-white/5 flex gap-4">
-                  <Wrench className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-1">Tool Calling & MCP</h4>
-                    <p className="text-xs text-muted-foreground">Connecting LLMs to real-world actions via the Model Context Protocol.</p>
-                  </div>
-                </div>
-              </div>
+              <BaselineCards />
             </div>
           </section>
 
