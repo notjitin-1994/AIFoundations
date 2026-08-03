@@ -89,11 +89,14 @@ function TabBar({
 
 // ─── AuthModal ────────────────────────────────────────────────────
 interface AuthModalProps {
-  /** Gate-style trigger: open while the learner is logged out. Dismissible. */
+  /** Gate-style trigger: open while the learner is logged out. */
   isOpen: boolean;
+  /** Allow dismissal (X / overlay / Escape). When false the page stays behind
+   *  the modal until the learner authenticates. */
+  dismissible?: boolean;
 }
 
-export function AuthModal({ isOpen }: AuthModalProps) {
+export function AuthModal({ isOpen, dismissible = true }: AuthModalProps) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
@@ -212,10 +215,11 @@ export function AuthModal({ isOpen }: AuthModalProps) {
   // ── Keyboard + scroll lock ──
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (!dismissible) return;
       if (e.key === "Escape") close();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open]
+    [open, dismissible]
   );
 
   useEffect(() => {
@@ -239,7 +243,7 @@ export function AuthModal({ isOpen }: AuthModalProps) {
           transition={reduce ? { duration: 0 } : { duration: 0.2 }}
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 px-4 py-10 backdrop-blur-sm"
           onClick={(e) => {
-            if (e.target === e.currentTarget) close();
+            if (!dismissible && e.target === e.currentTarget) close();
           }}
         >
           <motion.div
@@ -255,13 +259,15 @@ export function AuthModal({ isOpen }: AuthModalProps) {
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
             {/* Close button */}
-            <button
-              type="button"
-              onClick={close}
-              className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.04] text-muted-foreground/50 ring-1 ring-white/[0.06] transition-colors hover:bg-white/[0.08] hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {dismissible && (
+              <button
+                type="button"
+                onClick={close}
+                className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.04] text-muted-foreground/50 ring-1 ring-white/[0.06] transition-colors hover:bg-white/[0.08] hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
 
             {/* ── Header ── */}
             <div className="px-6 pb-0 pt-8 sm:px-8 sm:pt-10">

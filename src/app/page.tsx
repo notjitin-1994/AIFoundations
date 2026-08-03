@@ -147,7 +147,7 @@ export default function CourseMarketingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
-      <AuthModal isOpen={!authLoading && !user} />
+      <AuthModal isOpen={!authLoading && !user} dismissible={false} />
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <MarketingNavbar />
 
