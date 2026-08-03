@@ -7,7 +7,9 @@ import { useNotesStore } from "@/store/notes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, User, LogOut } from "lucide-react";
+import { ChevronDown, User, LogOut, Menu } from "lucide-react";
+import { SidebarContent } from "@/components/layout/sidebar";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { COURSE_MODULES } from "@/lib/course-data";
 import { computeCourseProgress } from "@/lib/progress-metrics";
 import type { CourseTotals } from "@/lib/progress-metrics";
@@ -22,6 +24,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -67,8 +70,20 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
-      {/* Mobile logo */}
-      <div className="flex items-center md:hidden">
+      {/* Mobile logo & Menu */}
+      <div className="flex items-center gap-3 md:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <button className="p-2 -ml-2 text-muted-foreground hover:text-foreground">
+              <Menu className="w-5 h-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-[280px] bg-sidebar border-r-border flex flex-col h-[100dvh]">
+            <SheetTitle className="sr-only">Course Curriculum</SheetTitle>
+            <SheetDescription className="sr-only">Navigation for the course modules</SheetDescription>
+            <SidebarContent onLinkClick={() => setIsMobileMenuOpen(false)} />
+          </SheetContent>
+        </Sheet>
         <img
           src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png"
           alt="Smartslate"

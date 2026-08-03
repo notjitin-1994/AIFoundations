@@ -81,7 +81,7 @@ const MODULES = [
   }
 ];
 
-export function Sidebar() {
+export function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { completedModules, completedLessons, activeLessonIndex, moduleProgressMap } = useProgressStore();
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
@@ -106,9 +106,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside id="tour-sidebar" className="w-64 md:w-72 border-r border-border bg-sidebar text-sidebar-foreground h-screen flex flex-col hidden md:flex shrink-0">
+    <>
       <div className="p-6 border-b border-border shrink-0">
-        <a href="https://orbit.smartslate.io" className="block hover:opacity-80 transition-opacity duration-200">
+        <a href="https://orbit.smartslate.io" onClick={onLinkClick} className="block hover:opacity-80 transition-opacity duration-200">
           <img src="https://hxxvxsmengeoazuywpjm.supabase.co/storage/v1/object/public/brand-assets/logo.png" alt="Smartslate" className="h-8 w-auto object-contain mb-1" />
         </a>
         <p className="text-[11px] font-medium text-sidebar-foreground/60 tracking-wide uppercase mt-1">AI Foundations: Concept2Application</p>
@@ -131,6 +131,7 @@ export function Sidebar() {
                   }`}>
                     <Link 
                       href={moduleHref} 
+                      onClick={onLinkClick}
                       className="flex-1 flex items-center space-x-3 px-3 py-2.5 text-sm font-medium truncate"
                     >
                       {isCompleted ? (
@@ -193,6 +194,7 @@ export function Sidebar() {
                             <Link 
                               key={i} 
                               href={`${mod.path}?lesson=${i}`}
+                              onClick={onLinkClick}
                               className={`flex items-center space-x-2 text-xs px-2 py-1.5 rounded-md transition-colors truncate cursor-pointer ${
                                 isCurrentLesson 
                                   ? "text-sidebar-primary bg-sidebar-accent font-semibold" 
@@ -217,6 +219,14 @@ export function Sidebar() {
           })}
         </nav>
       </div>
+    </>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <aside id="tour-sidebar" className="w-64 md:w-72 border-r border-border bg-sidebar text-sidebar-foreground h-[100dvh] flex flex-col hidden md:flex shrink-0">
+      <SidebarContent />
     </aside>
   );
 }

@@ -515,11 +515,11 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
           <p className="text-zinc-300">Please return to the window to continue learning.</p>
         </div>
       )}
-      <div className="w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center relative">
+      <div className="w-full h-full max-w-6xl mx-auto flex flex-col items-center md:justify-center relative bg-background md:bg-transparent">
         {/* Canvas Container */}
-        <div className="relative w-full aspect-[16/10] max-h-[90vh] bg-card border border-border shadow-2xl rounded-xl overflow-hidden flex flex-col">
+        <div className="relative w-full h-full md:aspect-[16/10] md:h-auto md:max-h-[90vh] bg-card md:border md:border-border shadow-none md:shadow-2xl md:rounded-xl overflow-hidden flex flex-col">
           {/* Content Area */}
-          <div className={`flex-1 relative overflow-hidden flex flex-col ${slides[currentIndex].fullWidth ? 'p-1 mt-1.5' : 'px-2 md:px-3 py-4 md:py-8'}`}>
+          <div className={`flex-1 relative overflow-y-auto flex flex-col ${slides[currentIndex].fullWidth ? 'p-1 mt-1.5' : 'px-4 md:px-3 py-6 md:py-8'}`}>
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={`${currentIndex}-${replayCount}`}
@@ -569,8 +569,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
             </AnimatePresence>
           </div>
 
-          <div className="h-20 border-t border-border bg-card/50 backdrop-blur-xl px-6 flex items-center justify-between shrink-0 relative">
-          <div className="flex items-center space-x-3 w-full max-w-[200px]">
+          <div className="min-h-[80px] h-auto md:h-20 py-4 md:py-0 border-t border-border bg-card/50 backdrop-blur-xl px-4 md:px-6 flex items-center justify-between shrink-0 relative flex-wrap gap-4 z-50">
+          <div className="flex items-center space-x-2 md:space-x-3 w-auto md:max-w-[200px]">
             {/* Left side actions */}
             <div className="flex items-center space-x-2">
               {/* Restart */}
@@ -615,10 +615,10 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
               <button
                 id="tour-assets"
                 onClick={() => setIsAssetsOpen(true)}
-                className="group flex items-center gap-1.5 pl-3 pr-4 py-2 rounded-full bg-zinc-100 hover:bg-primary/10 text-zinc-500 hover:text-primary dark:bg-zinc-800 dark:hover:bg-primary/10 dark:text-zinc-400 dark:hover:text-primary transition-all active:scale-95 text-sm font-semibold"
+                className="group flex items-center gap-1.5 p-2 md:pl-3 md:pr-4 md:py-2 rounded-full bg-zinc-100 hover:bg-primary/10 text-zinc-500 hover:text-primary dark:bg-zinc-800 dark:hover:bg-primary/10 dark:text-zinc-400 dark:hover:text-primary transition-all active:scale-95 text-sm font-semibold"
               >
-                <Library className="w-[15px] h-[15px] group-hover:-rotate-6 transition-transform duration-200" />
-                <span>Assets</span>
+                <Library className="w-[18px] h-[18px] md:w-[15px] md:h-[15px] group-hover:-rotate-6 transition-transform duration-200" />
+                <span className="hidden md:inline">Assets</span>
               </button>
             </div>
           </div>
@@ -688,8 +688,8 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
               >
                 {narration.isFinished ? (
                   <>
-                    <RotateCcw className="w-[18px] h-[18px] mr-1.5" strokeWidth={2.5} />
-                    <span className="font-semibold text-[15px] pr-1 tracking-wide">Replay</span>
+                    <RotateCcw className="w-[18px] h-[18px] md:mr-1.5" strokeWidth={2.5} />
+                    <span className="hidden md:inline font-semibold text-[15px] pr-1 tracking-wide">Replay</span>
                   </>
                 ) : narration.isPlaying ? (
                   <Pause className="w-4 h-4 fill-current" />
@@ -697,7 +697,7 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                   <>
                     <Play className="w-4 h-4 fill-current" />
                     {!hasInteracted && currentIndex === 0 && (
-                      <span className="font-bold text-sm pr-1">Begin Module</span>
+                      <span className="hidden md:inline font-bold text-sm pr-1 ml-2">Begin Module</span>
                     )}
                   </>
                 )}
@@ -718,10 +718,10 @@ export function CanvasViewer({ slides, onComplete, moduleId = "unknown" }: Canva
                 onClick={finalHandleNext}
                 disabled={nextDisabled}
                 className={`flex items-center justify-center h-10 ${
-                  displayNextLabel ? "px-5 space-x-2" : "w-10"
+                  displayNextLabel ? "px-4 md:px-5 space-x-2" : "w-10"
                 } rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:scale-95`}
               >
-                {displayNextLabel && <span>{displayNextLabel}</span>}
+                {displayNextLabel && <span className="text-sm md:text-base">{displayNextLabel}</span>}
                 {NextIcon}
               </button>
             </div>
